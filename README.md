@@ -1,3 +1,36 @@
+# JRCMATICS
+
+JRC.C4 telemetry project based on **freematics**` devices (mostly model ONE+ H)
+for OBD, OBFCM and GNSS data from light & heavy vehicles.
+
+## Reduce size of this git repo
+
+Code from the underlying ["freematics" git repo](https://github.com/stanleyhuangyc/Freematics.git) takes considerable time & space when cloning this repo (~500mb in disk), while only few parts of it are utilized;
+running the commands below to *sparsely* clone & checkout results
+in a x10 reduction in space/bandwidth (~45mb) and time to clone:
+```bash
+git clone --sparse <repo-url>
+cd <repo-dir>
+git sparse-checkout set --cone README.md libraries server firmware_v5/telelogger
+```
+
+Limiting in addition history depth while cloning, eg with `--depth=30`
+would result in half the size above. 
+
+**Tip:** Even if you fully cloned, you may still choose to *sparsely checkout* later,
+to limit distraction & speedup the IDE scanning your working dir,
+by running the last cmd above.
+
+To checkout fully and disable *sparseness*, type:
+```bash
+git sparse-checkout disable
+```
+
+
+--( original README follow )--
+
+---
+
 Directories
 ===========
 
