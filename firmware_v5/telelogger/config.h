@@ -127,7 +127,9 @@
 // motion threshold for waking up
 #define MOTION_THRESHOLD 0.4f /* moving vehicle motion threshold in G */
 // engine jumpstart voltage
-#define JUMPSTART_VOLTAGE 14 /* V */
+#define THR_VOLTAGE 13.6 /* V */
+// engine jumpstart voltage gradient
+#define THR_GRAD 1 /* V */
 
 /**************************************
 * Additional features

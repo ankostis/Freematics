@@ -708,35 +708,37 @@ void showStats()
 bool waitMotion(long timeout)
 {
 #if ENABLE_MEMS
-  unsigned long t = millis();
+  // unsigned long t = millis();
   if (state.check(STATE_MEMS_READY)) {
-    do {
-      serverProcess(100);
-      // calculate relative movement
-      float motion = 0;
-      float acc[3];
-      if (!mems->read(acc)) continue;
-      if (accCount == 10) {
-        accCount = 0;
-        accSum[0] = 0;
-        accSum[1] = 0;
-        accSum[2] = 0;
-      }
-      accSum[0] += acc[0];
-      accSum[1] += acc[1];
-      accSum[2] += acc[2];
-      accCount++;
-      for (byte i = 0; i < 3; i++) {
-        float m = (acc[i] - accBias[i]);
-        motion += m * m;
-      }
-      // check movement
-      if (motion >= MOTION_THRESHOLD * MOTION_THRESHOLD) {
-        //lastMotionTime = millis();
-        return true;
-      }
-    } while ((long)(millis() - t) < timeout || timeout == -1);
-    return false;
+    
+    serverProcess(100);
+    // calculate relative movement
+    float motion = 0;
+    float acc[3];
+    if (!mems->read(acc)) {
+      return false;
+    }
+    if (accCount == 10) {
+      accCount = 0;
+      accSum[0] = 0;
+      accSum[1] = 0;
+      accSum[2] = 0;
+    }
+    accSum[0] += acc[0];
+    accSum[1] += acc[1];
+    accSum[2] += acc[2];
+    accCount++;
+    for (byte i = 0; i < 3; i++) {
+      float m = (acc[i] - accBias[i]);
+      motion += m * m;
+    }
+    // check movement
+    if (motion >= MOTION_THRESHOLD * MOTION_THRESHOLD) {
+      //lastMotionTime = millis();
+      return true;
+    } else {
+      return false;
+    }
   }
 #endif
   serverProcess(timeout);
@@ -1117,6 +1119,7 @@ void standby()
   uint32_t t_old = millis();
   float v_old = 999;
   float v_grad;
+  bool moving;
 
   calibrateMEMS();
 
@@ -1133,8 +1136,8 @@ void standby()
     delay(1000);
     t_old = t;
     v_old = v;
+    if (waitMotion(-1)) break;
   } while ((!((v > THR_VOLTAGE) && (v_grad > THR_GRAD))) || (v_grad > 4));
-  // waitMotion(-1);
 #elif ENABLE_OBD
   do {
     delay(1000);
