@@ -710,7 +710,7 @@ bool waitMotion(long timeout)
 #if ENABLE_MEMS
   // unsigned long t = millis();
   if (state.check(STATE_MEMS_READY)) {
-    
+
     serverProcess(100);
     // calculate relative movement
     float motion = 0;
@@ -1119,7 +1119,6 @@ void standby()
   uint32_t t_old = millis();
   float v_old = 999;
   float v_grad;
-  bool moving;
 
   calibrateMEMS();
 
@@ -1127,16 +1126,23 @@ void standby()
     t = millis();
     v = (float)obd.getVoltage();
     v_grad = (v - v_old)/(t - t_old)*1000;
-    Serial.print("Voltage old: ");
+    Serial.print("Delta time: ");
+    Serial.print((float)(t - t_old)/1000);
+    Serial.print(", Voltage old: ");
     Serial.print(v_old);
     Serial.print(", Voltage new: ");
     Serial.print(v);
     Serial.print(", Gradient: ");
     Serial.println(v_grad);
-    delay(1000);
+
+    if (waitMotion(-1)) {
+      Serial.println("Motion event detected.");
+      break;
+    }
+
+    delay(880);
     t_old = t;
     v_old = v;
-    if (waitMotion(-1)) break;
   } while ((!((v > THR_VOLTAGE) && (v_grad > THR_GRAD))) || (v_grad > 4));
 #elif ENABLE_OBD
   do {
