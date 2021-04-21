@@ -1112,11 +1112,32 @@ void standby()
   Serial.println("STANDBY");
   obd.enterLowPowerMode();
 #if ENABLE_MEMS
+  uint32_t t;
+  float v;
+  uint32_t t_old = millis();
+  float v_old = 999;
+  float v_grad;
+
   calibrateMEMS();
-  waitMotion(-1);
+
+  do {
+    t = millis();
+    v = (float)obd.getVoltage();
+    v_grad = (v - v_old)/(t - t_old)*1000;
+    Serial.print("Voltage old: ");
+    Serial.print(v_old);
+    Serial.print(", Voltage new: ");
+    Serial.print(v);
+    Serial.print(", Gradient: ");
+    Serial.println(v_grad);
+    delay(1000);
+    t_old = t;
+    v_old = v;
+  } while ((!((v > THR_VOLTAGE) && (v_grad > THR_GRAD))) || (v_grad > 4));
+  // waitMotion(-1);
 #elif ENABLE_OBD
   do {
-    delay(5000);
+    delay(1000);
   } while (obd.getVoltage() < JUMPSTART_VOLTAGE);
 #else
   delay(5000);
