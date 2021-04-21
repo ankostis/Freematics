@@ -293,7 +293,7 @@ bool processGPS(CBuffer* buffer)
   }
   lastGPSLat = gd->lat;
   lastGPSLng = gd->lng;
-  
+
   float kph = (float)((int)(gd->speed * 1.852f * 10)) / 10;
   if (kph >= 2) lastMotionTime = millis();
 
@@ -310,7 +310,7 @@ bool processGPS(CBuffer* buffer)
       buffer->add(PID_GPS_HDOP, gd->hdop);
     }
   }
-  
+
   // generate ISO time string
   char *p = isoTime + sprintf(isoTime, "%04u-%02u-%02uT%02u:%02u:%02u",
       (unsigned int)(gd->date % 100) + 2000, (unsigned int)(gd->date / 100) % 100, (unsigned int)(gd->date / 10000),
@@ -461,7 +461,7 @@ void printTime()
 *******************************************************************************/
 void initialize()
 {
-    // turn on buzzer at 2000Hz frequency 
+    // turn on buzzer at 2000Hz frequency
   sys.buzzer(2000);
   delay(100);
   // turn off buzzer
@@ -1010,7 +1010,7 @@ void telemetry(void* inst)
       }
       continue;
     }
-    
+
     if (!state.check(STATE_NET_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
         teleClient.shutdown();
@@ -1118,10 +1118,10 @@ void standby()
 
 #if RESET_AFTER_WAKEUP
 #if ENABLE_MEMS
-  mems->end();  
+  mems->end();
 #endif
   ESP.restart();
-#endif  
+#endif
   state.clear(STATE_STANDBY);
   // this will wake up co-processor
   sys.resetLink();
@@ -1211,7 +1211,7 @@ void showSysInfo()
     Serial.print("RTC:");
     Serial.println(rtc);
   }
-  
+
 #if ENABLE_OLED
   oled.clear();
   oled.print("CPU:");

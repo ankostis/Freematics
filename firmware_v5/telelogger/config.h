@@ -56,7 +56,7 @@
 // Freematics Hub server settings
 #define SERVER_HOST "hub.freematics.com"
 #define SERVER_PROTOCOL PROTOCOL_UDP
-#endif 
+#endif
 
 // SIM card setting
 #define SIM_CARD_PIN ""
