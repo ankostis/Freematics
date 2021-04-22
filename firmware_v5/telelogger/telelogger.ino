@@ -1125,6 +1125,7 @@ void standby()
   do {
     t = millis();
     v = (float)obd.getVoltage();
+
     v_grad = (v - v_old)/(t - t_old)*1000;
     Serial.print("Delta time: ");
     Serial.print((float)(t - t_old)/1000);
@@ -1140,10 +1141,12 @@ void standby()
       break;
     }
 
+    if (v*v_old < 0.1) continue;
+    
     delay(880);
     t_old = t;
     v_old = v;
-  } while ((!((v > THR_VOLTAGE) && (v_grad > THR_GRAD))) || (v_grad > 4));
+  } while (!((v > THR_VOLTAGE) && (v_grad > THR_GRAD)));
 #elif ENABLE_OBD
   do {
     delay(1000);
