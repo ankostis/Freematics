@@ -116,6 +116,51 @@ byte COBD::readPID(const byte pid[], byte count, int result[])
 	return results;
 }
 
+bool COBD::readOBFCM(byte pid, char* completeBuffer)
+{
+	char buffer[128];
+	char command[64];
+	byte bufSize = 0;
+	char* data = 0;
+	byte i = 0;
+
+//	while (OBFCM_data[i].idx) {
+		sprintf(command, "09%02X\r", pid);
+//		strcpy (buffer, command);
+		for (byte n = 0; n < 2; n++) {
+			link->send(command);
+			idleTasks();
+			int ret = link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
+			if (ret > 0 && !checkErrorMessage(buffer)) {
+				char *p = buffer;
+				while ((p = strstr(p, "0: 49 "))) {
+					p += 6;
+					byte curpid = hex2uint8(p);
+					if (curpid == pid) {
+						errors = 0;
+						p += 5;
+						while (*p && *p != ' ') p++;
+						while (*p == ' ') p++;
+						if (*p) {
+							data = p;
+							break;
+						}
+					}
+				}
+			}
+		}
+		strcat(completeBuffer, buffer);
+		i++;
+//	}
+
+	if (!data) {
+		errors++;
+		return false;
+	}
+//	result = normalizeData(pid, data);
+  return true;
+}
+
 int COBD::readDTC(uint16_t codes[], byte maxCodes)
 {
 	/*
@@ -236,7 +281,19 @@ int COBD::normalizeData(byte pid, char* data)
 	case PID_AIR_FUEL_EQUIV_RATIO: // 0~200
 		result = (long)getLargeValue(data) * 200 / 65536;
 		break;
-	default:
+/*	case PID_VEHICLE_OP_DATA_DIST_FUEL:
+		result = (long)getLargeValue(data);
+		break;
+	case PID_PLUG_IN_HYBRID_VEHICLE_DIST_DATA:
+	result = (long)getLargeValue(data);
+		break;
+	case PID_PLUG_IN_HYBRID_VEHICLE_FUEL_DATA:
+	result = (long)getLargeValue(data);
+		break;
+	case PID_PLUG_IN_HYBRID_VEHICLE_GRID_DATA:
+	result = (long)getLargeValue(data);
+		break;
+*/	default:
 		result = getSmallValue(data);
 	}
 	return result;
@@ -466,7 +523,7 @@ void COBD::setHeaderFilter(uint32_t num)
 	sprintf(buf, "ATCF %X\r", num);
 	link->sendCommand(buf, buf, sizeof(buf), 1000);
 }
-	
+
 void COBD::setHeaderMask(uint32_t bitmask)
 {
 	char buf[32];
