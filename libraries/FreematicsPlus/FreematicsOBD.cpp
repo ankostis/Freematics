@@ -116,27 +116,64 @@ byte COBD::readPID(const byte pid[], byte count, int result[])
 	return results;
 }
 
-bool COBD::readOBFCM(byte pid, char* completeBuffer)
+/*
+bool COBD::readOBFCM(byte pid, char* buffer)
+{
+	for (byte n = 0; n < 2; n++) {
+		if (link->sendCommand("090217\r", buffer, 128, OBD_TIMEOUT_LONG)) {
+			int len = hex2uint16(buffer);
+			char *p = strstr(buffer + 4, "0: 49 17 01");
+			if (p) {
+				char *q = buffer;
+				p += 11; // skip the header
+				do {
+					while (*(++p) == ' ');
+					for (;;) {
+						*(q++) = hex2uint8(p);
+						while (*p && *p != ' ') p++;
+						while (*p == ' ') p++;
+						if (!*p || *p == '\r') break;
+					}
+					p = strchr(p, ':');
+				} while(p);
+				*q = 0;
+				if (q - buffer == len - 3) {
+					return true;
+				}
+			}
+		}
+		delay(100);
+	}
+    return false;
+}
+*/
+
+bool COBD::readOBFCM(byte pid, char* completeBuffer, int& l)
 {
 	char buffer[128];
 	char command[64];
 	byte bufSize = 0;
-	char* data = 0;
+	char *data;
 	byte i = 0;
 
 //	while (OBFCM_data[i].idx) {
 		sprintf(command, "09%02X\r", pid);
 //		strcpy (buffer, command);
-		for (byte n = 0; n < 2; n++) {
+		for (byte n = 0; n < 1; n++) {
 			link->send(command);
 			idleTasks();
 			int ret = link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
-			if (ret > 0 && !checkErrorMessage(buffer)) {
-				char *p = buffer;
-				while ((p = strstr(p, "0: 49 "))) {
+			if (ret > 0 && !checkErrorMessage(buffer))
+			{
+				l = ret;
+//				char *p = buffer;
+				char *p = strstr(buffer + 4, "0: 49 17 01");
+//				while ((p = strstr(p, "0: 49 "))) {
+				if (p){
 					p += 6;
 					byte curpid = hex2uint8(p);
-					if (curpid == pid) {
+					//if (curpid == 23)
+					 {
 						errors = 0;
 						p += 5;
 						while (*p && *p != ' ') p++;
@@ -148,10 +185,12 @@ bool COBD::readOBFCM(byte pid, char* completeBuffer)
 					}
 				}
 			}
+//			delay(100);
+
 		}
-		strcat(completeBuffer, buffer);
 		i++;
 //	}
+strncpy(completeBuffer, buffer, sizeof(buffer));
 
 	if (!data) {
 		errors++;
@@ -160,6 +199,8 @@ bool COBD::readOBFCM(byte pid, char* completeBuffer)
 //	result = normalizeData(pid, data);
   return true;
 }
+
+
 
 int COBD::readDTC(uint16_t codes[], byte maxCodes)
 {
@@ -357,7 +398,9 @@ float COBD::getVoltage()
 
 bool COBD::getVIN(char* buffer, byte bufsize)
 {
-	for (byte n = 0; n < 2; n++) {
+	for (byte n = 0; n < 1; n++) {
+		link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG);
+
 		if (link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG)) {
 			int len = hex2uint16(buffer);
 			char *p = strstr(buffer + 4, "0: 49 02 01");

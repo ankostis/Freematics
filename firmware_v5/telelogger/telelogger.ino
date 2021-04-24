@@ -572,7 +572,7 @@ void initialize()
       Serial.print("VIN:");
       Serial.println(vin);
     }
-    Serial.println(buf);
+    //Serial.println(buf);
     int dtcCount = obd.readDTC(dtc, sizeof(dtc) / sizeof(dtc[0]));
     if (dtcCount > 0) {
       Serial.print("DTC:");
@@ -581,15 +581,17 @@ void initialize()
     Serial.print("OBFCM:");
     int i = 0;
     bool esito = false;
+    char bufOBFCM[128];
+    int lung;
 //    while (obfcmData[i].idx){
-      esito = obd.readOBFCM(obfcmData[i].pid, buf);
-//      sprintf(buf, "idx: %d - pid: %d", obfcmData[i].idx, obfcmData[i].pid);
-        Serial.println(buf);
+      esito = obd.readOBFCM(obfcmData[i].pid, bufOBFCM, lung);
+        strncpy(obfcmTest, bufOBFCM, 127);
+        Serial.println(obfcmTest);
+        Serial.println(lung);
       i++;
-      esito = obd.readOBFCM(obfcmData[i].pid, buf);
-      Serial.println(buf);
+  //    esito = obd.readOBFCM(obfcmData[i].pid, buf);
+  //    Serial.println(buf);
   //  }
-    strcpy(obfcmTest, buf);
 
 #if ENABLE_OLED
     oled.print("VIN:");
