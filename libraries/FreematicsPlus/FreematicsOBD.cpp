@@ -25,6 +25,26 @@ int dumpLine(char* buffer, int len)
 	return bytesToDump;
 }
 
+uint32_t hex2uint32(const char *p)
+{
+	char c = *p;
+	uint32_t i = 0;
+	for (uint8_t n = 0; c && n < 8; c = *(++p)) {
+		if (c >= 'A' && c <= 'F') {
+			c -= 7;
+		} else if (c>='a' && c<='f') {
+			c -= 39;
+        } else if (c == ' ' && (n == 2 || n == 4 || n == 6)) {
+            continue;
+        } else if (c < '0' || c > '9') {
+			break;
+        }
+		i = (i << 4) | (c & 0xF);
+		n++;
+	}
+	return i;
+}
+
 uint16_t hex2uint16(const char *p)
 {
 	char c = *p;
@@ -115,92 +135,6 @@ byte COBD::readPID(const byte pid[], byte count, int result[])
 	}
 	return results;
 }
-
-/*
-bool COBD::readOBFCM(byte pid, char* buffer)
-{
-	for (byte n = 0; n < 2; n++) {
-		if (link->sendCommand("090217\r", buffer, 128, OBD_TIMEOUT_LONG)) {
-			int len = hex2uint16(buffer);
-			char *p = strstr(buffer + 4, "0: 49 17 01");
-			if (p) {
-				char *q = buffer;
-				p += 11; // skip the header
-				do {
-					while (*(++p) == ' ');
-					for (;;) {
-						*(q++) = hex2uint8(p);
-						while (*p && *p != ' ') p++;
-						while (*p == ' ') p++;
-						if (!*p || *p == '\r') break;
-					}
-					p = strchr(p, ':');
-				} while(p);
-				*q = 0;
-				if (q - buffer == len - 3) {
-					return true;
-				}
-			}
-		}
-		delay(100);
-	}
-    return false;
-}
-*/
-
-bool COBD::readOBFCM(byte pid, char* completeBuffer, int& l)
-{
-	char buffer[128];
-	char command[64];
-	byte bufSize = 0;
-	char *data;
-	byte i = 0;
-
-//	while (OBFCM_data[i].idx) {
-		sprintf(command, "09%02X\r", pid);
-//		strcpy (buffer, command);
-		for (byte n = 0; n < 1; n++) {
-			link->send(command);
-			idleTasks();
-			int ret = link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
-			if (ret > 0 && !checkErrorMessage(buffer))
-			{
-				l = ret;
-//				char *p = buffer;
-				char *p = strstr(buffer + 4, "0: 49 17 01");
-//				while ((p = strstr(p, "0: 49 "))) {
-				if (p){
-					p += 6;
-					byte curpid = hex2uint8(p);
-					//if (curpid == 23)
-					 {
-						errors = 0;
-						p += 5;
-						while (*p && *p != ' ') p++;
-						while (*p == ' ') p++;
-						if (*p) {
-							data = p;
-							break;
-						}
-					}
-				}
-			}
-//			delay(100);
-
-		}
-		i++;
-//	}
-strncpy(completeBuffer, buffer, sizeof(buffer));
-
-	if (!data) {
-		errors++;
-		return false;
-	}
-//	result = normalizeData(pid, data);
-  return true;
-}
-
-
 
 int COBD::readDTC(uint16_t codes[], byte maxCodes)
 {
@@ -426,6 +360,59 @@ bool COBD::getVIN(char* buffer, byte bufsize)
 		delay(100);
 	}
     return false;
+}
+
+bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
+{
+    // Write C++ code here
+    char data[16];
+    char* first;
+    char second;
+    byte idx = 0;
+    byte idx2 = 0;
+	char buffer[128];
+	byte bufsize;
+
+	bufsize = sizeof(buffer);
+	if (link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG))
+	{
+		int len = hex2uint16(buffer);
+//		char *p = strstr(buffer+4, "0: 49 17 01");
+		char *p = buffer+4;
+		if (p) {
+			p += 12; // skip the header
+
+//			while(obfcmDataArray[idx2].idx){
+			for(byte k = 0; k < 4; k++){
+				idx = 0;
+				for (unsigned char n = 0; n < 4; n++){
+					while (*p && *p != ' '){
+						data[idx] = *p;
+						idx++;
+						p++;
+					}
+					while (*p == ' '){
+						data[idx] = *p;
+						idx++;
+						p++;
+					}
+
+					if (*p == '\r'){
+						p = strchr(p, ':');
+						p += 2;
+					}
+				}
+/*				if (!data) {
+					errors++;
+					return false;
+				}
+*/
+				obfcmDataArray[idx2].value = (float)(hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
+				idx2++;
+			}
+		}
+	}
+	return false;
 }
 
 bool COBD::isValidPID(byte pid)

@@ -584,10 +584,11 @@ void initialize()
     char bufOBFCM[128];
     int lung;
 //    while (obfcmData[i].idx){
-      esito = obd.readOBFCM(obfcmData[i].pid, bufOBFCM, lung);
-        strncpy(obfcmTest, bufOBFCM, 127);
-        Serial.println(obfcmTest);
-        Serial.println(lung);
+      esito = obd.GetOBFCM(obfcmData);
+        Serial.println(obfcmData[0].value);
+        Serial.println(obfcmData[1].value);
+        Serial.println(obfcmData[2].value);
+        Serial.println(obfcmData[3].value);
       i++;
   //    esito = obd.readOBFCM(obfcmData[i].pid, buf);
   //    Serial.println(buf);

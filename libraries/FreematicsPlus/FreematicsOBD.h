@@ -48,7 +48,7 @@ public:
 	// get VIN as a string, buffer length should be >= OBD_RECV_BUF_SIZE
 	bool getVIN(char* buffer, byte bufsize);
 	// read OBFCM data (each pid has multiply data)
-	bool readOBFCM(byte pid, char* buffer, int& l);
+	bool GetOBFCM(DS_CAN_MSG* obfcmDataArray);
 	// determine if the PID is supported
 	bool isValidPID(byte pid);
 	// specify custom CAN header ID
