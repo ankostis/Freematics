@@ -26,6 +26,7 @@ public:
     void add(uint16_t pid, uint32_t value);
     void add(uint16_t pid, float value);
     void add(uint16_t pid, float value[]);
+    void add(uint16_t pid, char value[18]);
     void purge();
     void serialize(CStorage& store);
     uint32_t timestamp;

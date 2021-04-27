@@ -37,6 +37,7 @@
 #define STATE_NET_CONNECTED 0x20
 #define STATE_WORKING 0x40
 #define STATE_STANDBY 0x100
+#define STATE_GET_VEHICLE_INFO 0x200
 
 typedef struct {
   byte pid;
@@ -230,16 +231,29 @@ int handlerControl(UrlHandlerParam* param)
 #if ENABLE_OBD
  void getVehicleInfo(CBuffer* buffer)
 {
+    
+    char vin[18] = {0};
     char buf[128];
     
-
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin, buf, sizeof(vin) - 1);
-      buffer->add((uint16_t) 0x02 | 0x900, 0);
+      buffer->add((uint16_t) 0x902, *vin);
     } else {
         timeoutsOBD++;
         printTimeoutStats();
     }
+
+    if (1 == 1) {
+      buffer->add((uint16_t) 0x9171, (float) 1000);
+      buffer->add((uint16_t) 0x9172, (float) 1000);
+      buffer->add((uint16_t) 0x9173, (float) 100);
+      buffer->add((uint16_t) 0x9174, (float) 100);
+    } else {
+        timeoutsOBD++;
+        printTimeoutStats();
+    }
+
+    state.clear(STATE_GET_VEHICLE_INFO);
 }
 void processOBD(CBuffer* buffer)
 {
@@ -517,7 +531,7 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init()) {
       Serial.println("OBD:OK");
-      state.set(STATE_OBD_READY);
+      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO);
 #if ENABLE_OLED
       oled.println("OBD OK");
 #endif
@@ -778,7 +792,9 @@ void process()
 #if ENABLE_OBD
   // process OBD data if connected
   if (state.check(STATE_OBD_READY)) {
-    getVehicleInfo(buffer);
+    if (state.check(STATE_GET_VEHICLE_INFO)) {
+      getVehicleInfo(buffer);
+    }
     processOBD(buffer);
     if (obd.errors >= MAX_OBD_ERRORS) {
       if (!obd.init()) {
@@ -1118,7 +1134,7 @@ void standby()
   }
 #endif
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
-  state.set(STATE_STANDBY);
+  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO);
   // this will put co-processor into sleep mode
 #if ENABLE_OLED
   oled.print("STANDBY");
