@@ -228,6 +228,19 @@ int handlerControl(UrlHandlerParam* param)
   Reading and processing OBD data
 *******************************************************************************/
 #if ENABLE_OBD
+ void getVehicleInfo(CBuffer* buffer)
+{
+    char buf[128];
+    
+
+    if (obd.getVIN(buf, sizeof(buf))) {
+      strncpy(vin, buf, sizeof(vin) - 1);
+      buffer->add((uint16_t) 0x02 | 0x900, 0);
+    } else {
+        timeoutsOBD++;
+        printTimeoutStats();
+    }
+}
 void processOBD(CBuffer* buffer)
 {
   static int idx[2] = {0, 0};
@@ -765,6 +778,7 @@ void process()
 #if ENABLE_OBD
   // process OBD data if connected
   if (state.check(STATE_OBD_READY)) {
+    getVehicleInfo(buffer);
     processOBD(buffer);
     if (obd.errors >= MAX_OBD_ERRORS) {
       if (!obd.init()) {

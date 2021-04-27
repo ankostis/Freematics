@@ -34,3 +34,5 @@
 #define PID_RSSI 0x81
 #define PID_DEVICE_TEMP 0x82
 
+#define PID_VIN 0x902
+
