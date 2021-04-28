@@ -17,6 +17,7 @@
 #define ELEMENT_UINT 1
 #define ELEMENT_FLOAT 2
 #define ELEMENT_FLOATX3 3
+#define ELEMENT_STRING 4
 
 class CBuffer
 {

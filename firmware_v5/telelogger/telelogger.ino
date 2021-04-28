@@ -237,13 +237,13 @@ int handlerControl(UrlHandlerParam* param)
     
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin, buf, sizeof(vin) - 1);
-      buffer->add((uint16_t) 0x902, *vin);
+      buffer->add((uint16_t) 0x902, vin);
     } else {
         timeoutsOBD++;
         printTimeoutStats();
     }
 
-    if (1 == 1) {
+    /* if (1 == 1) {
       buffer->add((uint16_t) 0x9171, (float) 1000);
       buffer->add((uint16_t) 0x9172, (float) 1000);
       buffer->add((uint16_t) 0x9173, (float) 100);
@@ -251,7 +251,7 @@ int handlerControl(UrlHandlerParam* param)
     } else {
         timeoutsOBD++;
         printTimeoutStats();
-    }
+    } */
 
     state.clear(STATE_GET_VEHICLE_INFO);
 }

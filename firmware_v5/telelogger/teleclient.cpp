@@ -85,6 +85,19 @@ void CBuffer::add(uint16_t pid, float value[])
     Serial.println("FULL");
   }
 }
+void CBuffer::add(uint16_t pid, char value[18])
+{
+  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(char) * 18) {
+    setType(ELEMENT_STRING);
+    *(uint16_t*)(data + offset) = pid;
+    offset += 2;
+    memcpy(data + offset, value, sizeof(char) * 18);
+    offset += sizeof(char) * 18;
+    count++;
+  } else {
+    Serial.println("FULL2");
+  }
+}
 
 void CBuffer::purge()
 {
@@ -131,6 +144,14 @@ void CBuffer::serialize(CStorage& store)
     case ELEMENT_FLOATX3:
       {
         float value[3];
+        memcpy(value, data + of, sizeof(value));
+        of += sizeof(value);
+        store.log(pid, value);
+      }
+      break;
+    case ELEMENT_STRING:
+      {
+        char value[18];
         memcpy(value, data + of, sizeof(value));
         of += sizeof(value);
         store.log(pid, value);
