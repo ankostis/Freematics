@@ -333,8 +333,6 @@ float COBD::getVoltage()
 bool COBD::getVIN(char* buffer, byte bufsize)
 {
 	for (byte n = 0; n < 1; n++) {
-		link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG);
-
 		if (link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG)) {
 			int len = hex2uint16(buffer);
 			char *p = strstr(buffer + 4, "0: 49 02 01");
@@ -364,55 +362,63 @@ bool COBD::getVIN(char* buffer, byte bufsize)
 
 bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 {
-    // Write C++ code here
-    char data[16];
-    char* first;
-    char second;
-    byte idx = 0;
-    byte idx2 = 0;
+  // Write C++ code here
+	char command[128];
+  char data[16];
+  char* first;
+  char second;
+  byte idx = 0;
+  byte idx2 = 0;
+	byte msgNr = 0;
 	char buffer[128];
 	byte bufsize;
 
-	bufsize = sizeof(buffer);
-	if (link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG))
-	{
-		int len = hex2uint16(buffer);
-//		char *p = strstr(buffer+4, "0: 49 17 01");
-		char *p = buffer+4;
-		if (p) {
-			p += 12; // skip the header
+	while(obfcmDataArray[idx2].idx){
+		sprintf(command, "09%02X\r", obfcmDataArray[idx2].pid);
+		bufsize = sizeof(buffer);
+		if (link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG))
+		{
+			int len = hex2uint16(buffer);
+			if (len >= 19){
+				char *p = buffer+4;
+				if (p) {
+					p += 12; // skip the header
 
-//			while(obfcmDataArray[idx2].idx){
-			for(byte k = 0; k < 4; k++){
-				idx = 0;
-				for (unsigned char n = 0; n < 4; n++){
-					while (*p && *p != ' '){
-						data[idx] = *p;
-						idx++;
-						p++;
-					}
-					while (*p == ' '){
-						data[idx] = *p;
-						idx++;
-						p++;
-					}
+					msgNr = obfcmDataArray[idx2].nrOfChForMsg;
+					for(byte k = 0; k < msgNr; k++){
+						idx = 0;
+						for (byte n = 0; n < 4; n++){
+							while (*p && *p != ' '){
+								data[idx] = *p;
+								idx++;
+								p++;
+							}
+							while (*p == ' '){
+								data[idx] = *p;
+								idx++;
+								p++;
+							}
 
-					if (*p == '\r'){
-						p = strchr(p, ':');
-						p += 2;
-					}
-				}
-/*				if (!data) {
-					errors++;
-					return false;
-				}
+							if (*p == '\r'){
+								p = strchr(p, ':');
+								p += 2;
+							}
+						}
+/*					if (!data) {
+							errors++;
+							return false;
+						}
 */
-				obfcmDataArray[idx2].value = (float)(hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
-				idx2++;
+						obfcmDataArray[idx2].value = (hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
+						idx2++;
+					}
+				}
 			}
+			else
+				return true;
 		}
 	}
-	return false;
+	return true;
 }
 
 bool COBD::isValidPID(byte pid)

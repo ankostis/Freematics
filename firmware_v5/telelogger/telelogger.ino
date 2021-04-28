@@ -583,16 +583,14 @@ void initialize()
     bool esito = false;
     char bufOBFCM[128];
     int lung;
-//    while (obfcmData[i].idx){
+    while (obfcmData[i].idx){
+      
       esito = obd.GetOBFCM(obfcmData);
-        Serial.println(obfcmData[0].value);
-        Serial.println(obfcmData[1].value);
-        Serial.println(obfcmData[2].value);
-        Serial.println(obfcmData[3].value);
+        Serial.println(obfcmData[i].value);
       i++;
   //    esito = obd.readOBFCM(obfcmData[i].pid, buf);
   //    Serial.println(buf);
-  //  }
+    }
 
 #if ENABLE_OLED
     oled.print("VIN:");
