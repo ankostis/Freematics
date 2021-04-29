@@ -37,6 +37,7 @@
 #define STATE_NET_CONNECTED 0x20
 #define STATE_WORKING 0x40
 #define STATE_STANDBY 0x100
+#define STATE_GET_VEHICLE_INFO 0x200
 
 
 DS_CAN_MSG obfcmData[]=
@@ -252,6 +253,38 @@ int handlerControl(UrlHandlerParam* param)
   Reading and processing OBD data
 *******************************************************************************/
 #if ENABLE_OBD
+
+void getVehicleInfo(CBuffer* buffer)
+{
+    
+    char vin[18] = {0};
+    char buf[128];
+    
+    if (obd.getVIN(buf, sizeof(buf))) {
+      strncpy(vin, buf, sizeof(vin) - 1);
+      // buffer->add((uint16_t) 0x902, vin);
+    }
+
+    if (obd.GetOBFCM(obfcmData)) {
+        buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
+        buffer->add((uint16_t) 0x9174, (float) obfcmData[3].value);
+
+        buffer->add((uint16_t) 0x91A2, (float) obfcmData[5].value);
+        buffer->add((uint16_t) 0x91A4, (float) obfcmData[7].value);
+        buffer->add((uint16_t) 0x91A6, (float) obfcmData[9].value);
+        
+        buffer->add((uint16_t) 0x91B2, (float) obfcmData[11].value);
+        buffer->add((uint16_t) 0x91B4, (float) obfcmData[13].value);
+
+        buffer->add((uint16_t) 0x91C2, (float) obfcmData[15].value);
+        buffer->add((uint16_t) 0x91C4, (float) obfcmData[17].value);
+        buffer->add((uint16_t) 0x91C6, (float) obfcmData[19].value);
+
+    }
+
+    state.clear(STATE_GET_VEHICLE_INFO);
+}
+
 void processOBD(CBuffer* buffer)
 {
   static int idx[2] = {0, 0};
@@ -529,7 +562,7 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init()) {
       Serial.println("OBD:OK");
-      state.set(STATE_OBD_READY);
+      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO);
 #if ENABLE_OLED
       oled.println("OBD OK");
 #endif
@@ -803,6 +836,9 @@ void process()
 #if ENABLE_OBD
   // process OBD data if connected
   if (state.check(STATE_OBD_READY)) {
+    if (state.check(STATE_GET_VEHICLE_INFO)) {
+      getVehicleInfo(buffer);
+    }
     processOBD(buffer);
     if (obd.errors >= MAX_OBD_ERRORS) {
       if (!obd.init()) {
@@ -1142,7 +1178,7 @@ void standby()
   }
 #endif
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
-  state.set(STATE_STANDBY);
+  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO);
   // this will put co-processor into sleep mode
 #if ENABLE_OLED
   oled.print("STANDBY");

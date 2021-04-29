@@ -365,8 +365,6 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
   // Write C++ code here
 	char command[128];
   char data[16];
-  char* first;
-  char second;
   byte idx = 0;
   byte idx2 = 0;
 	byte msgNr = 0;
