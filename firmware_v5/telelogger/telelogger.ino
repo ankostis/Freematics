@@ -65,6 +65,12 @@ DS_CAN_MSG obfcmData[]=
   {0}    // TAPPO
 };
 
+DS_CAN_MSG obdDataMulti[]=
+{
+  {21, MULTIPID_ENGINE_FUEL_RATE_GS,                        2, 1, 1, 0,   16, 0.02, 0},
+  {22, MULTIPID_VEHICLE_FUEL_RATE_GS,                       2, 2, 1, 16,  16, 0.02, 0},
+  {0}    // TAPPO
+};
 
 typedef struct {
   byte pid;
@@ -80,6 +86,7 @@ PID_POLLING_INFO obdData[]= {
   {PID_ENGINE_LOAD, 1},
   {PID_ENGINE_FUEL_RATE, 1},
   {PID_ENGINE_OIL_TEMP, 1},
+  {PID_HYBRID_BATTERY_PERCENTAGE, 1},
   {PID_FUEL_PRESSURE, 2},
   {PID_TIMING_ADVANCE, 2},
   {PID_COOLANT_TEMP, 3},
@@ -318,6 +325,10 @@ void processOBD(CBuffer* buffer)
     }
     if (tier > 1) break;
   }
+  char buf[64];
+  obd.readPIDMulti(obdDataMulti, buf);
+  buffer->add((uint16_t) 0x9D1, (float) obdDataMulti[0].value);
+  buffer->add((uint16_t) 0x9D2, (float) obdDataMulti[1].value);
   int kph = obdData[0].value;
   if (kph >= 1) lastMotionTime = millis();
 }

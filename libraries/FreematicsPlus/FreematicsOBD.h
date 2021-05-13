@@ -35,6 +35,8 @@ public:
 	bool readPID(byte pid, int& result);
 	// read multiple OBD-II PID values, return number of values obtained
 	byte readPID(const byte pid[], byte count, int result[]);
+	// read OBD-II multiple PID (don't confuse with array of PID)
+	bool readPIDMulti(DS_CAN_MSG* obdDataMulti, char* buffer);
 	// set device into low power mode
 	void enterLowPowerMode();
 	// wake up device from low power mode

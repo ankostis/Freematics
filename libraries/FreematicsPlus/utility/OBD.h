@@ -75,6 +75,10 @@
 #define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_RECENT								0x1C	// idx = 19
 #define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_LIFETIME							0x1C	// idx = 20
 
+#define MULTIPID_ENGINE_FUEL_RATE_GS 0x9D
+#define MULTIPID_VEHICLE_FUEL_RATE_GS 0x9D
+
+
 
 typedef struct
 {

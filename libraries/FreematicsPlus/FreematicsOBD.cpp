@@ -136,6 +136,56 @@ byte COBD::readPID(const byte pid[], byte count, int result[])
 	return results;
 }
 
+bool COBD::readPIDMulti(DS_CAN_MSG* obdDataMulti, char* buffer)
+{
+	char command[64];
+//	char buffer[64];	riabilitare quando togliamo char* buffer dai parametri di funzione
+    char data[16];
+  	byte i = 0;
+	byte bufsize;
+    byte idx = 0;
+
+	sprintf(command, "%02d%02X\r", obdDataMulti[i].service, obdDataMulti[i].pid);
+	bufsize = sizeof(buffer);
+	link->send(command);
+	idleTasks();
+	int ret = link->receive(buffer, 64, OBD_TIMEOUT_SHORT);
+	if (ret > 0 /* && !checkErrorMessage(buffer)*/) {
+	//if(link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG)){
+		int len = hex2uint8(buffer);
+		char *p = buffer;
+		if ((p = strstr(p, "41 "))) {
+			p += 3;
+			byte curpid = hex2uint8(p);
+			if (curpid == obdDataMulti[i].pid) {
+				p += 3;
+				while(obdDataMulti[i].idx){
+					idx = 0;
+					for(byte k = 0; k < (obdDataMulti[i].length / 8); k++){
+						while (*p && *p != ' '){
+							data[idx] = *p;
+							idx++;
+							p++;
+						}
+						while (*p == ' '){
+							data[idx] = *p;
+							idx++;
+							p++;
+						}
+					}
+/*					if (!data) {
+						errors++;
+						return false;
+					}
+*/					obdDataMulti[i].value = (hex2uint16(data)*obdDataMulti[i].gain + obdDataMulti[i].offset);
+					i++;
+				}
+			}
+		}
+	}
+	return true;
+}
+
 int COBD::readDTC(uint16_t codes[], byte maxCodes)
 {
 	/*
@@ -364,15 +414,15 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 {
   // Write C++ code here
 	char command[128];
-  char data[16];
-  byte idx = 0;
-  byte idx2 = 0;
+  	char data[16];
+  	byte idx = 0;
+  	byte idx2 = 0;
 	byte msgNr = 0;
 	char buffer[128];
 	byte bufsize;
 
 	while(obfcmDataArray[idx2].idx){
-		sprintf(command, "09%02X\r", obfcmDataArray[idx2].pid);
+		sprintf(command, "%02d%02X\r", obfcmDataArray[idx2].service, obfcmDataArray[idx2].pid);
 		bufsize = sizeof(buffer);
 		if (link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG))
 		{
