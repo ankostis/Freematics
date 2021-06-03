@@ -74,28 +74,27 @@ void CBuffer::add(uint16_t pid, float value)
 }
 void CBuffer::add(uint16_t pid, float value[])
 {
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 3) {
-    setType(ELEMENT_FLOATX3);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    memcpy(data + offset, value, sizeof(float) * 3);
-    offset += sizeof(float) * 3;
-    count++;
-  } else {
-    Serial.println("FULL");
+  if (pid == 0x20) {
+    if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 3) {
+        setType(ELEMENT_FLOATX3);
+        *(uint16_t*)(data + offset) = pid;
+        offset += 2;
+        memcpy(data + offset, value, sizeof(float) * 3);
+        offset += sizeof(float) * 3;
+        count++;
+    } else {
+        Serial.println("FULL");
   }
-}
-void CBuffer::add(uint16_t pid, char value[18])
-{
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(char) * 18) {
-    setType(ELEMENT_STRING);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    memcpy(data + offset, value, sizeof(char) * 18);
-    offset += sizeof(char) * 18;
-    count++;
   } else {
-    Serial.println("FULL2");
+    if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 17) {
+        setType(ELEMENT_FLOATX17);
+        *(uint16_t*)(data + offset) = pid;
+        offset += 2;
+        memcpy(data + offset, value, sizeof(float) * 17);
+        offset += sizeof(float) * 17;
+        count++;
+    } else {
+        Serial.println("FULL");
   }
 }
 
@@ -149,9 +148,9 @@ void CBuffer::serialize(CStorage& store)
         store.log(pid, value);
       }
       break;
-    case ELEMENT_STRING:
+    case ELEMENT_FLOATX17:
       {
-        char value[18];
+        float value[17];
         memcpy(value, data + of, sizeof(value));
         of += sizeof(value);
         store.log(pid, value);
