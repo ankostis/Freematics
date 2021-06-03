@@ -148,9 +148,9 @@ void CBuffer::serialize(CStorage& store)
         store.log(pid, value);
       }
       break;
-    case ELEMENT_FLOATX17:
+    case ELEMENT_INTX17:
       {
-        float value[17];
+        int value[17];
         memcpy(value, data + of, sizeof(value));
         of += sizeof(value);
         store.log(pid, value);

@@ -263,12 +263,16 @@ int handlerControl(UrlHandlerParam* param)
 void getVehicleInfo(CBuffer* buffer)
 {
 
-    char vin[18] = {0};
+    char vin_char[18];
+    int vin_num[17];
     char buf[128];
 
     if (obd.getVIN(buf, sizeof(buf))) {
-      strncpy(vin, buf, sizeof(vin) - 1);
-      // buffer->add((uint16_t) 0x902, vin);
+      strncpy(vin_char, buf, sizeof(vin_char) - 1);
+      for (i = 0; i < 18; i++) {
+        vin_num[i] = int(vin_char[i]);
+      }
+      buffer->add((uint16_t) 0x902, vin_num);
     }
 
     if (obd.GetOBFCM(obfcmData)) {

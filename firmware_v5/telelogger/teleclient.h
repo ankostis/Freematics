@@ -17,6 +17,7 @@
 #define ELEMENT_UINT 1
 #define ELEMENT_FLOAT 2
 #define ELEMENT_FLOATX3 3
+#define ELEMENT_INTX17 4
 
 class CBuffer
 {
@@ -26,6 +27,7 @@ public:
     void add(uint16_t pid, uint32_t value);
     void add(uint16_t pid, float value);
     void add(uint16_t pid, float value[]);
+    void add(uint16_t pid, int value[]);
     void purge();
     void serialize(CStorage& store);
     uint32_t timestamp;
