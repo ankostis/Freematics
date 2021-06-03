@@ -74,30 +74,30 @@ void CBuffer::add(uint16_t pid, float value)
 }
 void CBuffer::add(uint16_t pid, float value[])
 {
-  if (pid == 0x20) {
-    if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 3) {
-        setType(ELEMENT_FLOATX3);
-        *(uint16_t*)(data + offset) = pid;
-        offset += 2;
-        memcpy(data + offset, value, sizeof(float) * 3);
-        offset += sizeof(float) * 3;
-        count++;
-    } else {
-        Serial.println("FULL");
-  }
+  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 3) {
+    setType(ELEMENT_FLOATX3);
+    *(uint16_t*)(data + offset) = pid;
+    offset += 2;
+    memcpy(data + offset, value, sizeof(float) * 3);
+    offset += sizeof(float) * 3;
+    count++;
   } else {
-    if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 17) {
-        setType(ELEMENT_FLOATX17);
-        *(uint16_t*)(data + offset) = pid;
-        offset += 2;
-        memcpy(data + offset, value, sizeof(float) * 17);
-        offset += sizeof(float) * 17;
-        count++;
-    } else {
-        Serial.println("FULL");
+      Serial.println("FULL");
   }
 }
-
+void CBuffer::add(uint16_t pid, int value[])
+{
+  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 17) {
+    setType(ELEMENT_INTX17);
+    *(uint16_t*)(data + offset) = pid;
+    offset += 2;
+    memcpy(data + offset, value, sizeof(float) * 17);
+    offset += sizeof(float) * 17;
+    count++;
+  } else {
+      Serial.println("FULL");
+  }
+}
 void CBuffer::purge()
 {
   state = BUFFER_STATE_EMPTY;

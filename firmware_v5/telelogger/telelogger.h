@@ -36,7 +36,7 @@ public:
     virtual void log(uint16_t pid, int value[])
     {
         char buf[96];
-        byte len = sprintf(buf, "%X%c%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d", pid, m_delimiter, value);
+        byte len = sprintf(buf, "%X%c%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d;%d", pid, m_delimiter, value[0], value[1], value[2], value[3], value[4], value[5], value[6], value[7], value[8], value[9], value[10], value[11], value[12], value[13], value[14], value[15], value[16]);
         dispatch(buf, len);
     }
     virtual void timestamp(uint32_t ts)

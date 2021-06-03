@@ -264,12 +264,13 @@ void getVehicleInfo(CBuffer* buffer)
 {
 
     char vin_char[18];
-    int vin_num[17];
+    int vin_num[17] = {0};
     char buf[128];
+    int i;
 
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin_char, buf, sizeof(vin_char) - 1);
-      for (i = 0; i < 18; i++) {
+      for (i = 0; i < 17; i++) {
         vin_num[i] = int(vin_char[i]);
       }
       buffer->add((uint16_t) 0x902, vin_num);
