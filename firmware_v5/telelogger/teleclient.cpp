@@ -85,7 +85,7 @@ void CBuffer::add(uint16_t pid, float value[])
       Serial.println("FULL");
   }
 }
-void CBuffer::add(uint16_t pid, uint8_t value[])
+void CBuffer::add(uint16_t pid, int value[])
 {
   if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 17) {
     setType(ELEMENT_INTX17);
@@ -150,7 +150,7 @@ void CBuffer::serialize(CStorage& store)
       break;
     case ELEMENT_INTX17:
       {
-        uint8_t value[17];
+        int value[17];
         memcpy(value, data + of, sizeof(value));
         of += sizeof(value);
         store.log(pid, value);
