@@ -327,8 +327,8 @@ void processOBD(CBuffer* buffer)
   }
   char buf[64];
   obd.readPIDMulti(obdDataMulti, buf);
-  buffer->add((uint16_t) 0x9D1, (float) obdDataMulti[0].value);
-  buffer->add((uint16_t) 0x9D2, (float) obdDataMulti[1].value);
+  buffer->add((uint16_t) 0x19D1, (float) obdDataMulti[0].value);
+  buffer->add((uint16_t) 0x19D2, (float) obdDataMulti[1].value);
   int kph = obdData[0].value;
   if (kph >= 1) lastMotionTime = millis();
 }
