@@ -38,6 +38,40 @@
 #define STATE_WORKING 0x40
 #define STATE_STANDBY 0x100
 #define STATE_GET_VEHICLE_INFO 0x200
+#define STATE_GET_VEHICLE_INFO 0x200
+
+
+DS_CAN_MSG obfcmData[]=
+{
+  {1,  OBFCM_TOTAL_DISTANCE_TRAVELED_RECENT,                4, 1, 9, 0,   32, 0.1,  0},
+  {2,  OBFCM_TOTAL_DISTANCE_TRAVELED_LIFETIME,              4, 2, 9, 32,  32, 0.1,  0},
+  {3,  OBFCM_TOTAL_FUEL_TRAVELED_RECENT,                    4, 3, 9, 64,  32, 0.01, 0},
+  {4,  OBFCM_TOTAL_FUEL_TRAVELED_LIFETIME,                  4, 4, 9, 96,  32, 0.01, 0},
+  {5,  OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_RECENT,           6, 1, 9, 0,   32, 0.1,  0},
+  {6,  OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_LIFETIME,         6, 2, 9, 32,  32, 0.1,  0},
+  {7,  OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_RECENT,            6, 3, 9, 64,  32, 0.1,  0},
+  {8,  OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_LIFETIME,          6, 4, 9, 96,  32, 0.1,  0},
+  {9,  OBFCM_PEV_DIST_CHARGE_INCREASING_RECENT,             6, 5, 9, 128, 32, 0.1,  0},
+  {10, OBFCM_PEV_DIST_CHARGE_INCREASING_LIFETIME,           6, 6, 9, 160, 32, 0.1,  0},
+  {11, OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_RECENT,          4, 1, 9, 0,   32, 0.01, 0},
+  {12, OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_LIFETIME,        4, 2, 9, 32,  32, 0.01, 0},
+  {13, OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_RECENT,          4, 3, 9, 64,  32, 0.01, 0},
+  {14, OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_LIFETIME,        4, 4, 9, 96,  32, 0.01, 0},
+  {15, OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_OFF_RECENT,    6, 1, 9, 0,   32, 0.1,  0},
+  {16, OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_OFF_LIFETIME,  6, 2, 9, 32,  32, 0.1,  0},
+  {17, OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_RECENT,     6, 3, 9, 64,  32, 0.1,  0},
+  {18, OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_LIFETIME,   6, 4, 9, 96,  32, 0.1,  0},
+  {19, OBFCM_PEV_GRID_ENERGY_IN_BATTERY_RECENT,             6, 5, 9, 128, 32, 0.1,  0},
+  {20, OBFCM_PEV_GRID_ENERGY_IN_BATTERY_LIFETIME,           6, 6, 9, 160, 32, 0.1,  0},
+  {0}    // TAPPO
+};
+
+DS_CAN_MSG obdDataMulti[]=
+{
+  {21, MULTIPID_ENGINE_FUEL_RATE_GS,                        2, 1, 1, 0,   16, 0.02, 0},
+  {22, MULTIPID_VEHICLE_FUEL_RATE_GS,                       2, 2, 1, 16,  16, 0.02, 0},
+  {0}    // TAPPO
+};
 
 typedef struct {
   byte pid;
@@ -49,17 +83,11 @@ typedef struct {
 PID_POLLING_INFO obdData[]= {
   {PID_SPEED, 1},
   {PID_RPM, 1},
-  {PID_THROTTLE, 1},
   {PID_ENGINE_LOAD, 1},
   {PID_ACC_PEDAL_POS_D, 1},
-  {PID_COMMANDED_EGR, 1},
-  {PID_CONTROL_MODULE_VOLTAGE, 1},
-  {PID_ENGINE_OIL_TEMP, 1},
-  {PID_MAF_FLOW, 1},
-  {PID_AIR_FUEL_EQUIV_RATIO, 1},
-  {PID_CONTROL_MODULE_VOLTAGE, 2},
-  {PID_FUEL_PRESSURE, 2},
-  {PID_TIMING_ADVANCE, 2},
+  {PID_HYBRID_BATTERY_PERCENTAGE, 1},
+  {PID_COMMANDED_EGR, 2},
+  {PID_CONTROL_MODULE_VOLTAGE, 3},
   {PID_COOLANT_TEMP, 3},
   {PID_INTAKE_TEMP, 3},
 };
@@ -80,6 +108,7 @@ char vin[18] = {0};
 uint16_t dtc[6] = {0};
 int16_t batteryVoltage = 0;
 GPS_DATA* gd = 0;
+char obfcmTest[128] = {0};
 
 char devid[12] = {0};
 char isoTime[26] = {0};
@@ -189,6 +218,7 @@ int handlerLiveData(UrlHandlerParam* param)
     char *buf = param->pucBuffer;
     int bufsize = param->bufSize;
     int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, (float)batteryVoltage / 100);
+    int n = snprintf(buf, bufsize, "{\"obfcm\":{\"obfcm\":\"%s\",\":[", obfcmTest);
     uint32_t t = millis();
     for (int i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
         n += snprintf(buf + n, bufsize - n, "{\"pid\":%u,\"value\":%d,\"age\":%u},",
@@ -229,32 +259,38 @@ int handlerControl(UrlHandlerParam* param)
   Reading and processing OBD data
 *******************************************************************************/
 #if ENABLE_OBD
- void getVehicleInfo(CBuffer* buffer)
+
+void getVehicleInfo(CBuffer* buffer)
 {
-    
+
     char vin[18] = {0};
     char buf[128];
-    
+
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin, buf, sizeof(vin) - 1);
-      buffer->add((uint16_t) 0x902, vin);
-    } else {
-        timeoutsOBD++;
-        printTimeoutStats();
+      // buffer->add((uint16_t) 0x902, vin);
     }
 
-    /* if (1 == 1) {
-      buffer->add((uint16_t) 0x9171, (float) 1000);
-      buffer->add((uint16_t) 0x9172, (float) 1000);
-      buffer->add((uint16_t) 0x9173, (float) 100);
-      buffer->add((uint16_t) 0x9174, (float) 100);
-    } else {
-        timeoutsOBD++;
-        printTimeoutStats();
-    } */
+    if (obd.GetOBFCM(obfcmData)) {
+        buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
+        buffer->add((uint16_t) 0x9174, (float) obfcmData[3].value);
+
+        buffer->add((uint16_t) 0x91A2, (float) obfcmData[5].value);
+        buffer->add((uint16_t) 0x91A4, (float) obfcmData[7].value);
+        buffer->add((uint16_t) 0x91A6, (float) obfcmData[9].value);
+
+        buffer->add((uint16_t) 0x91B2, (float) obfcmData[11].value);
+        buffer->add((uint16_t) 0x91B4, (float) obfcmData[13].value);
+
+        buffer->add((uint16_t) 0x91C2, (float) obfcmData[15].value);
+        buffer->add((uint16_t) 0x91C4, (float) obfcmData[17].value);
+        buffer->add((uint16_t) 0x91C6, (float) obfcmData[19].value);
+
+    }
 
     state.clear(STATE_GET_VEHICLE_INFO);
 }
+
 void processOBD(CBuffer* buffer)
 {
   static int idx[2] = {0, 0};
@@ -288,6 +324,10 @@ void processOBD(CBuffer* buffer)
     }
     if (tier > 1) break;
   }
+  char buf[64];
+  obd.readPIDMulti(obdDataMulti, buf);
+  buffer->add((uint16_t) 0x19D1, (float) obdDataMulti[0].value);
+  buffer->add((uint16_t) 0x19D2, (float) obdDataMulti[1].value);
   int kph = obdData[0].value;
   if (kph >= 1) lastMotionTime = millis();
 }
@@ -579,6 +619,20 @@ void initialize()
       Serial.print("DTC:");
       Serial.println(dtcCount);
     }
+    Serial.print("OBFCM:");
+    int i = 0;
+    bool esito = false;
+    char bufOBFCM[128];
+    int lung;
+    while (obfcmData[i].idx){
+
+      esito = obd.GetOBFCM(obfcmData);
+        Serial.println(obfcmData[i].value);
+      i++;
+  //    esito = obd.readOBFCM(obfcmData[i].pid, buf);
+  //    Serial.println(buf);
+    }
+
 #if ENABLE_OLED
     oled.print("VIN:");
     oled.println(vin);
@@ -1172,7 +1226,7 @@ void standby()
     }
 
     if (v*v_old < 0.1) continue;
-    
+
     delay(880);
     t_old = t;
     v_old = v;
