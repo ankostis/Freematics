@@ -290,7 +290,7 @@ void getVehicleInfo(CBuffer* buffer)
 
     }
 
-    // state.clear(STATE_GET_VEHICLE_INFO);
+    state.clear(STATE_GET_VEHICLE_INFO);
 }
 
 void processOBD(CBuffer* buffer)
