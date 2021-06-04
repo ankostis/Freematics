@@ -90,7 +90,7 @@
 // expected maximum server sync signal interval
 #define SERVER_SYNC_INTERVAL 120 /* seconds, 0 to disable */
 // data interval settings
-#define STATIONARY_TIME_TABLE {30, 60, 180} /* seconds */
+#define STATIONARY_TIME_TABLE {20, 40, 60} /* seconds */
 #define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
 #define PING_BACK_INTERVAL 900 /* seconds */
 
@@ -141,6 +141,6 @@
 #define PIN_SENSOR1 34
 #define PIN_SENSOR2 26
 
-#define COOLING_DOWN_TEMP 65 /* celsius degrees */
+#define COOLING_DOWN_TEMP 75 /* celsius degrees */
 
 #endif // CONFIG_H_INCLUDED

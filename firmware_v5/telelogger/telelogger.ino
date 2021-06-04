@@ -63,14 +63,14 @@ DS_CAN_MSG obfcmData[]=
   {18, OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_LIFETIME,   6, 4, 9, 96,  32, 0.1,  0},
   {19, OBFCM_PEV_GRID_ENERGY_IN_BATTERY_RECENT,             6, 5, 9, 128, 32, 0.1,  0},
   {20, OBFCM_PEV_GRID_ENERGY_IN_BATTERY_LIFETIME,           6, 6, 9, 160, 32, 0.1,  0},
-  {0}    // TAPPO
+  {0}
 };
 
 DS_CAN_MSG obdDataMulti[]=
 {
   {21, MULTIPID_ENGINE_FUEL_RATE_GS,                        2, 1, 1, 0,   16, 0.02, 0},
   {22, MULTIPID_VEHICLE_FUEL_RATE_GS,                       2, 2, 1, 16,  16, 0.02, 0},
-  {0}    // TAPPO
+  {0}
 };
 
 typedef struct {
@@ -85,11 +85,8 @@ PID_POLLING_INFO obdData[]= {
   {PID_RPM, 1},
   {PID_ENGINE_LOAD, 1},
   {PID_ACC_PEDAL_POS_D, 1},
-  {PID_HYBRID_BATTERY_PERCENTAGE, 1},
-  {PID_COMMANDED_EGR, 2},
-  {PID_CONTROL_MODULE_VOLTAGE, 3},
   {PID_COOLANT_TEMP, 3},
-  {PID_INTAKE_TEMP, 3},
+  {PID_AMBIENT_TEMP, 3}
 };
 
 CBufferManager bufman;
@@ -1174,7 +1171,7 @@ void telemetry(void* inst)
       if (deviceTemp >= COOLING_DOWN_TEMP) {
         // device too hot, cool down by pause transmission
         Serial.println("Overheat");
-        delay(10000);
+        delay(5000);
         bufman.purge();
       }
 
