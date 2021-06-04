@@ -267,14 +267,14 @@ void getVehicleInfo(CBuffer* buffer)
     int vin_num[17] = {0};
     char buf[128];
     int i;
-
+    /*
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin_char, buf, sizeof(vin_char) - 1);
       for (i = 0; i < 17; i++) {
         vin_num[i] = int(vin_char[i]);
       }
       buffer->add((uint16_t) 0x902, vin_num);
-    }
+    }*/
 
     if (obd.GetOBFCM(obfcmData)) {
         buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
@@ -293,7 +293,7 @@ void getVehicleInfo(CBuffer* buffer)
 
     }
 
-    state.clear(STATE_GET_VEHICLE_INFO);
+    // state.clear(STATE_GET_VEHICLE_INFO);
 }
 
 void processOBD(CBuffer* buffer)

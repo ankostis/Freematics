@@ -87,12 +87,12 @@ void CBuffer::add(uint16_t pid, float value[])
 }
 void CBuffer::add(uint16_t pid, int value[])
 {
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 17) {
+  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(int) * 17) {
     setType(ELEMENT_INTX17);
     *(uint16_t*)(data + offset) = pid;
     offset += 2;
-    memcpy(data + offset, value, sizeof(float) * 17);
-    offset += sizeof(float) * 17;
+    memcpy(data + offset, value, sizeof(int) * 17);
+    offset += sizeof(int) * 17;
     count++;
   } else {
       Serial.println("FULL");
