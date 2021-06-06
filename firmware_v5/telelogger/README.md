@@ -8,8 +8,7 @@ The sketch collects following data.
 * Vehicle OBD-II PIDs data (from OBD port)
 * Battery voltage (from OBD port)
 * Geolocation data (from cellular module's internal GNSS or external GNSS receiver)
-* Acceleration data (from built-in MEMS sensor)
-* Orientation data (computed from motion sensor data)
+* Acceleration and gyroscope data (from internal MEMS sensor)
 * Device temperature (from MEMS sensor or ESP32 built-in sensor)
 
 Data Transmissions
@@ -23,7 +22,13 @@ Data transmission over UDP and HTTP protocols are implemented with following har
 * 3G WCDMA (SIM5360)
 * 4G LTE (SIM7600)
 
-UDP mode implements a client for [Freematics Hub](https://freematics.com/hub/). HTTP mode implements a client for [Traccar](https://www.traccar.org) under [OsmAnd](https://www.traccar.org/osmand/) protocol.
+There two ways of sending data:
+
+1. UDP mode implements a full telemetry client for [Freematics Hub](https://freematics.com/hub/)
+   and [Traccar](https://www.traccar.org) (sends more data, [protocol's API](https://freematics.com/pages/hub/api/), uses 5170 port).
+2. HTTP/HTTPS mode implements a `osmand` protocol client for Traccar
+   (sends only location data, [protocol's API](https://www.traccar.org/osmand/),
+   uses 5055 port)
 
 Data Storage
 ------------
