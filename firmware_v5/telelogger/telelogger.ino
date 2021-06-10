@@ -616,16 +616,10 @@ void initialize()
     }
     Serial.print("OBFCM:");
     int i = 0;
-    bool esito = false;
-    char bufOBFCM[128];
-    int lung;
+    obd.GetOBFCM(obfcmData);
     while (obfcmData[i].idx){
-
-      esito = obd.GetOBFCM(obfcmData);
-        Serial.println(obfcmData[i].value);
+      Serial.println(obfcmData[i].value);
       i++;
-  //    esito = obd.readOBFCM(obfcmData[i].pid, buf);
-  //    Serial.println(buf);
     }
 
 #if ENABLE_OLED
