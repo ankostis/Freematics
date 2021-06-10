@@ -39,10 +39,10 @@
 #define STATE_STANDBY 0x100
 #define STATE_GET_VEHICLE_INFO 0x200
 #define STATE_GET_VIN 0x400
-#define STATE_GET_ITID17 0x800
-#define STATE_GET_ITID1A 0x1000
-#define STATE_GET_ITID1B 0x2000
-#define STATE_GET_ITID1C 0x4000
+#define STATE_SEND_ITID17 0x800
+#define STATE_SEND_ITID1A 0x1000
+#define STATE_SEND_ITID1B 0x2000
+#define STATE_SEND_ITID1C 0x4000
 
 
 DS_CAN_MSG obfcmData[]=
@@ -88,6 +88,7 @@ PID_POLLING_INFO obdData[]= {
   {PID_SPEED, 1},
   {PID_RPM, 1},
   {PID_ENGINE_LOAD, 1},
+  {PID_ENGINE_FUEL_RATE, 1},
   {PID_ACC_PEDAL_POS_D, 1},
   {PID_HYBRID_BATTERY_PERCENTAGE, 1},
   {PID_COOLANT_TEMP, 3},
@@ -120,6 +121,7 @@ uint32_t lastMotionTime = 0;
 uint32_t timeoutsOBD = 0;
 uint32_t timeoutsNet = 0;
 uint32_t lastStatsTime = 0;
+uint32_t lastObfcmTime = 0;
 
 int32_t syncInterval = SERVER_SYNC_INTERVAL * 1000;
 int32_t dataInterval = 1000;
@@ -262,11 +264,10 @@ int handlerControl(UrlHandlerParam* param)
 *******************************************************************************/
 #if ENABLE_OBD
 
-void getVehicleInfo(CBuffer* buffer)
-{
-  if (state.check(STATE_GET_ITID17)) {
-    obd.GetOBFCM(obfcmData);
-  }
+void getVehicleInfo(CBuffer* buffer) {
+
+  Serial.print("Getting vehicle info.");
+  obd.GetOBFCM(obfcmData);
 
   // if (state.check(STATE_GET_VIN)) {
     /*
@@ -283,33 +284,6 @@ void getVehicleInfo(CBuffer* buffer)
     buffer->add((uint16_t) 0x902, vin_num);
   }*/
   //}
-
-  if (state.check(STATE_GET_ITID17)) {
-    buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
-    buffer->add((uint16_t) 0x9174, (float) obfcmData[3].value);
-    state.clear(STATE_GET_ITID17);
-  } else {
-    if (state.check(STATE_GET_ITID1A)) {
-      buffer->add((uint16_t) 0x91A2, (float) obfcmData[5].value);
-      buffer->add((uint16_t) 0x91A4, (float) obfcmData[7].value);
-      buffer->add((uint16_t) 0x91A6, (float) obfcmData[9].value);
-      state.clear(STATE_GET_ITID1A);
-    } else {
-      if (state.check(STATE_GET_ITID1B)) {
-        buffer->add((uint16_t) 0x91B2, (float) obfcmData[11].value);
-        buffer->add((uint16_t) 0x91B4, (float) obfcmData[13].value);
-        state.clear(STATE_GET_ITID1B);
-      } else {
-        if (state.check(STATE_GET_ITID1C)) {
-          buffer->add((uint16_t) 0x91C2, (float) obfcmData[15].value);
-          buffer->add((uint16_t) 0x91C4, (float) obfcmData[17].value);
-          buffer->add((uint16_t) 0x91C6, (float) obfcmData[19].value);
-          state.clear(STATE_GET_ITID1C);
-          state.clear(STATE_GET_VEHICLE_INFO);
-        }
-      }
-    }
-  }
 }
 
 void processOBD(CBuffer* buffer)
@@ -592,7 +566,7 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init()) {
       Serial.println("OBD:OK");
-      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO | STATE_GET_ITID17 | STATE_GET_ITID1A | STATE_GET_ITID1B | STATE_GET_ITID1C);
+      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO);
 #if ENABLE_OLED
       oled.println("OBD OK");
 #endif
@@ -853,7 +827,6 @@ bool waitMotion(long timeout)
 void process()
 {
   uint32_t startTime = millis();
-  uint32_t lastOBFCM = 0;
 
   CBuffer* buffer = bufman.get();
   if (!buffer) {
@@ -872,13 +845,41 @@ void process()
     processOBD(buffer);
 
     if (state.check(STATE_GET_VEHICLE_INFO)) {
-      Serial.print("Getting vehicle info.");
+      lastObfcmTime = millis();
       getVehicleInfo(buffer);
-      lastOBFCM = startTime;
+      state.clear(STATE_GET_VEHICLE_INFO);
+      state.set(STATE_SEND_ITID17 | STATE_SEND_ITID1A | STATE_SEND_ITID1B | STATE_SEND_ITID1C);
     }
 
-    if (millis() - lastOBFCM > 120000) {
-      state.set(STATE_GET_VEHICLE_INFO | STATE_GET_ITID17 | STATE_GET_ITID1A | STATE_GET_ITID1B | STATE_GET_ITID1C);
+    if (state.check(STATE_SEND_ITID17)) {
+      buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
+      buffer->add((uint16_t) 0x9174, (float) obfcmData[3].value);
+      state.clear(STATE_SEND_ITID17);
+    } else {
+      if (state.check(STATE_SEND_ITID1A)) {
+        buffer->add((uint16_t) 0x91A2, (float) obfcmData[5].value);
+        buffer->add((uint16_t) 0x91A4, (float) obfcmData[7].value);
+        buffer->add((uint16_t) 0x91A6, (float) obfcmData[9].value);
+        state.clear(STATE_SEND_ITID1A);
+      } else {
+        if (state.check(STATE_SEND_ITID1B)) {
+          buffer->add((uint16_t) 0x91B2, (float) obfcmData[11].value);
+          buffer->add((uint16_t) 0x91B4, (float) obfcmData[13].value);
+          state.clear(STATE_SEND_ITID1B);
+        } else {
+          if (state.check(STATE_SEND_ITID1C)) {
+            buffer->add((uint16_t) 0x91C2, (float) obfcmData[15].value);
+            buffer->add((uint16_t) 0x91C4, (float) obfcmData[17].value);
+            buffer->add((uint16_t) 0x91C6, (float) obfcmData[19].value);
+            state.clear(STATE_SEND_ITID1C);
+          }
+        }
+      }
+    }
+
+    if (millis() - lastObfcmTime > 120000) {
+      Serial.print("Two minutes since last OBFCM.");
+      state.set(STATE_GET_VEHICLE_INFO);
     }
 
     if (obd.errors >= MAX_OBD_ERRORS) {
@@ -1219,7 +1220,7 @@ void standby()
   }
 #endif
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
-  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO | STATE_GET_ITID17 | STATE_GET_ITID1A | STATE_GET_ITID1B | STATE_GET_ITID1C);
+  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO);
   // this will put co-processor into sleep mode
 #if ENABLE_OLED
   oled.print("STANDBY");
