@@ -141,6 +141,6 @@
 #define PIN_SENSOR1 34
 #define PIN_SENSOR2 26
 
-#define COOLING_DOWN_TEMP 75 /* celsius degrees */
+#define COOLING_DOWN_TEMP 80 /* celsius degrees */
 
 #endif // CONFIG_H_INCLUDED

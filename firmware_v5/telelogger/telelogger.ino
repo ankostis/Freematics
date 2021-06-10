@@ -374,8 +374,8 @@ bool processGPS(CBuffer* buffer)
       buffer->add(PID_GPS_LONGITUDE, gd->lng);
       buffer->add(PID_GPS_ALTITUDE, gd->alt); /* m */
       buffer->add(PID_GPS_SPEED, kph);
-      buffer->add(PID_GPS_HEADING, gd->heading);
-      buffer->add(PID_GPS_SAT_COUNT, gd->sat);
+      // buffer->add(PID_GPS_HEADING, gd->heading);
+      // buffer->add(PID_GPS_SAT_COUNT, gd->sat);
       buffer->add(PID_GPS_HDOP, gd->hdop);
     }
   }
@@ -450,7 +450,7 @@ void processMEMS(CBuffer* buffer)
       value[0] = accSum[0] / accCount - accBias[0];
       value[1] = accSum[1] / accCount - accBias[1];
       value[2] = accSum[2] / accCount - accBias[2];
-      buffer->add(PID_ACC, value);
+      // buffer->add(PID_ACC, value);
 #if ENABLE_ORIENTATION
       value[0] = ori.yaw;
       value[1] = ori.pitch;
