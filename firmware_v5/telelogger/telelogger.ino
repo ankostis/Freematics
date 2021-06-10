@@ -321,8 +321,8 @@ void processOBD(CBuffer* buffer)
   }
   char buf[64];
   obd.readPIDMulti(obdDataMulti, buf);
-  buffer->add((uint16_t) 0x19D1, (float) obdDataMulti[0].value);
-  buffer->add((uint16_t) 0x19D2, (float) obdDataMulti[1].value);
+  buffer->add((uint16_t) 0x19D1, (int) obdDataMulti[0].value);
+  buffer->add((uint16_t) 0x19D2, (int) obdDataMulti[1].value);
   int kph = obdData[0].value;
   if (kph >= 1) lastMotionTime = millis();
 }
@@ -846,25 +846,25 @@ void process()
     }
 
     if (state.check(STATE_SEND_ITID17)) {
-      buffer->add((uint16_t) 0x9172, (float) obfcmData[1].value);
-      buffer->add((uint16_t) 0x9174, (float) obfcmData[3].value);
+      buffer->add((uint16_t) 0x9172, (int) obfcmData[1].value);
+      buffer->add((uint16_t) 0x9174, (int) obfcmData[3].value);
       state.clear(STATE_SEND_ITID17);
     } else {
       if (state.check(STATE_SEND_ITID1A)) {
-        buffer->add((uint16_t) 0x91A2, (float) obfcmData[5].value);
-        buffer->add((uint16_t) 0x91A4, (float) obfcmData[7].value);
-        buffer->add((uint16_t) 0x91A6, (float) obfcmData[9].value);
+        buffer->add((uint16_t) 0x91A2, (int) obfcmData[5].value);
+        buffer->add((uint16_t) 0x91A4, (int) obfcmData[7].value);
+        buffer->add((uint16_t) 0x91A6, (int) obfcmData[9].value);
         state.clear(STATE_SEND_ITID1A);
       } else {
         if (state.check(STATE_SEND_ITID1B)) {
-          buffer->add((uint16_t) 0x91B2, (float) obfcmData[11].value);
-          buffer->add((uint16_t) 0x91B4, (float) obfcmData[13].value);
+          buffer->add((uint16_t) 0x91B2, (int) obfcmData[11].value);
+          buffer->add((uint16_t) 0x91B4, (int) obfcmData[13].value);
           state.clear(STATE_SEND_ITID1B);
         } else {
           if (state.check(STATE_SEND_ITID1C)) {
-            buffer->add((uint16_t) 0x91C2, (float) obfcmData[15].value);
-            buffer->add((uint16_t) 0x91C4, (float) obfcmData[17].value);
-            buffer->add((uint16_t) 0x91C6, (float) obfcmData[19].value);
+            buffer->add((uint16_t) 0x91C2, (int) obfcmData[15].value);
+            buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
+            buffer->add((uint16_t) 0x91C6, (int) obfcmData[19].value);
             state.clear(STATE_SEND_ITID1C);
           }
         }

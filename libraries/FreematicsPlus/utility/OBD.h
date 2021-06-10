@@ -52,48 +52,45 @@
 #define PID_ENGINE_REF_TORQUE 0x63
 
 // Mode 9 PIDs
-#define OBFCM_MAX_CHANNELS																		6			// PID 0x1A, 0x1C
-#define OBFCM_TOTAL_DISTANCE_TRAVELED_RECENT 									0x17	// idx = 1
-#define OBFCM_TOTAL_DISTANCE_TRAVELED_LIFETIME 								0x17	// idx = 2
-#define OBFCM_TOTAL_FUEL_TRAVELED_RECENT											0x17	// idx = 3
-#define OBFCM_TOTAL_FUEL_TRAVELED_LIFETIME										0x17	// idx = 4
-#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_RECENT							0x1A	// idx = 5
-#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_LIFETIME						0x1A	// idx = 6
-#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_RECENT							0x1A	// idx = 7
-#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_LIFETIME						0x1A	// idx = 8
-#define OBFCM_PEV_DIST_CHARGE_INCREASING_RECENT								0x1A	// idx = 9
-#define OBFCM_PEV_DIST_CHARGE_INCREASING_LIFETIME							0x1A	// idx = 10
-#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_RECENT						0x1B	// idx = 11
-#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_LIFETIME					0x1B	// idx = 12
-#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_RECENT						0x1B	// idx = 13
-#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_LIFETIME					0x1B	// idx = 14
-#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_OFF_RECENT			0x1C	// idx = 15
+#define OBFCM_MAX_CHANNELS      								6		// PID 0x1A, 0x1C
+#define OBFCM_TOTAL_DISTANCE_TRAVELED_RECENT                    0x17	// idx = 1
+#define OBFCM_TOTAL_DISTANCE_TRAVELED_LIFETIME                  0x17	// idx = 2
+#define OBFCM_TOTAL_FUEL_TRAVELED_RECENT                        0x17	// idx = 3
+#define OBFCM_TOTAL_FUEL_TRAVELED_LIFETIME                      0x17	// idx = 4
+#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_RECENT               0x1A	// idx = 5
+#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_OFF_LIFETIME             0x1A	// idx = 6
+#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_RECENT                0x1A	// idx = 7
+#define OBFCM_PEV_DIST_CHARGE_DEPL_ENG_ON_LIFETIME              0x1A	// idx = 8
+#define OBFCM_PEV_DIST_CHARGE_INCREASING_RECENT                 0x1A	// idx = 9
+#define OBFCM_PEV_DIST_CHARGE_INCREASING_LIFETIME               0x1A	// idx = 10
+#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_RECENT              0x1B	// idx = 11
+#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_DEPL_LIFETIME            0x1B	// idx = 12
+#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_RECENT              0x1B	// idx = 13
+#define OBFCM_PEV_FUEL_CONSUMED_CHARGE_INCR_LIFETIME            0x1B	// idx = 14
+#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_OFF_RECENT        0x1C	// idx = 15
 #define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_OFF_LIFETIME		0x1C	// idx = 16
-#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_RECENT				0x1C	// idx = 17
-#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_LIFETIME			0x1C	// idx = 18
-#define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_RECENT								0x1C	// idx = 19
-#define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_LIFETIME							0x1C	// idx = 20
+#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_RECENT		    0x1C	// idx = 17
+#define OBFCM_PEV_GRID_ENERGY_CHARGE_DEPL_ENG_ON_LIFETIME	    0x1C	// idx = 18
+#define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_RECENT				    0x1C	// idx = 19
+#define OBFCM_PEV_GRID_ENERGY_IN_BATTERY_LIFETIME			    0x1C	// idx = 20
 
 #define MULTIPID_ENGINE_FUEL_RATE_GS 0x9D
 #define MULTIPID_VEHICLE_FUEL_RATE_GS 0x9D
 
-
-
 typedef struct
 {
-	byte		idx;						// idx che identifica il PID nella struttura dati
-	byte		pid;						// PID: Parameter ID per OBD
-	byte		nrOfChForMsg;		// numero di canali che compongono il messaggio, ovvero lo stesso PID
-	byte		curMsg;					// canale corrente (da 1 a NrOfChForMsg)
-	byte		service;				// standard diagnostic service: 0x01..0x0A; oppure custom service: 0x22
-	byte		startBit;				// bit inizio messaggio
-	byte		length;					// lunghezza in bit
-	float			gain;					  // fattore moltiplicativo della funzione di trasferimento
-	float			offset;					// fattore additivo della funzione di trasferimento
-	float			value;					// valore ingegnerizzato
+	byte		idx;					// idx identifying the parameter in the data structure
+	byte		pid;					// PID: OBD Parameter ID (PID) or InfoType ID (ITID)
+	byte		nrOfChForMsg;		    // number of channels in message
+	byte		curMsg;					// current channel
+	byte		service;				// standard diagnostics service: 0x01..0x0A; or custom service: 0x22
+	byte		startBit;				// start bit position where the channel is found
+	byte		length;					// lenght of the information in bits
+	float		gain;                   // engineering scale factor
+	float		offset;				    // engineering offset 
+	int		    value;			        // engineered value
 }
 DS_CAN_MSG;
-
 
 typedef enum {
     PROTO_AUTO = 0x0,

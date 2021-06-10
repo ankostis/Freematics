@@ -234,16 +234,16 @@ int COBD::normalizeData(byte pid, char* data)
 	switch (pid) {
 	case PID_RPM:
 	case PID_EVAP_SYS_VAPOR_PRESSURE: // kPa
-		result = getLargeValue(data) >> 2;
+		result = getLargeValue(data); //getLargeValue(data) >> 2;
 		break;
 	case PID_FUEL_PRESSURE: // kPa
-		result = getSmallValue(data) * 3;
+		result = getSmallValue(data); //getSmallValue(data) * 3;
 		break;
 	case PID_COOLANT_TEMP:
 	case PID_INTAKE_TEMP:
 	case PID_AMBIENT_TEMP:
 	case PID_ENGINE_OIL_TEMP:
-		result = getTemperatureValue(data);
+		result = getSmallValue(data); //getTemperatureValue(data);
 		break;
 	case PID_THROTTLE:
 	case PID_COMMANDED_EGR:
@@ -260,13 +260,13 @@ int COBD::normalizeData(byte pid, char* data)
 	case PID_ABSOLUTE_ENGINE_LOAD:
 	case PID_ETHANOL_FUEL:
 	case PID_HYBRID_BATTERY_PERCENTAGE:
-		result = getPercentageValue(data);
+		result = getSmallValue(data); //getPercentageValue(data);
 		break;
 	case PID_MAF_FLOW: // grams/sec
-		result = getLargeValue(data) / 100;
+		result = getLargeValue(data); //getLargeValue(data) / 100;
 		break;
 	case PID_TIMING_ADVANCE:
-		result = (int)(getSmallValue(data) / 2) - 64;
+		result = getSmallValue(data); //(int)(getSmallValue(data) / 2) - 64;
 		break;
 	case PID_DISTANCE: // km
 	case PID_DISTANCE_WITH_MIL: // km
@@ -278,47 +278,35 @@ int COBD::normalizeData(byte pid, char* data)
 		result = getLargeValue(data);
 		break;
 	case PID_CONTROL_MODULE_VOLTAGE: // V
-		result = getLargeValue(data) / 1000;
+		result = getLargeValue(data); //getLargeValue(data) / 1000;
 		break;
 	case PID_ENGINE_FUEL_RATE: // L/h
-		result = getLargeValue(data) / 20;
+		result = getLargeValue(data); //getLargeValue(data) / 20;
 		break;
 	case PID_ENGINE_TORQUE_DEMANDED: // %
 	case PID_ENGINE_TORQUE_PERCENTAGE: // %
-		result = (int)getSmallValue(data) - 125;
+		result = getSmallValue(data); //(int)getSmallValue(data) - 125;
 		break;
 	case PID_SHORT_TERM_FUEL_TRIM_1:
 	case PID_LONG_TERM_FUEL_TRIM_1:
 	case PID_SHORT_TERM_FUEL_TRIM_2:
 	case PID_LONG_TERM_FUEL_TRIM_2:
 	case PID_EGR_ERROR:
-		result = ((int)getSmallValue(data) - 128) * 100 / 128;
+		result = getSmallValue(data); //((int)getSmallValue(data) - 128) * 100 / 128;
 		break;
 	case PID_FUEL_INJECTION_TIMING:
-		result = ((int32_t)getLargeValue(data) - 26880) / 128;
+		result = getLargeValue(data); //((int32_t)getLargeValue(data) - 26880) / 128;
 		break;
 	case PID_CATALYST_TEMP_B1S1:
 	case PID_CATALYST_TEMP_B2S1:
 	case PID_CATALYST_TEMP_B1S2:
 	case PID_CATALYST_TEMP_B2S2:
-		result = getLargeValue(data) / 10 - 40;
+		result = getLargeValue(data); //getLargeValue(data) / 10 - 40;
 		break;
 	case PID_AIR_FUEL_EQUIV_RATIO: // 0~200
-		result = (long)getLargeValue(data) * 200 / 65536;
+		result = getLargeValue(data); //(long)getLargeValue(data) * 200 / 65536;
 		break;
-/*	case PID_VEHICLE_OP_DATA_DIST_FUEL:
-		result = (long)getLargeValue(data);
-		break;
-	case PID_PLUG_IN_HYBRID_VEHICLE_DIST_DATA:
-	result = (long)getLargeValue(data);
-		break;
-	case PID_PLUG_IN_HYBRID_VEHICLE_FUEL_DATA:
-	result = (long)getLargeValue(data);
-		break;
-	case PID_PLUG_IN_HYBRID_VEHICLE_GRID_DATA:
-	result = (long)getLargeValue(data);
-		break;
-*/	default:
+	default:
 		result = getSmallValue(data);
 	}
 	return result;
@@ -457,7 +445,7 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 							return false;
 						}
 */
-						obfcmDataArray[idx2].value = (hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
+						obfcmDataArray[idx2].value = hex2uint32(data); //(hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
 						idx2++;
 					}
 				}
