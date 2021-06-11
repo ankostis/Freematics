@@ -177,7 +177,7 @@ bool COBD::readPIDMulti(DS_CAN_MSG* obdDataMulti, char* buffer)
 						errors++;
 						return false;
 					}
-*/					obdDataMulti[i].value = (hex2uint16(data)*obdDataMulti[i].gain + obdDataMulti[i].offset);
+*/					obdDataMulti[i].value = hex2uint16(data);//(hex2uint16(data)*obdDataMulti[i].gain + obdDataMulti[i].offset);
 					i++;
 				}
 			}
