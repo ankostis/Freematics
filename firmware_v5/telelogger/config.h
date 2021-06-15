@@ -125,7 +125,7 @@
 **************************************/
 #define RESET_AFTER_WAKEUP 0
 // motion threshold for waking up
-#define MOTION_THRESHOLD 0.3f /* moving vehicle motion threshold in G */
+#define MOTION_THRESHOLD 0.4f /* moving vehicle motion threshold in G */
 // engine jumpstart voltage
 #define THR_VOLTAGE 13.6 /* V */
 // engine jumpstart voltage gradient
