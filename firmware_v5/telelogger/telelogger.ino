@@ -43,7 +43,26 @@
 #define STATE_SEND_ITID1A 0x1000
 #define STATE_SEND_ITID1B 0x2000
 #define STATE_SEND_ITID1C 0x4000
+#define STATE_SEND_VIN_1 0x8000
+#define STATE_SEND_VIN_2 0x10000
+#define STATE_SEND_VIN_3 0x20000
+#define STATE_SEND_VIN_4 0x40000
+#define STATE_SEND_VIN_5 0x80000
 
+uint32_t vin_array[6] = {0, 0, 0, 0, 0};
+
+int vin_substring_numeric(char (&substring)[5])
+{
+  uint32_t substring_numeric = 0;
+  int cnt = 0;
+  for(char c : substring) {  
+    if (c) {
+    substring_numeric += (int) c << (3 - cnt)*8;
+    }
+    cnt++;
+  }
+  return substring_numeric;
+}
 
 DS_CAN_MSG obfcmData[]=
 {
@@ -145,10 +164,10 @@ bool processGPS(CBuffer* buffer);
 
 class State {
 public:
-  bool check(uint16_t flags) { return (m_state & flags) == flags; }
-  void set(uint16_t flags) { m_state |= flags; }
-  void clear(uint16_t flags) { m_state &= ~flags; }
-  uint16_t m_state = 0;
+  bool check(uint32_t flags) { return (m_state & flags) == flags; }
+  void set(uint32_t flags) { m_state |= flags; }
+  void clear(uint32_t flags) { m_state &= ~flags; }
+  uint32_t m_state = 0;
 };
 
 FreematicsESP32 sys;
@@ -266,24 +285,39 @@ int handlerControl(UrlHandlerParam* param)
 
 void getVehicleInfo(CBuffer* buffer) {
 
-  Serial.print("Getting vehicle info.");
+  Serial.println("Getting vehicle info.");
   obd.GetOBFCM(obfcmData);
 
-  // if (state.check(STATE_GET_VIN)) {
-    /*
-  char vin_char[18];
-  int vin_num[17] = {0};
-  char buf[128];
-  int i;
+  if (state.check(STATE_GET_VIN)) {
+    Serial.println("Getting VIN.");
+    char buf[128];
+    char vin_char[21] = {0};
   
-  if (obd.getVIN(buf, sizeof(buf))) {
-    strncpy(vin_char, buf, sizeof(vin_char) - 1);
-    for (i = 0; i < 17; i++) {
-      vin_num[i] = int(vin_char[i]);
+    if (obd.getVIN(buf, sizeof(buf))) {
+      strncpy(vin_char, buf, sizeof(vin_char) - 1);
     }
-    buffer->add((uint16_t) 0x902, vin_num);
-  }*/
-  //}
+
+    char vin_1[5] = {0};
+    char vin_2[5] = {0};
+    char vin_3[5] = {0};
+    char vin_4[5] = {0};
+    char vin_5[5] = {0};
+
+    strncpy(vin_1, vin_char, 4);
+    strncpy(vin_2, vin_char+4, 4);
+    strncpy(vin_3, vin_char+8, 4);
+    strncpy(vin_4, vin_char+12, 4);
+    strncpy(vin_5, vin_char+16, 4);
+
+    vin_array[0] = vin_substring_numeric(vin_1);
+    vin_array[1] = vin_substring_numeric(vin_2);
+    vin_array[2] = vin_substring_numeric(vin_3);
+    vin_array[3] = vin_substring_numeric(vin_4);
+    vin_array[4] = vin_substring_numeric(vin_5);
+
+    state.clear(STATE_GET_VIN);
+
+  }
 }
 
 void processOBD(CBuffer* buffer)
@@ -566,7 +600,7 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init()) {
       Serial.println("OBD:OK");
-      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO);
+      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO | STATE_GET_VIN);
 #if ENABLE_OLED
       oled.println("OBD OK");
 #endif
@@ -614,7 +648,7 @@ void initialize()
       Serial.print("DTC:");
       Serial.println(dtcCount);
     }
-    Serial.print("OBFCM:");
+    Serial.println("OBFCM:");
     int i = 0;
     obd.GetOBFCM(obfcmData);
     while (obfcmData[i].idx){
@@ -843,6 +877,7 @@ void process()
       getVehicleInfo(buffer);
       state.clear(STATE_GET_VEHICLE_INFO);
       state.set(STATE_SEND_ITID17 | STATE_SEND_ITID1A | STATE_SEND_ITID1B | STATE_SEND_ITID1C);
+      state.set(STATE_SEND_VIN_1 | STATE_SEND_VIN_2 | STATE_SEND_VIN_3 | STATE_SEND_VIN_4 | STATE_SEND_VIN_5);
     }
 
     if (state.check(STATE_SEND_ITID17)) {
@@ -866,6 +901,31 @@ void process()
             buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
             buffer->add((uint16_t) 0x91C6, (int) obfcmData[19].value);
             state.clear(STATE_SEND_ITID1C);
+          } else {
+            if (state.check(STATE_SEND_VIN_1)) {
+              buffer->add((uint16_t) 0x9021, (uint32_t) vin_array[0]);
+              state.clear(STATE_SEND_VIN_1);
+            } else {
+              if (state.check(STATE_SEND_VIN_2)) {
+                buffer->add((uint16_t) 0x9022, (uint32_t) vin_array[1]);
+                state.clear(STATE_SEND_VIN_2);
+              } else {
+                if (state.check(STATE_SEND_VIN_3)) {
+                  buffer->add((uint16_t) 0x9023, (uint32_t) vin_array[2]);
+                  state.clear(STATE_SEND_VIN_3);
+                } else {
+                  if (state.check(STATE_SEND_VIN_4)) {
+                    buffer->add((uint16_t) 0x9024, (uint32_t) vin_array[3]);
+                    state.clear(STATE_SEND_VIN_4);
+                  } else {
+                    if (state.check(STATE_SEND_VIN_5)) {
+                      buffer->add((uint16_t) 0x9025, (uint32_t) vin_array[4]);
+                      state.clear(STATE_SEND_VIN_5);
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -1214,7 +1274,7 @@ void standby()
   }
 #endif
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
-  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO);
+  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO | STATE_GET_VIN);
   // this will put co-processor into sleep mode
 #if ENABLE_OLED
   oled.print("STANDBY");
