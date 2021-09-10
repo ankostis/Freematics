@@ -409,7 +409,7 @@ bool processGPS(CBuffer* buffer)
       buffer->add(PID_GPS_ALTITUDE, gd->alt); /* m */
       buffer->add(PID_GPS_SPEED, kph);
       // buffer->add(PID_GPS_HEADING, gd->heading);
-      // buffer->add(PID_GPS_SAT_COUNT, gd->sat);
+      buffer->add(PID_GPS_SAT_COUNT, gd->sat);
       buffer->add(PID_GPS_HDOP, gd->hdop);
     }
   }
