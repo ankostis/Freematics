@@ -36,7 +36,7 @@ public:
 	// read multiple OBD-II PID values, return number of values obtained
 	byte readPID(const byte pid[], byte count, int result[]);
 	// read OBD-II multiple PID (don't confuse with array of PID)
-	bool readPIDMulti(DS_CAN_MSG* obdDataMulti, char* buffer);
+	bool readPIDMulti(DS_CAN_MSG* obdDataMulti);
 	// set device into low power mode
 	void enterLowPowerMode();
 	// wake up device from low power mode
@@ -78,7 +78,7 @@ protected:
 	uint16_t getLargeValue(char* data);
 	uint8_t getSmallValue(char* data);
 	int16_t getTemperatureValue(char* data);
-	int normalizeData(byte pid, char* data);
+	int normalizeData(uint16_t id, char* data);
 	byte checkErrorMessage(const char* buffer);
 	char* getResultValue(char* buf);
 	OBD_STATES m_state = OBD_DISCONNECTED;

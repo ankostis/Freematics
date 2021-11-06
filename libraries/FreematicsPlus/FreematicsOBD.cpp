@@ -136,50 +136,55 @@ byte COBD::readPID(const byte pid[], byte count, int result[])
 	return results;
 }
 
-bool COBD::readPIDMulti(DS_CAN_MSG* obdDataMulti, char* buffer)
+bool COBD::readPIDMulti(DS_CAN_MSG* obdDataMulti)
 {
 	char command[64];
-//	char buffer[64];	riabilitare quando togliamo char* buffer dai parametri di funzione
+	char buffer[64];
     char data[16];
   	byte i = 0;
+    byte nrOfChForMsg;
 	byte bufsize;
-    byte idx = 0;
+    byte idx_i = 0;
 
-	sprintf(command, "%02d%02X\r", obdDataMulti[i].service, obdDataMulti[i].pid);
-	bufsize = sizeof(buffer);
-	link->send(command);
-	idleTasks();
-	int ret = link->receive(buffer, 64, OBD_TIMEOUT_SHORT);
-	if (ret > 0 /* && !checkErrorMessage(buffer)*/) {
-	//if(link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG)){
-		int len = hex2uint8(buffer);
-		char *p = buffer;
-		if ((p = strstr(p, "41 "))) {
-			p += 3;
-			byte curpid = hex2uint8(p);
-			if (curpid == obdDataMulti[i].pid) {
+	while (obdDataMulti[i].idx){
+
+		sprintf(command, "%02d%02X\r", obdDataMulti[i].service, obdDataMulti[i].pid);
+		// bufsize = sizeof(buffer);
+		link->send(command);
+		idleTasks();
+		int ret = link->receive(buffer, 64, OBD_TIMEOUT_SHORT);
+		if (ret > 0 /* && !checkErrorMessage(buffer)*/) {
+		//if(link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG)){
+			int len = hex2uint8(buffer);
+			char *p = buffer;
+			if ((p = strstr(p, "41 "))) {
 				p += 3;
-				while(obdDataMulti[i].idx){
-					idx = 0;
-					for(byte k = 0; k < (obdDataMulti[i].length / 8); k++){
-						while (*p && *p != ' '){
-							data[idx] = *p;
-							idx++;
-							p++;
+				byte curpid = hex2uint8(p);
+				if (curpid == obdDataMulti[i].pid) {
+					p += 3;
+					nrOfChForMsg = obdDataMulti[i].nrOfChForMsg;
+					for (byte j=0; j < nrOfChForMsg; j++){
+						idx_i = 0;
+						for(byte k = 0; k < (obdDataMulti[i].length / 8); k++){
+							while (*p && *p != ' '){
+									data[idx_i] = *p;
+									idx_i++;
+								p++;
+							}
+							while (*p == ' '){
+									data[idx_i] = *p;
+									idx_i++;
+								p++;
+							}
 						}
-						while (*p == ' '){
-							data[idx] = *p;
-							idx++;
-							p++;
-						}
+						obdDataMulti[i].value = normalizeData(obdDataMulti[i].id, data);//(hex2uint16(data)*obdDataMulti[i].gain + obdDataMulti[i].offset);
+						i++;
 					}
-/*					if (!data) {
-						errors++;
-						return false;
-					}
-*/					obdDataMulti[i].value = hex2uint16(data);//(hex2uint16(data)*obdDataMulti[i].gain + obdDataMulti[i].offset);
-					i++;
+				} else {
+				for (int j=0; j < obdDataMulti[i].nrOfChForMsg; j++) i++;
 				}
+			} else {
+				for (int j=0; j < obdDataMulti[i].nrOfChForMsg; j++) i++;
 			}
 		}
 	}
@@ -228,82 +233,88 @@ void COBD::clearDTC()
 	link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_LONG);
 }
 
-int COBD::normalizeData(byte pid, char* data)
+int COBD::normalizeData(uint16_t id, char* data)
 {
 	int result;
-	switch (pid) {
-	case PID_RPM:
-	case PID_EVAP_SYS_VAPOR_PRESSURE: // kPa
+	switch (id) {
+	case PID_RPM_ID:
+	case PID_EVAP_SYS_VAPOR_PRESSURE_ID: // kPa
 		result = getLargeValue(data); //getLargeValue(data) >> 2;
 		break;
-	case PID_FUEL_PRESSURE: // kPa
+	case PID_FUEL_PRESSURE_ID: // kPa
 		result = getSmallValue(data); //getSmallValue(data) * 3;
 		break;
-	case PID_COOLANT_TEMP:
-	case PID_INTAKE_TEMP:
-	case PID_AMBIENT_TEMP:
-	case PID_ENGINE_OIL_TEMP:
+	case PID_COOLANT_TEMP_ID:
+	case PID_INTAKE_TEMP_ID:
+	case PID_AMBIENT_TEMP_ID:
+	case PID_ENGINE_OIL_TEMP_ID:
 		result = getSmallValue(data); //getTemperatureValue(data);
 		break;
-	case PID_THROTTLE:
-	case PID_COMMANDED_EGR:
-	case PID_COMMANDED_EVAPORATIVE_PURGE:
-	case PID_FUEL_LEVEL:
-	case PID_RELATIVE_THROTTLE_POS:
-	case PID_ABSOLUTE_THROTTLE_POS_B:
-	case PID_ABSOLUTE_THROTTLE_POS_C:
-	case PID_ACC_PEDAL_POS_D:
-	case PID_ACC_PEDAL_POS_E:
-	case PID_ACC_PEDAL_POS_F:
-	case PID_COMMANDED_THROTTLE_ACTUATOR:
-	case PID_ENGINE_LOAD:
-	case PID_ABSOLUTE_ENGINE_LOAD:
-	case PID_ETHANOL_FUEL:
-	case PID_HYBRID_BATTERY_PERCENTAGE:
+	case PID_THROTTLE_ID:
+	case PID_COMMANDED_EGR_ID:
+	case PID_COMMANDED_EVAPORATIVE_PURGE_ID:
+	case PID_FUEL_LEVEL_ID:
+	case PID_RELATIVE_THROTTLE_POS_ID:
+	case PID_ABSOLUTE_THROTTLE_POS_B_ID:
+	case PID_ABSOLUTE_THROTTLE_POS_C_ID:
+	case PID_ACC_PEDAL_POS_D_ID:
+	case PID_ACC_PEDAL_POS_E_ID:
+	case PID_ACC_PEDAL_POS_F_ID:
+	case PID_COMMANDED_THROTTLE_ACTUATOR_ID:
+	case PID_ENGINE_LOAD_ID:
+	case PID_ABSOLUTE_ENGINE_LOAD_ID:
+	case PID_ETHANOL_FUEL_ID:
+	case PID_HYBRID_BATTERY_PERCENTAGE_ID:
 		result = getSmallValue(data); //getPercentageValue(data);
 		break;
-	case PID_MAF_FLOW: // grams/sec
+	case PID_MAF_FLOW_ID: // grams/sec
 		result = getLargeValue(data); //getLargeValue(data) / 100;
 		break;
-	case PID_TIMING_ADVANCE:
+	case PID_TIMING_ADVANCE_ID:
 		result = getSmallValue(data); //(int)(getSmallValue(data) / 2) - 64;
 		break;
-	case PID_DISTANCE: // km
-	case PID_DISTANCE_WITH_MIL: // km
-	case PID_TIME_WITH_MIL: // minute
-	case PID_TIME_SINCE_CODES_CLEARED: // minute
-	case PID_RUNTIME: // second
-	case PID_FUEL_RAIL_PRESSURE: // kPa
-	case PID_ENGINE_REF_TORQUE: // Nm
+	case PID_DISTANCE_ID: // km
+	case PID_DISTANCE_WITH_MIL_ID: // km
+	case PID_TIME_WITH_MIL_ID: // minute
+	case PID_TIME_SINCE_CODES_CLEARED_ID: // minute
+	case PID_RUNTIME_ID: // second
+	case PID_FUEL_RAIL_PRESSURE_ID: // kPa
+	case PID_ENGINE_REF_TORQUE_ID: // Nm
 		result = getLargeValue(data);
 		break;
-	case PID_CONTROL_MODULE_VOLTAGE: // V
+	case PID_CONTROL_MODULE_VOLTAGE_ID: // V
 		result = getLargeValue(data); //getLargeValue(data) / 1000;
 		break;
-	case PID_ENGINE_FUEL_RATE: // L/h
+	case PID_ENGINE_FUEL_RATE_ID: // L/h
 		result = getLargeValue(data); //getLargeValue(data) / 20;
 		break;
-	case PID_ENGINE_TORQUE_DEMANDED: // %
-	case PID_ENGINE_TORQUE_PERCENTAGE: // %
+	case MULTIPID_ENGINE_FUEL_RATE_GS_ID: // g/s
+		result = getLargeValue(data); //getLargeValue(data) / 5;
+		break;
+	case MULTIPID_VEHICLE_FUEL_RATE_GS_ID: // g/s
+		result = getLargeValue(data); //getLargeValue(data) / 5;
+		break;
+	case PID_ENGINE_TORQUE_DEMANDED_ID: // %
+	case PID_ENGINE_TORQUE_PERCENTAGE_ID: // %
 		result = getSmallValue(data); //(int)getSmallValue(data) - 125;
 		break;
-	case PID_SHORT_TERM_FUEL_TRIM_1:
-	case PID_LONG_TERM_FUEL_TRIM_1:
-	case PID_SHORT_TERM_FUEL_TRIM_2:
-	case PID_LONG_TERM_FUEL_TRIM_2:
-	case PID_EGR_ERROR:
+	case PID_SHORT_TERM_FUEL_TRIM_1_ID:
+	case PID_LONG_TERM_FUEL_TRIM_1_ID:
+	case PID_SHORT_TERM_FUEL_TRIM_2_ID:
+	case PID_LONG_TERM_FUEL_TRIM_2_ID:
+	case PID_EGR_ERROR_ID:
 		result = getSmallValue(data); //((int)getSmallValue(data) - 128) * 100 / 128;
 		break;
-	case PID_FUEL_INJECTION_TIMING:
+	case PID_FUEL_INJECTION_TIMING_ID:
 		result = getLargeValue(data); //((int32_t)getLargeValue(data) - 26880) / 128;
 		break;
-	case PID_CATALYST_TEMP_B1S1:
-	case PID_CATALYST_TEMP_B2S1:
-	case PID_CATALYST_TEMP_B1S2:
-	case PID_CATALYST_TEMP_B2S2:
+	case PID_CATALYST_TEMP_B1S1_ID:
+	case PID_CATALYST_TEMP_B2S1_ID:
+	case PID_CATALYST_TEMP_B1S2_ID:
+	case PID_CATALYST_TEMP_B2S2_ID:
 		result = getLargeValue(data); //getLargeValue(data) / 10 - 40;
 		break;
-	case PID_AIR_FUEL_EQUIV_RATIO: // 0~200
+	case PID_AIR_FUEL_EQUIV_RATIO_ID: // 0~200
 		result = getLargeValue(data); //(long)getLargeValue(data) * 200 / 65536;
 		break;
 	default:
@@ -462,7 +473,7 @@ bool COBD::isValidPID(byte pid)
 	pid--;
 	byte i = pid >> 3;
 	byte b = 0x80 >> (pid & 0x7);
-	return (pidmap[i] & b) != 0;
+	return true; //(pidmap[i] & b) != 0;
 }
 
 bool COBD::init(OBD_PROTOCOLS protocol)
