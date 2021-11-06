@@ -680,6 +680,8 @@ void initialize()
   oled.print("KB Sent");
   oled.setFontSize(FONT_SIZE_MEDIUM);
 #endif
+
+teleClient.notify(EVENT_PING); // Nestor
 }
 
 /*******************************************************************************
