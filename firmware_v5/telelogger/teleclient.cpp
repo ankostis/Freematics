@@ -258,11 +258,12 @@ bool TeleClientUDP::connect()
   bool success = false;
   // connect to telematics server
   for (byte attempts = 0; attempts < 5; attempts++) {
-    Serial.print(event == EVENT_LOGIN ? "LOGIN(" : "RECONNECT(");
-    Serial.print(SERVER_HOST);
-    Serial.print(':');
-    Serial.print(SERVER_PORT);
-    Serial.println(")...");
+    Serial.print(event == EVENT_LOGIN ? "LOGIN" : "RECONNECT");
+    Serial.println("...");
+    //Serial.print(SERVER_HOST);
+    //Serial.print(':');
+    //Serial.print(SERVER_PORT);
+    //Serial.println(")...");
     if (!net.open(SERVER_HOST, SERVER_PORT)) {
       Serial.println("Unable to connect");
       delay(3000);
@@ -436,11 +437,12 @@ bool TeleClientHTTP::connect()
     return false;
   }
   if (!login) {
-    Serial.print("LOGIN(");
-    Serial.print(SERVER_HOST);
-    Serial.print(':');
-    Serial.print(SERVER_PORT);
-    Serial.println(")...");
+    // Serial.print("LOGIN(");
+    // Serial.print(SERVER_HOST);
+    // Serial.print(':');
+    // Serial.print(SERVER_PORT);
+    //  Serial.println(")...");
+    Serial.println("LOGIN to server...");
     // log in or reconnect to Freematics Hub
     if (notify(EVENT_LOGIN)) {
       lastSyncTime = millis();
