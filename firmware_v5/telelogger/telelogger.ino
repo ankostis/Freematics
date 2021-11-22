@@ -903,8 +903,8 @@ void process()
           state.clear(STATE_SEND_ITID1B);
         } else {
           if (state.check(STATE_SEND_ITID1C)) {
-            buffer->add((uint16_t) 0x91C2, (int) obfcmData[15].value);
-            buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
+            // buffer->add((uint16_t) 0x91C2, (int) obfcmData[15].value);
+            // buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
             buffer->add((uint16_t) 0x91C6, (int) obfcmData[19].value);
             state.clear(STATE_SEND_ITID1C);
           } else {
