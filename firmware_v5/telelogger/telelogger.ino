@@ -288,7 +288,7 @@ void getVehicleInfo(CBuffer* buffer) {
   Serial.println("Getting vehicle info.");
   obd.GetOBFCM(obfcmData);
 
-  if (state.check(STATE_GET_VIN)) {
+  /*if (state.check(STATE_GET_VIN)) {
     Serial.println("Getting VIN.");
     char buf[128];
     char vin_char[21] = {0};
@@ -317,7 +317,7 @@ void getVehicleInfo(CBuffer* buffer) {
 
     state.clear(STATE_GET_VIN);
 
-  }
+  }*/
 }
 
 void processOBD(CBuffer* buffer)
@@ -883,7 +883,8 @@ void process()
       getVehicleInfo(buffer);
       state.clear(STATE_GET_VEHICLE_INFO);
       state.set(STATE_SEND_ITID17 | STATE_SEND_ITID1A | STATE_SEND_ITID1B | STATE_SEND_ITID1C);
-      state.set(STATE_SEND_VIN_1 | STATE_SEND_VIN_2 | STATE_SEND_VIN_3 | STATE_SEND_VIN_4 | STATE_SEND_VIN_5);
+      state.clear(STATE_SEND_VIN_1 | STATE_SEND_VIN_2 | STATE_SEND_VIN_3 | STATE_SEND_VIN_4 | STATE_SEND_VIN_5);
+      //state.set(STATE_SEND_VIN_1 | STATE_SEND_VIN_2 | STATE_SEND_VIN_3 | STATE_SEND_VIN_4 | STATE_SEND_VIN_5);
     }
 
     if (state.check(STATE_SEND_ITID17)) {
