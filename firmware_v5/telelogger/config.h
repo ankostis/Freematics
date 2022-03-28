@@ -47,7 +47,7 @@
 **************************************/
 #ifndef NET_DEVICE
 // change the following line to change network device
-#define NET_DEVICE NET_SIM7600
+#define NET_DEVICE NET_WIFI
 // WiFi settings
 #define WIFI_SSID "SSID"
 #define WIFI_PASSWORD "PASSWORD"
@@ -99,7 +99,7 @@
 **************************************/
 #ifndef STORAGE
 // change the following line to change storage type
-#define STORAGE STORAGE_SD
+#define STORAGE STORAGE_NONE
 #endif
 
 /**************************************
