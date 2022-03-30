@@ -143,19 +143,16 @@ bool COBD::readPIDMulti(DS_CAN_MSG* obdDataMulti)
     char data[16];
   	byte i = 0;
     byte nrOfChForMsg;
-	byte bufsize;
     byte idx_i = 0;
 
 	while (obdDataMulti[i].idx){
 
 		sprintf(command, "%02d%02X\r", obdDataMulti[i].service, obdDataMulti[i].pid);
-		// bufsize = sizeof(buffer);
 		link->send(command);
 		idleTasks();
 		int ret = link->receive(buffer, 64, OBD_TIMEOUT_SHORT);
 		if (ret > 0 /* && !checkErrorMessage(buffer)*/) {
-		//if(link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG)){
-			int len = hex2uint8(buffer);
+			hex2uint8(buffer);
 			char *p = buffer;
 			if ((p = strstr(p, "41 "))) {
 				p += 3;
@@ -473,7 +470,7 @@ bool COBD::isValidPID(byte pid)
 	pid--;
 	byte i = pid >> 3;
 	byte b = 0x80 >> (pid & 0x7);
-	return true; //(pidmap[i] & b) != 0;
+	return true || (pidmap[i] & b) != 0;
 }
 
 bool COBD::init(OBD_PROTOCOLS protocol)

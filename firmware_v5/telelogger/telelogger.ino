@@ -460,6 +460,7 @@ bool waitMotionGPS(int timeout)
   return false;
 }
 
+#define ENABLE_MOVEMENT 0
 #if ENABLE_MEMS
 void processMEMS(CBuffer* buffer)
 {
@@ -484,11 +485,13 @@ void processMEMS(CBuffer* buffer)
 
   if (buffer) {
     if (accCount) {
+#if ENABLE_ORIENTATION || ENABLE_MOVEMENT
       float value[3];
       value[0] = accSum[0] / accCount - accBias[0];
       value[1] = accSum[1] / accCount - accBias[1];
       value[2] = accSum[2] / accCount - accBias[2];
       // buffer->add(PID_ACC, value);
+#endif
 #if ENABLE_ORIENTATION
       value[0] = ori.yaw;
       value[1] = ori.pitch;
@@ -499,7 +502,7 @@ void processMEMS(CBuffer* buffer)
         deviceTemp = temp;
         buffer->add(PID_DEVICE_TEMP, (int)temp);
       }
-#if 0
+#if ENABLE_MOVEMENT
       // calculate motion
       float motion = 0;
       for (byte i = 0; i < 3; i++) {
