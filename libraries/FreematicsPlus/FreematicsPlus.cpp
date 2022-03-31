@@ -781,7 +781,7 @@ void FreematicsESP32::xbTogglePower()
 void FreematicsESP32::buzzer(int freq)
 {
     if (freq) {
-        ledcWriteTone(0, 2000);
+        ledcWriteTone(0, freq);
         ledcWrite(0, 255);
     } else {
         ledcWrite(0, 0);
