@@ -68,18 +68,12 @@ int ClientWIFI::listAPs()
 {
   int n = WiFi.scanNetworks();
   if (n <= 0) {
-      Serial.println("No WiFi AP found");
+    ESP_LOGI(TAG, "No WiFi AP found");
   } else {
-      Serial.println("Nearby WiFi APs:");
-      for (int i = 0; i < n; ++i) {
-          // Print SSID and RSSI for each network found
-          Serial.print(i + 1);
-          Serial.print(": ");
-          Serial.print(WiFi.SSID(i));
-          Serial.print(" (");
-          Serial.print(WiFi.RSSI(i));
-          Serial.println("dB)");
-      }
+    ESP_LOGI(TAG, "x%i nearby WiFi APs:", n);
+    for (int i = 0; i < n; ++i) {
+        ESP_LOGI(TAG, "  +--%i: %s (%is)db)", (i + 1), WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+    }
   }
   return n;
 }

@@ -65,7 +65,7 @@ public:
     int getSignal() { return 0; }
     const char* deviceName() { return "WiFi"; }
     /**
-     * Dump (SSIDs, RSSI) in the serial all WiFis in the area.
+     * Dump (SSIDs, RSSI) in the log all WiFis in the area.
      * 
      * return: the number of SSIDs scanned
      */
