@@ -58,6 +58,7 @@ class ClientWIFI
 {
 public:
     bool begin(const char* ssid, const char* password);
+    bool reconnect();
     void end();
     bool setup(unsigned int timeout = 5000);
     String getIP();

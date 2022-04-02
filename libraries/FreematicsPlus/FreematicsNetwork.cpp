@@ -54,6 +54,11 @@ bool ClientWIFI::begin(const char* ssid, const char* password)
   return true;
 }
 
+bool ClientWIFI::reconnect()
+{
+  return WiFi.reconnect();
+}
+
 void ClientWIFI::end()
 {
   WiFi.disconnect(true);
