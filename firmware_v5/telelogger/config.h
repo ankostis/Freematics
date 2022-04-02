@@ -43,8 +43,17 @@
 #define MAX_OBD_ERRORS 3
 
 /**************************************
-* Networking configurations
-**************************************/
+ * Networking configurations
+ **************************************
+ * Don't modify per-device network settings & secrets here,
+ * do it in `secrets.h` overrides instead:
+ *      #define NET_DEVICE NET_xxx   //(default below)
+ *      #define WIFI_SSID ""
+ *      #define WIFI_SSID ""
+ *      #define CELL_APN ""
+ *      #define SIM_CARD_PIN ""
+ *      #define SERVER_HOST "hub.freematics.com"
+ */
 #ifndef NET_DEVICE
 // change the following line to change network device
 #define NET_DEVICE NET_WIFI
@@ -123,10 +132,11 @@
 /**************************************
 * Standby/wakeup
 **************************************/
+// reset device after waking up
 #define RESET_AFTER_WAKEUP 0
 // motion threshold for waking up
 #define MOTION_THRESHOLD 0.4f /* moving vehicle motion threshold in G */
-// engine jumpstart voltage
+// engine jumpstart voltage for waking up (when ENABLE_MEMS)
 #define THR_VOLTAGE 13.6 /* V */
 // engine jumpstart voltage gradient
 #define THR_GRAD 1 /* V */
@@ -134,7 +144,9 @@
 /**************************************
 * Additional features
 **************************************/
+// enable(1)/disable(0) http server
 #define ENABLE_HTTPD 0
+// enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED 0
 #define CONFIG_MODE_TIMEOUT 0
 
@@ -142,5 +154,32 @@
 #define PIN_SENSOR2 26
 
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
+
+/**************************************
+ * Secrets & per-device overrides, like:
+ * ```
+ * // git-ignored header-file for "sensitive" or per-device overrides.
+ *
+ * #undef NET_DEVICE
+ *
+ * #define NET_DEVICE NET_XXX
+ *
+ * #undef WIFI_SSID
+ * #define WIFI_SSID "..."
+ * #undef WIFI_PASSWORD
+ * #define WIFI_PASSWORD "..."
+ *
+ * #undef CELL_APN
+ * #define CELL_APN "..."
+ * #undef SIM_CARD_PIN
+ * #define SIM_CARD_PIN "..."
+ *
+ * #undef SERVER_HOST
+ * #define SERVER_HOST "..."
+ * ```
+ **************************************/
+#if __has_include("secrets.h")
+#   include "secrets.h"
+#endif
 
 #endif // CONFIG_H_INCLUDED
