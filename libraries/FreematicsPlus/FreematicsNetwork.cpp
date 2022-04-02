@@ -64,7 +64,7 @@ void ClientWIFI::end()
   WiFi.disconnect(true);
 }
 
-void ClientWIFI::listAPs()
+int ClientWIFI::listAPs()
 {
   int n = WiFi.scanNetworks();
   if (n <= 0) {
@@ -81,6 +81,7 @@ void ClientWIFI::listAPs()
           Serial.println("dB)");
       }
   }
+  return n;
 }
 
 bool UDPClientWIFI::open(const char* host, uint16_t port)

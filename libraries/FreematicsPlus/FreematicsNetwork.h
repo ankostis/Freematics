@@ -64,7 +64,12 @@ public:
     String getIP();
     int getSignal() { return 0; }
     const char* deviceName() { return "WiFi"; }
-    void listAPs();
+    /**
+     * Dump (SSIDs, RSSI) in the serial all WiFis in the area.
+     * 
+     * return: the number of SSIDs scanned
+     */
+    int listAPs();
 protected:
     char m_buffer[256] = {0};
 };
