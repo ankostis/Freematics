@@ -15,10 +15,8 @@
  limitations under the License.
 **/
 
-#include <config.h>
-#include <FreematicsNetwork.h>
+#include "config.h"
 #include <unity.h>
-// #include "esp32-hal-log.h"
 
 // void setUp(void) {
 // // set stuff up here
@@ -231,11 +229,69 @@ void test_logging()
     }
 }
 
+#include "FreematicsNetwork.h"
+
+ClientWIFI wifi;
+
+uint32_t _check_wifi_status(
+    int break_status=WL_CONNECTED, uint32_t timeout_ms=16000, bool notEq=0)
+{
+    for (uint32_t t = millis(); millis() - t < timeout_ms;) {
+        if ((WiFi.status() == break_status) ^ notEq) {
+            return millis();
+        }
+        delay(50);
+    }
+    return 0;
+}
+
+/**
+ * Do connect, listAPs, reconnect work when interspersed?
+ * Set you WiFi passSSID/pswd in `secrets.ini`
+ *
+ * ATTENTION: set  valid WIFI_SSID, WIFI_PASSWORD for your network
+ * before launching.
+ *
+ * Ok log sample:
+ *
+ * ```
+ * [I][test_net.cpp:46] test_ClientWIFI_listAPs(): Connecting...
+ * [I][test_net.cpp:47] test_ClientWIFI_listAPs(): Connecting...
+ * [I][test_net.cpp:51] test_ClientWIFI_listAPs(): Connected after: 5218ms
+ * [W][WiFiGeneric.cpp:391] _eventCallback(): Reason: 8 - ASSOC_LEAVE
+ * [I][FreematicsNetwork.cpp:83] listAPs(): x4 nearby WiFi APs:
+ * [I][FreematicsNetwork.cpp:85] listAPs():   +--1: DIRECT-D3A9B014 (-55s)db)
+ * ...
+ * [I][test_net.cpp:55] test_ClientWIFI_listAPs(): Reconnecting...
+ * [I][test_net.cpp:59] test_ClientWIFI_listAPs(): Reconnected after: 14984ms
+ * test/test_net.cpp:64:test_ClientWIFI_listAPs    [PASSED]
+ * ```
+ */
+void test_ClientWIFI_connect_and_listAPs() {
+    log_i("Connecting...");
+    wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    uint32_t ok_delay_ms = _check_wifi_status();
+    // TEST_ASSERT_NOT_EQUAL(0, ok_delay_ms);
+    ESP_LOGI("gg", "Connected after: %ims", ok_delay_ms);
+
+    TEST_ASSERT_GREATER_THAN(0, wifi.listAPs());
+
+    log_i("Reconnecting...");
+    wifi.reconnect();
+    ok_delay_ms = _check_wifi_status();
+    TEST_ASSERT_NOT_EQUAL(0, ok_delay_ms);
+    log_i("Reconnected after: %ims", ok_delay_ms);
+
+    // ok_delay_ms = _check_wifi_status(WL_CONNECTED, 24000, 1);
+    // ESP_LOGI("ss", "Disconnected after: %ims", ok_delay_ms);
+}
+
 
 void process() {
     UNITY_BEGIN();
     RUN_TEST(test_sys_info);
     RUN_TEST(test_logging);
+    RUN_TEST(test_ClientWIFI_connect_and_listAPs);
     UNITY_END();
 }
 

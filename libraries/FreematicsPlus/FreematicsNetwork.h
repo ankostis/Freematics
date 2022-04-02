@@ -66,8 +66,12 @@ public:
     const char* deviceName() { return "WiFi"; }
     /**
      * Dump (SSIDs, RSSI) in the log all WiFis in the area.
-     * 
+     *
      * return: the number of SSIDs scanned
+     *
+     * SIDE_EFFECT:
+     *   Switches to Station-mode and disconnects from SSID,
+     *   so better call `WiFi.reconnect()` afterwards.
      */
     int listAPs();
 protected:

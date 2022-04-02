@@ -66,6 +66,8 @@ void ClientWIFI::end()
 
 int ClientWIFI::listAPs()
 {
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
   int n = WiFi.scanNetworks();
   if (n <= 0) {
     ESP_LOGI(TAG, "No WiFi AP found");
