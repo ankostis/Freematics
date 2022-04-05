@@ -28,6 +28,111 @@
 // // clean stuff up here
 // }
 
+#include <Esp.h>
+#include <esp_ota_ops.h>
+#if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
+#   include <himem.h>
+#endif
+#include <soc/rtc.h>
+
+/**
+ *
+ * ATTENTION: rev1 devices (like the sample below),
+ * [need the PSRAM workaround](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1)
+ *
+ * Sample output:
+ * ```
+ * SysInfo:
+ *        cpu: 160MHz, chip_model: ESP32-D0WDQ6-v1,
+ * flash_size: 16MiB, flash_speed: 40MHz, slow_rtc_freq: 150.0KHz,
+ *  esp32_sdk: v4.4-367-gc29343eb94,
+ *    arduino: 2.0.3,
+ * fw_version: v0.1.0-upstream202204-14-g798d4ef,
+ * sketch_md5: 6ff4796,
+ * build_date: Apr  7 2022 13:23:16,
+ *  partition:  20.70%, sketch_size:  271312, partition_size: 1310720,
+ *       heap:   6.94%,   heap_used:  339236,      heap_size:  364532,
+ *      psram:   0.00%,  psram_used: 4192139,     psram_size:  4.00MiB
+ * ```
+ */
+void test_sys_info()
+{
+    int PartitionSize = esp_ota_get_running_partition()->size;  // +395 from compiler report
+    int SketchSize = ESP.getSketchSize();
+
+    int HeapSize = ESP.getHeapSize();
+    int HeapFree = ESP.getFreeHeap();
+    int HeapUsed = HeapSize - HeapFree;
+
+#if BOARD_HAS_PSRAM
+    int PsramSize = ESP.getPsramSize();
+    int PsramFree = ESP.getFreePsram();
+    int PsramUsed =  PsramSize - PsramFree ;
+
+#   if BOARD_HAS_PSRAM_HIGH
+    int PsramHighSize = (int)esp_himem_get_phys_size();
+    int PsramHighFree = (int)esp_himem_get_free_size();
+    int PsramHighUsed = PsramHighSize - PsramHighFree;
+#   endif
+#endif
+
+    Serial.printf(
+        "SysInfo"
+        ":\n       cpu: %iMHz, chip_model: %s-v%i"
+        ",\nflash_size: %iMiB, flash_speed: %.2fMHz, slow_rtc: %i@%.2fKHz"
+        ",\n esp32_sdk: %s"
+        ",\n   arduino: %i.%i.%i"
+        ",\nfw_version: %s"
+        ",\nsketch_md5: %.7s"
+        ",\nbuild_date: %s"
+        ",\n partition: %6.2f%%, sketch_size: %7i, partition_size: %7i"
+        ",\n      heap: %6.2f%%,   heap_used: %7i,      heap_size: %7i"
+#if BOARD_HAS_PSRAM
+        ",\n     psram: %6.2f%%,  psram_used: %7i,     psram_size: %5.2f%%MiB"
+#   if BOARD_HAS_PSRAM_HIGH
+        ",\npsram_high: %6.2f%%, psram_high_used: %7i, psram_high_size: %5.2f%%MiB"
+#   endif
+#endif
+        "\n"
+        , ESP.getCpuFreqMHz()
+        , ESP.getChipModel()
+        , ESP.getChipRevision()
+        , ESP.getFlashChipSize() >> 20
+        , (float)ESP.getFlashChipSpeed() / 1000000
+        , rtc_clk_slow_freq_get()
+        , (float)rtc_clk_slow_freq_get_hz() / 1000
+        , IDF_VER
+        , ESP_ARDUINO_VERSION_MAJOR
+        , ESP_ARDUINO_VERSION_MINOR
+        , ESP_ARDUINO_VERSION_PATCH
+        , GIT_DESCRIBE
+        , ESP.getSketchMD5().c_str()
+        , __DATE__ " " __TIME__
+        , 100.0 * ((float)SketchSize / PartitionSize)
+        , SketchSize
+        , PartitionSize
+        // , NOTE: `ESP.getFreeSketchSpace()` actually brings next (OTA) partion's siz
+        // , (see espressif/arduino-esp32#3501
+        // , ESP.getFreeSketchSpace()
+        , 100.0 * ((float)HeapUsed / HeapSize)
+        , HeapUsed
+        , HeapSize
+#if BOARD_HAS_PSRAM
+        , 100.0 * ((float)PsramUsed / PsramSize)
+        , PsramUsed
+        , (float)PsramSize / (1<<20)  // not exactly 4MiB reported
+#   if BOARD_HAS_PSRAM_HIGH
+        , 100.0 * ((float)PsramHighUsed / PsramHighSize)
+        , PsramHighUsed
+        , (float)PsramHighSize / (1<<20)
+#   endif
+#endif
+        );
+}
+
+#include "esp_log.h"
+#include "esp32-hal-log.h"
+
 /**
  * From the sample logs below,
  * we derrive that must use ESP_LOGx() constructs to have a meaningful "tag"
@@ -110,23 +215,6 @@ void _do_logs()
 }
 void test_logging()
 {
-    ESP_LOGE(
-        "MyTAG",
-        "SysInfo:\n+--ChipModel: %s,\n+--ChipRevision: %i,"
-        "\n+--SdkVersion: %s,  \n+--SketchMD5: %s,\n+--CommitId: %s"
-        "\n+--FlashChipSize: %i(%i),  \n+--getHeapSize: %i(%i),\n+--PsramSize: %i(%i)",
-        ESP.getChipModel(),
-        ESP.getChipRevision(),
-        ESP.getSdkVersion(),
-        ESP.getSketchMD5().c_str(),
-        GIT_DESCRIBE,
-        ESP.getFlashChipSize(),
-        ESP.getFreeSketchSpace(),
-        ESP.getHeapSize(),
-        ESP.getHeapSize(),
-        ESP.getPsramSize(),
-        ESP.getFreePsram()
-    );
     ESP_LOGE("MyTAG", "NO TAG");
     log_e("plain");
 
@@ -143,6 +231,7 @@ void test_logging()
 
 void process() {
     UNITY_BEGIN();
+    RUN_TEST(test_sys_info);
     RUN_TEST(test_logging);
     UNITY_END();
 }
