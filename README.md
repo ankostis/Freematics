@@ -11,11 +11,15 @@ in a x10 reduction in space/bandwidth (~45mb) and time to clone:
 ```bash
 git clone --sparse <repo-url>
 cd <repo-dir>
-git sparse-checkout set --cone README.md libraries server firmware_v5/telelogger
+git sparse-checkout set --cone \
+    README.md\
+    server\
+    libraries/{FreematicsPlus,httpd,TinyGPS}\
+    firmware_v5/{telelogger,sandbox}
 ```
 
 Limiting in addition history depth while cloning, eg with `--depth=30`
-would result in half the size above. 
+would result in half the size above.
 
 **Tip:** Even if you fully cloned, you may still choose to *sparsely checkout* later,
 to limit distraction & speedup the IDE scanning your working dir,
