@@ -55,7 +55,7 @@ int vin_substring_numeric(char (&substring)[5])
 {
   uint32_t substring_numeric = 0;
   int cnt = 0;
-  for(char c : substring) {  
+  for(char c : substring) {
     if (c) {
     substring_numeric += (int) c << (3 - cnt)*8;
     }
@@ -292,7 +292,7 @@ void getVehicleInfo(CBuffer* buffer) {
     Serial.println("Getting VIN.");
     char buf[128];
     char vin_char[21] = {0};
-  
+
     if (obd.getVIN(buf, sizeof(buf))) {
       strncpy(vin_char, buf, sizeof(vin_char) - 1);
     }
@@ -353,7 +353,7 @@ void processOBD(CBuffer* buffer)
     }
     if (tier > 1) break;
   }
-  
+
   obd.readPIDMulti(obdDataMulti);
   int idx_i=0;
   while (obdDataMulti[idx_i].idx) {
@@ -878,7 +878,7 @@ void process()
 #if ENABLE_OBD
   // process OBD data if connected
   if (state.check(STATE_OBD_READY)) {
-    
+
     processOBD(buffer);
 
     if (state.check(STATE_GET_VEHICLE_INFO)) {

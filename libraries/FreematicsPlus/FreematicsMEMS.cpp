@@ -153,7 +153,7 @@ void MEMS_I2C::uninitI2C()
   i2c_driver_delete((i2c_port_t)I2C_NUM_0);
 }
 /*******************************************************************************
-  MPU-9250 class functions 
+  MPU-9250 class functions
 *******************************************************************************/
 
 //==============================================================================
@@ -713,7 +713,7 @@ bool MPU9250::read(float* acc, float* gyr, float* mag, float* temp, ORIENTATION*
 }
 
 /*******************************************************************************
-  ICM-20948 class functions 
+  ICM-20948 class functions
 *******************************************************************************/
 
 // serif functions for the I2C and SPI classes
@@ -761,7 +761,7 @@ ICM_20948_Status_e ICM_20948_read_I2C(uint8_t reg, uint8_t* buff, uint32_t len, 
 
 ICM_20948_AGMT_t ICM_20948::getAGMT                 ( void ){
     status = ICM_20948_get_agmt( &_device, &agmt );
-    
+
     if( _has_magnetometer ){
         getMagnetometerData( &agmt );
     }
@@ -858,7 +858,7 @@ const char* ICM_20948::statusString                 ( ICM_20948_Status_e stat ){
         case ICM_20948_Stat_SensorNotSupported : return "Sensor Not Supported"; break;
         default :
             return "Unknown Status"; break;
-        
+
     }
     return "None";
 }
@@ -1032,7 +1032,7 @@ ICM_20948_Status_e	ICM_20948::intEnableI2C        ( bool enable ){
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.I2C_MST_INT_EN != enable ){
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1046,7 +1046,7 @@ ICM_20948_Status_e	ICM_20948::intEnableDMP        ( bool enable ){
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.DMP_INT1_EN != enable ){
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1060,7 +1060,7 @@ ICM_20948_Status_e	ICM_20948::intEnablePLL        ( bool enable ){
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.PLL_RDY_EN != enable ){
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1074,7 +1074,7 @@ ICM_20948_Status_e	ICM_20948::intEnableWOM        ( bool enable ){
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.WOM_INT_EN != enable ){
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1088,7 +1088,7 @@ ICM_20948_Status_e	ICM_20948::intEnableWOF        ( bool enable ){
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.REG_WOF_EN != enable ){
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1103,7 +1103,7 @@ ICM_20948_Status_e	ICM_20948::intEnableRawDataReady   ( bool enable ){
     if( en.RAW_DATA_0_RDY_EN != enable ){
         Serial.println("mismatch error");
         status = ICM_20948_Stat_Err;
-        return status; 
+        return status;
     }
     return status;
 }
@@ -1192,14 +1192,14 @@ ICM_20948_Status_e  ICM_20948::startupDefault          ( void ){
 
     retval = lowPower( false );
     if( retval != ICM_20948_Stat_Ok ){ status = retval; return status; }
-    
+
     retval = setSampleMode( (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous );  // options: ICM_20948_Sample_Mode_Continuous or ICM_20948_Sample_Mode_Cycled
     if( retval != ICM_20948_Stat_Ok ){ status = retval; return status; }                                                                 // sensors: 	ICM_20948_Internal_Acc, ICM_20948_Internal_Gyr, ICM_20948_Internal_Mst
 
     ICM_20948_fss_t FSS;
     FSS.a = gpm2;       // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
     FSS.g = dps250;     // (ICM_20948_GYRO_CONFIG_1_FS_SEL_e)
-    retval = setFullScale( (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), FSS );  
+    retval = setFullScale( (ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), FSS );
     if( retval != ICM_20948_Stat_Ok ){ status = retval; return status; }
 
     ICM_20948_dlpcfg_t dlpcfg;
@@ -1217,9 +1217,9 @@ ICM_20948_Status_e  ICM_20948::startupDefault          ( void ){
     retval = startupMagnetometer();
     if(( retval != ICM_20948_Stat_Ok) && ( retval != ICM_20948_Stat_NotImpl )){ status = retval; return status; }
     if( retval == ICM_20948_Stat_NotImpl ){
-        // This is a temporary fix. 
-        // Ultimately we *should* be able to configure the I2C master to handle the 
-        // magnetometer no matter what interface (SPI / I2C) we are using. 
+        // This is a temporary fix.
+        // Ultimately we *should* be able to configure the I2C master to handle the
+        // magnetometer no matter what interface (SPI / I2C) we are using.
 
         // Should try testing I2C master functionality on a bare ICM chip w/o TXS0108 level shifter...
 
@@ -1259,7 +1259,7 @@ ICM_20948_Status_e  ICM_20948::write                ( uint8_t reg, uint8_t* pdat
 }
 
 byte ICM_20948_I2C::begin(bool fusion){
-    // Associate 
+    // Associate
 	_ad0 = ICM_20948_ARD_UNUSED_PIN;
 	_ad0val = false;
 
@@ -1273,7 +1273,7 @@ byte ICM_20948_I2C::begin(bool fusion){
 	if(_ad0 != ICM_20948_ARD_UNUSED_PIN){ digitalWrite(_ad0, _ad0val); }
 
     if (!initI2C(100000)) return 0;
-    
+
     // Set up the serif
     _serif.write = ICM_20948_write_I2C;
     _serif.read = ICM_20948_read_I2C;
@@ -1342,7 +1342,7 @@ ICM_20948_Status_e  ICM_20948_I2C::getMagnetometerData     ( ICM_20948_AGMT_t* p
 
     const uint8_t reqd_len = 9; // you must read all the way through the status2 register to re-enable the next measurement
     uint8_t buff[reqd_len];
-        
+
     status = readMag( AK09916_REG_ST1, buff, reqd_len );
     if( status != ICM_20948_Stat_Ok ){
         return status;

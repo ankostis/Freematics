@@ -74,7 +74,7 @@ bool ClientWiFiMesh::begin(CFreematics* device)
  {
    return mwifi_is_connected();
  }
- 
+
 bool ClientWiFiMesh::send(const char* data, unsigned int len)
 {
   if (mwifi_is_connected()) {

@@ -413,7 +413,7 @@ bool HTTPClientSIM800::send(HTTP_METHOD method, const char* path, bool keepAlive
 {
   sendCommand("AT+HTTPPARA = \"CID\",1\r");
   sprintf(m_buffer, "AT+HTTPPARA=\"URL\",\"%s:%u%s\"\r", m_host.c_str(), m_port, path);
-  if (!sendCommand(m_buffer)) {  
+  if (!sendCommand(m_buffer)) {
   } else if (method == METHOD_GET) {
     if (sendCommand("AT+HTTPACTION=0\r", HTTP_CONN_TIMEOUT)) {
       m_state = HTTP_SENT;
@@ -459,7 +459,7 @@ char* HTTPClientSIM800::receive(int* pbytes, unsigned int timeout)
     }
   }
   m_state = HTTP_ERROR;
-  return 0;  
+  return 0;
 }
 
 /*******************************************************************************
@@ -642,7 +642,7 @@ bool ClientSIM5360::checkSIM(const char* pin)
     sendCommand(m_buffer);
   }
   for (byte n = 0; n < 10 && !(success = sendCommand("AT+CPIN?\r", 500, ": READY")); n++);
-  return success;  
+  return success;
 }
 
 String ClientSIM5360::queryIP(const char* host)
@@ -1095,7 +1095,7 @@ char* HTTPClientSIM7600::receive(int* pbytes, unsigned int timeout)
     checkGPS();
     return 0;
   }
-  
+
   bool legacy = false;
   char *p = strstr(m_buffer, "RECV EVENT");
   if (p) {

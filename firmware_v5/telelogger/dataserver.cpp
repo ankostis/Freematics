@@ -184,7 +184,7 @@ int handlerLogData(UrlHandlerParam* param)
         // JSON head
         param->contentLength = sprintf(param->pucBuffer, "[");
     }
-    
+
     int len = 0;
     char buf[64];
     uint32_t ts = 0;
