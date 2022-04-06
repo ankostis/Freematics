@@ -21,6 +21,7 @@
 #include "telelogger.h"
 #include "telemesh.h"
 #include "teleclient.h"
+#include <esp_log.h>
 #ifdef BOARD_HAS_PSRAM
 #include "esp_himem.h"
 #endif
@@ -1489,6 +1490,9 @@ void setup()
 #endif
     // initialize USB serial
     Serial.begin(115200);
+
+    // Relevant only when ESP_IDF log-lib selected.
+    esp_log_level_set("*", (esp_log_level_t)RUNTIME_ALL_TAGS_LOG_LEVEL);
 
     // init LED pin
     pinMode(PIN_LED, OUTPUT);

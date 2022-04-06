@@ -134,7 +134,7 @@ void test_sys_info()
 #include "esp32-hal-log.h"
 
 /**
- * From the sample logs below,
+ * From the sample logs below (with CORE_DEBUG_LEVEL=5 (VERBOSE)),
  * we derrive that must use ESP_LOGx() constructs to have a meaningful "tag"
  * (instead of being fixe to `ARDUINO`).
  *
@@ -144,6 +144,7 @@ void test_sys_info()
  * [E][test_sandbox.cpp:131] test_logging(): ChipModel: ESP32-D0WDQ6, ChipRevision: 1, SdkVersion: v3.3.5-1-g85c43024c, SketchMD5: bed3b7a145e4c12ddf03fc801120c63e
  * [E][test_sandbox.cpp:132] test_logging(): NO TAG
  * [E][test_sandbox.cpp:133] test_logging(): null TAG
+ * [D][test_sandbox.cpp:114] _do_logs(): ESP_LOGV
  * [D][test_sandbox.cpp:114] _do_logs(): ESP_LOGD
  * [I][test_sandbox.cpp:115] _do_logs(): ESP_LOGI
  * [W][test_sandbox.cpp:116] _do_logs(): ESP_LOGW
@@ -158,54 +159,56 @@ void test_sys_info()
  *
  * ESP_IDF logs:
  * ```
- * PLL: 320 / 2 = 160 Mhz, APB: 80000000 Hz
- * E (186) TAG: ChipModel: ESP32-D0WDQ6, ChipRevision: 1, SdkVersion: v3.3.5-1-g85c43024c, SketchMD5: 3f878b6faf761f5b14fd71b3ad2dd719
- * E (451) : NO TAG
- * E (452) TAG: ESP_LOGE
- * E (454) ARDUINO: log_e
- * E (456) ARDUINO: LEVEL: 5
- * D (459) TAG: ESP_LOGD
- * I (461) TAG: ESP_LOGI
- * W (463) TAG: ESP_LOGW
- * E (465) TAG: ESP_LOGE
- * D (467) ARDUINO: log_d
- * I (469) ARDUINO: log_i
- * W (471) ARDUINO: log_w
- * E (473) ARDUINO: log_e
- * E (475) ARDUINO: LEVEL: 4
- * D (477) TAG: ESP_LOGD
- * I (479) TAG: ESP_LOGI
- * W (481) TAG: ESP_LOGW
- * E (483) TAG: ESP_LOGE
- * D (485) ARDUINO: log_d
- * I (487) ARDUINO: log_i
- * W (490) ARDUINO: log_w
- * E (492) ARDUINO: log_e
- * E (494) ARDUINO: LEVEL: 3
- * I (496) TAG: ESP_LOGI
- * W (498) TAG: ESP_LOGW
- * E (500) TAG: ESP_LOGE
- * I (502) ARDUINO: log_i
- * W (504) ARDUINO: log_w
- * E (506) ARDUINO: log_e
- * E (508) ARDUINO: LEVEL: 2
- * W (511) TAG: ESP_LOGW
- * E (513) TAG: ESP_LOGE
- * W (515) ARDUINO: log_w
- * E (517) ARDUINO: log_e
- * E (519) ARDUINO: LEVEL: 1
- * E (521) TAG: ESP_LOGE
- * E (523) ARDUINO: log_e
- * E (525) ARDUINO: LEVEL: 0
+ * E (48) MyTag: some tag
+ * E (49) test_sandbox.cpp: plain
+ * E (49) test_sandbox.cpp: ESP_LOGE
+ * E (49) test_sandbox.cpp: log_e
+ * E (49) test_sandbox.cpp: LEVEL: 5
+ * V (52) test_sandbox.cpp: ESP_LOGV
+ * D (55) test_sandbox.cpp: ESP_LOGD
+ * I (58) test_sandbox.cpp: ESP_LOGI
+ * W (61) test_sandbox.cpp: ESP_LOGW
+ * E (64) test_sandbox.cpp: ESP_LOGE
+ * V (67) test_sandbox.cpp: log_v
+ * D (69) test_sandbox.cpp: log_d
+ * I (72) test_sandbox.cpp: log_i
+ * W (75) test_sandbox.cpp: log_w
+ * E (78) test_sandbox.cpp: log_e
+ * E (81) test_sandbox.cpp: LEVEL: 4
+ * D (84) test_sandbox.cpp: ESP_LOGD
+ * I (87) test_sandbox.cpp: ESP_LOGI
+ * W (90) test_sandbox.cpp: ESP_LOGW
+ * E (93) test_sandbox.cpp: ESP_LOGE
+ * D (96) test_sandbox.cpp: log_d
+ * I (99) test_sandbox.cpp: log_i
+ * W (101) test_sandbox.cpp: log_w
+ * E (104) test_sandbox.cpp: log_e
+ * E (107) test_sandbox.cpp: LEVEL: 3
+ * I (110) test_sandbox.cpp: ESP_LOGI
+ * W (113) test_sandbox.cpp: ESP_LOGW
+ * E (116) test_sandbox.cpp: ESP_LOGE
+ * I (120) test_sandbox.cpp: log_i
+ * W (122) test_sandbox.cpp: log_w
+ * E (125) test_sandbox.cpp: log_e
+ * E (128) test_sandbox.cpp: LEVEL: 2
+ * W (131) test_sandbox.cpp: ESP_LOGW
+ * E (134) test_sandbox.cpp: ESP_LOGE
+ * W (138) test_sandbox.cpp: log_w
+ * E (140) test_sandbox.cpp: log_e
+ * E (143) test_sandbox.cpp: LEVEL: 1
+ * E (146) test_sandbox.cpp: ESP_LOGE
+ * E (150) test_sandbox.cpp: log_e
+ * E (152) test_sandbox.cpp: LEVEL: 0
+ * test_sandbox.cpp:239:test_logging       [PASSED]
  * ```
  */
 void _do_logs()
 {
-    ESP_LOGV("MyTAG", "ESP_LOGV");
-    ESP_LOGD("MyTAG", "ESP_LOGD");
-    ESP_LOGI("MyTAG", "ESP_LOGI");
-    ESP_LOGW("MyTAG", "ESP_LOGW");
-    ESP_LOGE("MyTAG", "ESP_LOGE");
+    ESP_LOGV(TAG, "ESP_LOGV");
+    ESP_LOGD(TAG, "ESP_LOGD");
+    ESP_LOGI(TAG, "ESP_LOGI");
+    ESP_LOGW(TAG, "ESP_LOGW");
+    ESP_LOGE(TAG, "ESP_LOGE");
 
     log_v("log_v");
     log_d("log_d");
@@ -215,15 +218,15 @@ void _do_logs()
 }
 void test_logging()
 {
-    ESP_LOGE("MyTAG", "NO TAG");
+    ESP_LOGE("MyTag", "some tag");
     log_e("plain");
 
     _do_logs();
-    for (int i = ARDUHAL_LOG_LEVEL_VERBOSE+1; i >= ARDUHAL_LOG_LEVEL_NONE; i--)
+    for (int i = ARDUHAL_LOG_LEVEL_VERBOSE; i >= ARDUHAL_LOG_LEVEL_NONE; i--)
     {
-        ESP_LOGE("MyTAG", "LEVEL: %i", i);
+        ESP_LOGE(TAG, "LEVEL: %i", i);
         esp_log_level_set("*", (esp_log_level_t)i);
-        esp_log_level_set("MyTAG", (esp_log_level_t)i);
+        esp_log_level_set(TAG, (esp_log_level_t)i);
         _do_logs();
     }
 }

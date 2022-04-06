@@ -33,6 +33,12 @@
 #define PROTOCOL_METHOD_POST 1
 
 /**************************************
+ * Logging (see also `platformio.ini`)
+ **************************************/
+// Works only when ESP_IDF logging-lib selected in `platformio.ini`.
+#define RUNTIME_ALL_TAGS_LOG_LEVEL CORE_DEBUG_LEVEL
+
+/**************************************
 * OBD-II configurations
 **************************************/
 #ifndef ENABLE_OBD
