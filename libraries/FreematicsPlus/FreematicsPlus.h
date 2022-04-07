@@ -67,7 +67,6 @@
 
 int readChipTemperature();
 int readChipHallSensor();
-uint16_t getFlashSize(); /* KB */
 
 class Task
 {

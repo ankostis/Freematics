@@ -15,16 +15,14 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
+#include <esp_log.h>
 #include <FreematicsPlus.h>
 #include <httpd.h>
 #include "config.h"
 #include "telelogger.h"
+#include "DeviceInfo.h"
 #include "telemesh.h"
 #include "teleclient.h"
-#include <esp_log.h>
-#ifdef BOARD_HAS_PSRAM
-#include "esp_himem.h"
-#endif
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -1373,85 +1371,6 @@ void genDeviceID(char* buf)
     buf[8] = 0;
 }
 
-void showSysInfo()
-{
-  Serial.print("CPU:");
-  Serial.print(ESP.getCpuFreqMHz());
-  Serial.print("MHz FLASH:");
-  Serial.print(getFlashSize() >> 10);
-  Serial.println("MB");
-#ifdef BOARD_HAS_PSRAM
-  Serial.print("IRAM:");
-  Serial.print(ESP.getHeapSize() >> 10);
-  Serial.print("KB");
-  if (psramInit()) {
-    Serial.print(" PSRAM:");
-    Serial.print((ESP.getPsramSize() + esp_himem_get_phys_size()) >> 10);
-    Serial.print("KB");
-#if 0
-    Serial.println();
-    Serial.print("Writing PSRAM...");
-    int size = ESP.getPsramSize();
-    uint32_t *ptr = (uint32_t*)ps_malloc(size);
-    if (!ptr) {
-      Serial.print("unable to allocate ");
-      Serial.print(size);
-      Serial.println(" bytes");
-    } else {
-      uint32_t t = millis();
-      for (int i = 0; i < size / 4; i++) {
-        ptr[i] = 0xa5a5a5a5;
-      }
-      Serial.print("OK @");
-      Serial.print(size  / (millis() - t));
-      Serial.println("KB/s");
-    }
-    Serial.print("Verifying PSRAM...");
-    int errors = 0;
-    uint32_t t = millis();
-    for (int i = 0; i < size / 4; i++) {
-      if (ptr[i] != 0xa5a5a5a5) {
-        Serial.print("mismatch @ 0x");
-        Serial.println(i * 4, 16);
-        errors++;
-      }
-    }
-    if (errors == 0) {
-      Serial.print("OK @");
-      Serial.print(size  / (millis() - t));
-      Serial.println("KB/s");
-    }
-    free(ptr);
-#endif
-  }
-  Serial.println();
-#endif
-
-  int rtc = rtc_clk_slow_freq_get();
-  if (rtc) {
-    Serial.print("RTC:");
-    Serial.println(rtc);
-  }
-
-#if ENABLE_OLED
-  oled.clear();
-  oled.print("CPU:");
-  oled.print(ESP.getCpuFreqMHz());
-  oled.print("Mhz ");
-  oled.print(getFlashSize() >> 10);
-  oled.println("MB Flash");
-#endif
-
-    // generate unique device ID
-    genDeviceID(devid);
-    Serial.print("DEVICE ID:");
-    Serial.println(devid);
-#if ENABLE_OLED
-    oled.print("DEVICE ID:");
-    oled.println(devid);
-#endif
-}
-
 #if CONFIG_MODE_TIMEOUT
 void configMode()
 {
@@ -1498,6 +1417,9 @@ void setup()
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
+   // generate unique device ID
+    genDeviceID(devid);
+
 #if CONFIG_MODE_TIMEOUT
     configMode();
 #endif
@@ -1507,8 +1429,14 @@ void setup()
     pinMode(PIN_SENSOR2, INPUT);
 #endif
 
-    // show system information
-    showSysInfo();
+    LogDeviceInfo(devid);
+
+#if ENABLE_OLED
+    oled.clear();
+    oled.printf(
+        "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
+        (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20), devid);
+#endif
 
     if (sys.begin()) {
       Serial.print("TYPE:");

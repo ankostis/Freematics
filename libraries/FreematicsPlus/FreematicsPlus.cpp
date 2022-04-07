@@ -147,11 +147,6 @@ int readChipHallSensor()
   return hall_sens_read();
 }
 
-uint16_t getFlashSize()
-{
-    return (spi_flash_get_chip_size() >> 10);
-}
-
 bool Task::create(void (*task)(void*), const char* name, int priority, int stacksize)
 {
     if (xHandle) return false;
