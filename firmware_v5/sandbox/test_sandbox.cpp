@@ -33,8 +33,8 @@ void test_sys_info()
     LogDeviceInfo("<test_case>");
 }
 
-#include "esp_log.h"
-#include "esp32-hal-log.h"
+#include <esp_log.h>
+#include <esp32-hal-log.h>
 
 
 /**
@@ -135,7 +135,29 @@ void test_logging()
     }
 }
 
-#include "FreematicsNetwork.h"
+
+#include <FreematicsPlus.h>
+
+FreematicsESP32 sys;
+void test_buzzer()
+{
+    float freq = 12;
+    sys.begin(false, false);
+
+    sys.buzzer(freq); freq *= 1.618;
+    delay(700);
+    sys.buzzer(freq); freq *= 1.618;
+    delay(700);
+    sys.buzzer(freq); freq *= 1.618;
+    delay(700);
+    sys.buzzer(freq); freq *= 1.618;
+    delay(700);
+
+    sys.buzzer(0);
+}
+
+
+#include <FreematicsNetwork.h>
 
 ClientWIFI wifi;
 
@@ -197,6 +219,7 @@ void process() {
     UNITY_BEGIN();
     RUN_TEST(test_sys_info);
     RUN_TEST(test_logging);
+    RUN_TEST(test_buzzer);
     RUN_TEST(test_ClientWIFI_connect_and_listAPs);
     UNITY_END();
 }
