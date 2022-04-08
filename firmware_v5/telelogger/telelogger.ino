@@ -893,51 +893,35 @@ void process()
       buffer->add((uint16_t) 0x9172, (int) obfcmData[1].value);
       buffer->add((uint16_t) 0x9174, (int) obfcmData[3].value);
       state.clear(STATE_SEND_ITID17);
-    } else {
-      if (state.check(STATE_SEND_ITID1A)) {
-        buffer->add((uint16_t) 0x91A2, (int) obfcmData[5].value);
-        buffer->add((uint16_t) 0x91A4, (int) obfcmData[7].value);
-        buffer->add((uint16_t) 0x91A6, (int) obfcmData[9].value);
-        state.clear(STATE_SEND_ITID1A);
-      } else {
-        if (state.check(STATE_SEND_ITID1B)) {
-          buffer->add((uint16_t) 0x91B2, (int) obfcmData[11].value);
-          buffer->add((uint16_t) 0x91B4, (int) obfcmData[13].value);
-          state.clear(STATE_SEND_ITID1B);
-        } else {
-          if (state.check(STATE_SEND_ITID1C)) {
-            // buffer->add((uint16_t) 0x91C2, (int) obfcmData[15].value);
-            // buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
-            buffer->add((uint16_t) 0x91C6, (int) obfcmData[19].value);
-            state.clear(STATE_SEND_ITID1C);
-          } else {
-            if (state.check(STATE_SEND_VIN_1)) {
-              buffer->add((uint16_t) 0x9021, (uint32_t) vin_array[0]);
-              state.clear(STATE_SEND_VIN_1);
-            } else {
-              if (state.check(STATE_SEND_VIN_2)) {
-                buffer->add((uint16_t) 0x9022, (uint32_t) vin_array[1]);
-                state.clear(STATE_SEND_VIN_2);
-              } else {
-                if (state.check(STATE_SEND_VIN_3)) {
-                  buffer->add((uint16_t) 0x9023, (uint32_t) vin_array[2]);
-                  state.clear(STATE_SEND_VIN_3);
-                } else {
-                  if (state.check(STATE_SEND_VIN_4)) {
-                    buffer->add((uint16_t) 0x9024, (uint32_t) vin_array[3]);
-                    state.clear(STATE_SEND_VIN_4);
-                  } else {
-                    if (state.check(STATE_SEND_VIN_5)) {
-                      buffer->add((uint16_t) 0x9025, (uint32_t) vin_array[4]);
-                      state.clear(STATE_SEND_VIN_5);
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
+    } else if (state.check(STATE_SEND_ITID1A)) {
+      buffer->add((uint16_t) 0x91A2, (int) obfcmData[5].value);
+      buffer->add((uint16_t) 0x91A4, (int) obfcmData[7].value);
+      buffer->add((uint16_t) 0x91A6, (int) obfcmData[9].value);
+      state.clear(STATE_SEND_ITID1A);
+    } else if (state.check(STATE_SEND_ITID1B)) {
+      buffer->add((uint16_t) 0x91B2, (int) obfcmData[11].value);
+      buffer->add((uint16_t) 0x91B4, (int) obfcmData[13].value);
+      state.clear(STATE_SEND_ITID1B);
+    } else if (state.check(STATE_SEND_ITID1C)) {
+      // buffer->add((uint16_t) 0x91C2, (int) obfcmData[15].value);
+      // buffer->add((uint16_t) 0x91C4, (int) obfcmData[17].value);
+      buffer->add((uint16_t) 0x91C6, (int) obfcmData[19].value);
+      state.clear(STATE_SEND_ITID1C);
+    } else if (state.check(STATE_SEND_VIN_1)) {
+      buffer->add((uint16_t) 0x9021, (uint32_t) vin_array[0]);
+      state.clear(STATE_SEND_VIN_1);
+    } else if (state.check(STATE_SEND_VIN_2)) {
+      buffer->add((uint16_t) 0x9022, (uint32_t) vin_array[1]);
+      state.clear(STATE_SEND_VIN_2);
+    } else if (state.check(STATE_SEND_VIN_3)) {
+      buffer->add((uint16_t) 0x9023, (uint32_t) vin_array[2]);
+      state.clear(STATE_SEND_VIN_3);
+    } else if (state.check(STATE_SEND_VIN_4)) {
+      buffer->add((uint16_t) 0x9024, (uint32_t) vin_array[3]);
+      state.clear(STATE_SEND_VIN_4);
+    } else if (state.check(STATE_SEND_VIN_5)) {
+      buffer->add((uint16_t) 0x9025, (uint32_t) vin_array[4]);
+      state.clear(STATE_SEND_VIN_5);
     }
 
     if (millis() - lastObfcmTime > 120000) {
