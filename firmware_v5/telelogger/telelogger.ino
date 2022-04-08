@@ -188,7 +188,27 @@ TeleClientHTTP teleClient;
 
 #if ENABLE_OLED
 OLED_SH1106 oled;
-#endif
+
+#   define OLED_CLEAR()      oled.clear()
+#   define OLED_PRINT(...)      oled.print(__VA_ARGS__)
+#   define OLED_PRINTF(...)     oled.printf(__VA_ARGS__)
+#   define OLED_PRINTLN(...)    oled.println(__VA_ARGS__)
+#   define OLED_SET_CURSOR(...) oled.setCursor(__VA_ARGS__)
+
+
+#else // ENABLE_OLED
+#   undef OLED_CLEAR
+#   undef OLED_PRINT
+#   undef OLED_PRINTF
+#   undef OLED_PRINTLN
+#   undef OLED_SET_CURSOR
+
+#   define OLED_CLEAR()         do {} while(0)
+#   define OLED_PRINT(...)      do {} while(0)
+#   define OLED_PRINTF(...)     do {} while(0)
+#   define OLED_PRINTLN(...)    do {} while(0)
+#   define OLED_SET_CURSOR(...) do {} while(0)
+#endif // ENABLE_OLED
 
 State state;
 
@@ -514,9 +534,7 @@ void initialize()
     if (sys.gpsBegin(GPS_SERIAL_BAUDRATE)) {
       state.set(STATE_GPS_READY);
       ESP_LOGI(TAG_INIT, "GNSS: OK, state: %X", state.m_state);
-#if ENABLE_OLED
-      oled.println("GNSS OK");
-#endif
+      OLED_PRINTLN("GNSS OK");
     } else {
       ESP_LOGE(TAG_INIT, "GNSS: NO, state: %X", state.m_state);
     }
@@ -530,9 +548,7 @@ void initialize()
     if (obd.init()) {
       state.set(STATE_OBD_READY | STATE_GET_OBFCM);
       ESP_LOGI(TAG_INIT, "OBD: OK, state: %X", state.m_state);
-#if ENABLE_OLED
-      oled.println("OBD OK");
-#endif
+      OLED_PRINTLN("OBD OK");
     } else {
       ESP_LOGE(TAG_INIT, "OBD:NO");
       //state.clear(STATE_WORKING);
@@ -582,9 +598,7 @@ void initialize()
       i++;
     }
 
-#if ENABLE_OLED
-    oled.printf("VIN: %s\n", vin);
-#endif
+    OLED_PRINTF("VIN: %s\n", vin);
   }
 #endif
 
@@ -595,7 +609,7 @@ void initialize()
   state.set(STATE_WORKING);
 
 #if ENABLE_OLED
-  delay(1000);
+  delay(1000);  // This `delay()` forces #ifdef OLED.
   oled.clear();
   oled.printf("DEVICE ID: %s\n", devid);
   oled.setCursor(0, 7);
@@ -899,9 +913,7 @@ void process()
 bool initNetwork()
 {
 #if NET_DEVICE == NET_WIFI
-#if ENABLE_OLED
-  oled.print("Connecting WiFi...");
-#endif
+  OLED_PRINT("Connecting WiFi...");
   for (byte attempts = 0; attempts < 3; attempts++) {
     ESP_LOGI(TAG_INIT, "Joining WiFi: %s", WIFI_SSID);
     teleClient.net.begin(WIFI_SSID, WIFI_PASSWORD);
@@ -911,9 +923,7 @@ bool initNetwork()
       if (ip.length()) {
         state.set(STATE_NET_CONNECTED);
         ESP_LOGI(TAG_INIT, "WiFi IP: %s", ip.c_str());
-#if ENABLE_OLED
-        oled.println(ip);
-#endif
+        OLED_PRINTLN(ip);
         break;
       }
     } else {
@@ -927,15 +937,11 @@ bool initNetwork()
     state.set(STATE_NET_READY);
   } else {
     ESP_LOGE(TAG_INIT, "CELL: NO");
-#if ENABLE_OLED
-    oled.println("No Cell Module");
-#endif
+    OLED_PRINTLN("No Cell Module");
     return false;
   }
-#if NET_DEVICE == SIM800 || NET_DEVICE == NET_SIM5360 || NET_DEVICE == NET_SIM7600
-#if ENABLE_OLED
-    oled.printf("%s OK\nIMEI: %s\n", teleClient.net.deviceName(), teleClient.net.IMEI);
-#endif
+#if NET_DEVICE >= SIM800
+    OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
   ESP_LOGI(TAG_INIT, "CELL: %s", teleClient.net.deviceName());
   if (!teleClient.net.checkSIM(SIM_CARD_PIN)) {
     ESP_LOGE(TAG_INIT, "NO SIM CARD");
@@ -947,9 +953,7 @@ bool initNetwork()
       String op = teleClient.net.getOperatorName();
       if (op.length()) {
         ESP_LOGI(TAG_INIT, "Operator: %s", op.c_str());
-#if ENABLE_OLED
-        oled.printf("Operator: %s\n", op.c_str());
-#endif
+        OLED_PRINTLN(op);
       }
 
 #if GNSS == GNSS_CELLULAR
@@ -961,16 +965,12 @@ bool initNetwork()
       String ip = teleClient.net.getIP();
       if (ip.length()) {
         ESP_LOGI(TAG_INIT, "IP: %s", ip.c_str());
-#if ENABLE_OLED
-      oled.printf("IP: %s\n",ip.c_str());
-#endif
+        OLED_PRINTF("IP: %s\n",ip.c_str());
       }
       rssi = teleClient.net.getSignal();
       if (rssi) {
         ESP_LOGI(TAG_INIT, "RSSI: %idBm", rssi);
-#if ENABLE_OLED
-        oled.printf("RSSI: %idBm\n", rssi);
-#endif
+        OLED_PRINTF("RSSI: %idBm\n", rssi);
       }
       state.set(STATE_NET_CONNECTED);
     } else {
@@ -979,9 +979,7 @@ bool initNetwork()
         char *q = strchr(p, '\r');
         if (q) *q = 0;
         ESP_LOGD(TAG_INIT, "net buf: %s", p + 7);
-#if ENABLE_OLED
-        oled.println(p + 7);
-#endif
+        OLED_PRINTLN(p + 7);
       } else {
         ESP_LOGD(TAG_INIT, "net buf: %s", teleClient.net.getBuffer());
       }
@@ -1091,14 +1089,12 @@ void telemetry(void* inst)
         connErrors = 0;
         char timestr[16];
         teleClient.showNetStats(timestr);
-#if ENABLE_OLED
-        oled.setCursor(0, 2);
-        oled.println(timestr);
-        oled.setCursor(0, 5);
-        oled.printInt(teleClient.txCount, 2);
-        oled.setCursor(80, 5);
-        oled.printInt(teleClient.txBytes >> 10, 3);
-#endif
+        OLED_SET_CURSOR(0, 2);
+        OLED_PRINTLN(timestr);
+        OLED_PRINTF("%2i", teleClient.txCount);
+        OLED_SET_CURSOR(80, 5);
+        OLED_PRINTF("%3i", teleClient.txBytes >> 10);
+
       } else {
         connErrors++;
         timeoutsNet++;
@@ -1151,7 +1147,7 @@ void standby()
   ESP_LOGI(TAG_PROC, "STANDBY(state: %X)", state.m_state);
 #if ENABLE_OLED
   oled.print("STANDBY");
-  delay(1000);
+  delay(1000);  // This `delay()` forces #ifdef OLED.
   oled.clear();
 #endif
   // this will put co-processor into sleep mode
@@ -1310,13 +1306,10 @@ void setup()
 #endif
 
     LogDeviceInfo(devid);
-
-#if ENABLE_OLED
-    oled.clear();
-    oled.printf(
+    OLED_CLEAR();
+    OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
         (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20), devid);
-#endif
 
     if (sys.begin()) {
       ESP_LOGI(TAG_INIT, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
@@ -1356,7 +1349,7 @@ void setup()
     if (serverSetup(ip)) {
       ESP_LOGI(TAG, "HTTPD: %s\n", ip.toString().c_str());
 #if ENABLE_OLED
-      oled.printf("HTTPD: %s\n", ip.c_str());
+      OLED_PRINTF("HTTPD: %s\n", ip.c_str());
 #endif
     } else {
       ESP_LOGE(TAG, "HTTPD:NO");
