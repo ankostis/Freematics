@@ -36,7 +36,7 @@
 #define STATE_NET_CONNECTED 0x20
 #define STATE_WORKING 0x40
 #define STATE_STANDBY 0x100
-#define STATE_GET_VEHICLE_INFO 0x200
+#define STATE_GET_OBFCM 0x200
 #define STATE_SEND_ITID17 0x800
 #define STATE_SEND_ITID1A 0x1000
 #define STATE_SEND_ITID1B 0x2000
@@ -547,7 +547,7 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init()) {
       Serial.println("OBD:OK");
-      state.set(STATE_OBD_READY | STATE_GET_VEHICLE_INFO);
+      state.set(STATE_OBD_READY | STATE_GET_OBFCM);
 #if ENABLE_OLED
       oled.println("OBD OK");
 #endif
@@ -821,10 +821,10 @@ void process()
 
     processOBD(buffer);
 
-    if (state.check(STATE_GET_VEHICLE_INFO)) {
+    if (state.check(STATE_GET_OBFCM)) {
       lastObfcmTime = millis();
       obd.GetOBFCM(obfcmData);
-      state.clear(STATE_GET_VEHICLE_INFO);
+      state.clear(STATE_GET_OBFCM);
       state.set(STATE_SEND_ITID17 | STATE_SEND_ITID1A | STATE_SEND_ITID1B | STATE_SEND_ITID1C);
     }
 
@@ -850,7 +850,7 @@ void process()
 
     if (millis() - lastObfcmTime > 120000) {
       Serial.print("Two minutes since last OBFCM.");
-      state.set(STATE_GET_VEHICLE_INFO);
+      state.set(STATE_GET_OBFCM);
     }
 
     if (obd.errors >= MAX_OBD_ERRORS) {
@@ -1192,7 +1192,7 @@ void standby()
 #endif
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
   // this will put co-processor into sleep mode
-  state.set(STATE_STANDBY | STATE_GET_VEHICLE_INFO);
+  state.set(STATE_STANDBY | STATE_GET_OBFCM);
 #if ENABLE_OLED
   oled.print("STANDBY");
   delay(1000);
