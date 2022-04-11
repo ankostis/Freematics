@@ -604,8 +604,7 @@ void initialize()
     }
 
 #if ENABLE_OLED
-    oled.print("VIN:");
-    oled.println(vin);
+    oled.printf("VIN: %s\n", vin);
 #endif
   }
 #endif
@@ -619,8 +618,7 @@ void initialize()
 #if ENABLE_OLED
   delay(1000);
   oled.clear();
-  oled.print("DEVICE ID: ");
-  oled.println(devid);
+  oled.printf("DEVICE ID: %s\n", devid);
   oled.setCursor(0, 7);
   oled.print("Packets");
   oled.setCursor(80, 7);
@@ -979,10 +977,7 @@ bool initNetwork()
   }
 #if NET_DEVICE == SIM800 || NET_DEVICE == NET_SIM5360 || NET_DEVICE == NET_SIM7600
 #if ENABLE_OLED
-    oled.print(teleClient.net.deviceName());
-    oled.println(" OK\r");
-    oled.print("IMEI:");
-    oled.println(teleClient.net.IMEI);
+    oled.printf("%s OK\nIMEI: %s\n", teleClient.net.deviceName(), teleClient.net.IMEI);
 #endif
   Serial.print("CELL:");
   Serial.println(teleClient.net.deviceName());
@@ -999,7 +994,7 @@ bool initNetwork()
         Serial.print("Operator:");
         Serial.println(op);
 #if ENABLE_OLED
-        oled.println(op);
+        oled.printf("Operator: %s\n", op.c_str());
 #endif
       }
 
@@ -1014,8 +1009,7 @@ bool initNetwork()
         Serial.print("IP:");
         Serial.println(ip);
 #if ENABLE_OLED
-        oled.print("IP:");
-        oled.println(ip);
+      oled.printf("IP: %s\n",ip.c_str());
 #endif
       }
       rssi = teleClient.net.getSignal();
@@ -1024,9 +1018,7 @@ bool initNetwork()
         Serial.print(rssi);
         Serial.println("dBm");
 #if ENABLE_OLED
-        oled.print("RSSI:");
-        oled.print(rssi);
-        oled.println("dBm");
+        oled.printf("RSSI: %idBm\n", rssi);
 #endif
       }
       state.set(STATE_NET_CONNECTED);
@@ -1384,7 +1376,7 @@ void setup()
       Serial.println("HTTPD:");
       Serial.println(ip);
 #if ENABLE_OLED
-      oled.println(ip);
+      oled.printf("HTTPD: %s\n", ip.c_str());
 #endif
     } else {
       Serial.println("HTTPD:NO");
