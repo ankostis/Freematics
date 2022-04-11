@@ -1101,7 +1101,7 @@ ICM_20948_Status_e	ICM_20948::intEnableRawDataReady   ( bool enable ){
     status = ICM_20948_int_enable( &_device, &en, &en );    // write phase w/ readback
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.RAW_DATA_0_RDY_EN != enable ){
-        Serial.println("mismatch error");
+        ESP_LOGW(TAG, "mismatch error %i", status);
         status = ICM_20948_Stat_Err;
         return status;
     }

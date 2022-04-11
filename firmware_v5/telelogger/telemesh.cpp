@@ -9,15 +9,15 @@ static mdf_err_t event_loop_cb(mdf_event_loop_t event, void *ctx)
 {
     switch (event) {
         case MDF_EVENT_MWIFI_STARTED:
-            Serial.println("MESH is started");
+            ESP_LOGI("MESH is started");
             break;
 
         case MDF_EVENT_MWIFI_PARENT_CONNECTED:
-            Serial.println("Parent is connected on station interface");
+            ESP_LOGI("Parent is connected on station interface");
             break;
 
         case MDF_EVENT_MWIFI_PARENT_DISCONNECTED:
-            Serial.println("Parent is disconnected on station interface");
+            ESP_LOGI("Parent is disconnected on station interface");
             break;
 
         default:

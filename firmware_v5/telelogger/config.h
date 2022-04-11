@@ -36,7 +36,7 @@
  * Logging (see also `platformio.ini`)
  **************************************/
 // Works only when ESP_IDF logging-lib selected in `platformio.ini`.
-#define RUNTIME_ALL_TAGS_LOG_LEVEL CORE_DEBUG_LEVEL
+#define RUNTIME_ALL_TAGS_LOG_LEVEL (esp_log_level_t)CORE_DEBUG_LEVEL
 
 /**************************************
 * OBD-II configurations
@@ -96,7 +96,10 @@
 #define WIFI_AP_SSID "TELELOGGER"
 #define WIFI_AP_PASSWORD "PASSWORD"
 
-// maximum consecutive communication errors before reconnecting
+// Currently, only server's URL * WiFi passwords considered secrets.
+#define HIDE_SECRETS_IN_LOGS 0
+
+// maximum consecutive communication errors before resetting network
 #define MAX_CONN_ERRORS_RECONNECT 3
 // maximum allowed connecting time
 #define MAX_CONN_TIME 10000 /* ms */
@@ -108,6 +111,9 @@
 #define STATIONARY_TIME_TABLE {20, 40, 60} /* seconds */
 #define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
 #define PING_BACK_INTERVAL 900 /* seconds */
+
+// How often to send PIDs form the on-board fuel-consumption monitoring device.
+#define OBFCM_INTERVAL_MS 120000
 
 /**************************************
 * Data storage configurations

@@ -25,8 +25,7 @@
 #include "FreematicsPlus.h"
 #include "FreematicsGPS.h"
 
-#define VERBOSE_LINK 0
-#define VERBOSE_XBEE 0
+// TODO: merge device-temp from upstream(202204)
 
 static TinyGPS gps;
 static bool gpsHasDecodedData = false;
@@ -202,9 +201,7 @@ void Mutex::unlock()
 
 bool CLink_UART::begin(unsigned int baudrate, int rxPin, int txPin)
 {
-#if VERBOSE_LINK
-    Serial.println("[UART BEGIN]");
-#endif
+    ESP_LOGD(TAG_LINK, "<BEGIN> UART-%i, %i, %i, %i", LINK_UART_NUM, baudrate, rxPin, txPin);
     uart_config_t uart_config = {
         .baud_rate = (int)baudrate,
         .data_bits = UART_DATA_8_BITS,
@@ -225,9 +222,7 @@ bool CLink_UART::begin(unsigned int baudrate, int rxPin, int txPin)
 
 void CLink_UART::end()
 {
-#if VERBOSE_LINK
-    Serial.println("[UART END]");
-#endif
+    ESP_LOGD(TAG_LINK, "<END> UART-%i", LINK_UART_NUM);
 	uart_driver_delete(LINK_UART_NUM);
 }
 
@@ -255,20 +250,14 @@ int CLink_UART::receive(char* buffer, int bufsize, unsigned int timeout)
 			timeout += OBD_TIMEOUT_LONG;
 		}
 	}
-#if VERBOSE_LINK
-	Serial.print("[UART RECV]");
-	Serial.println(buffer);
-#endif
+	ESP_LOGV(TAG_LINK, "<UART RECV> x%i |%s|", n, buffer);
 	return n;
 }
 
 bool CLink_UART::send(const char* str)
 {
-#if VERBOSE_LINK
-	Serial.print("[UART SEND]");
-	Serial.println(str);
-#endif
     int len = strlen(str);
+	ESP_LOGV(TAG_LINK, "<UART SEND> x%i |%s|", len, str);
 	return uart_write_bytes(LINK_UART_NUM, str, len) == len;
 }
 
@@ -299,9 +288,7 @@ bool CLink_UART::changeBaudRate(unsigned int baudrate)
 
 bool CLink_SPI::begin(unsigned int freq, int rxPin, int txPin)
 {
-#if VERBOSE_LINK
-    Serial.println("[SPI BEGIN]");
-#endif
+    ESP_LOGD(TAG_SPI, "<SPI BEGIN> %i, %i, %i", freq, rxPin, txPin);
 	pinMode(PIN_LINK_SPI_READY, INPUT);
 	pinMode(PIN_LINK_SPI_CS, OUTPUT);
 	digitalWrite(PIN_LINK_SPI_CS, HIGH);
@@ -317,9 +304,7 @@ bool CLink_SPI::begin(unsigned int freq, int rxPin, int txPin)
 
 void CLink_SPI::end()
 {
-#if VERBOSE_LINK
-    Serial.println("[SPI END]");
-#endif
+    ESP_LOGD(TAG_SPI, "<SPI END>");
 	SPI.end();
 }
 
@@ -335,9 +320,7 @@ int CLink_SPI::receive(char* buffer, int bufsize, unsigned int timeout)
 			if (millis() - t > 3000) return -1;
             delay(1);
 		}
-#if VERBOSE_LINK
-    	Serial.println("[SPI RECV]");
-#endif
+    	ESP_LOGV(TAG_SPI, "<SPI RECV>");
 		portENTER_CRITICAL(&m);
 		digitalWrite(PIN_LINK_SPI_CS, LOW);
 		while (digitalRead(PIN_LINK_SPI_READY) == LOW && millis() - t < timeout) {
@@ -368,9 +351,7 @@ int CLink_SPI::receive(char* buffer, int bufsize, unsigned int timeout)
 				if (n == bufsize - 1) {
 					int bytesDumped = dumpLine(buffer, n);
 					n -= bytesDumped;
-#if VERBOSE_LINK
-					Serial.println("[SPI BUFFER FULL]");
-#endif
+					ESP_LOGW(TAG_LINK, "<SPI RECV> BUFFER FULL");
 				}
 				buffer[n++] = c;
 			}
@@ -378,17 +359,12 @@ int CLink_SPI::receive(char* buffer, int bufsize, unsigned int timeout)
 		digitalWrite(PIN_LINK_SPI_CS, HIGH);
 		portEXIT_CRITICAL(&m);
 	} while (!eos && millis() - t < timeout);
-#if VERBOSE_LINK
 	if (!eos) {
 		// timed out
-		Serial.println("[SPI RECV TIMEOUT]");
+		ESP_LOGW(TAG_SPI, "<SPI RECV> TIMEOUT");
 	}
-#endif
 	buffer[n] = 0;
-#if VERBOSE_LINK
-	Serial.print("[SPI RECV]");
-	Serial.println(buffer);
-#endif
+	ESP_LOGD(TAG_LINK, "<SPI RECV> x%i |%s|", n, buffer);
 	// wait for READY pin to restore high level so SPI bus is released
     if (eos) while (digitalRead(PIN_LINK_SPI_READY) == LOW) delay(1);
 	return n;
@@ -397,17 +373,12 @@ int CLink_SPI::receive(char* buffer, int bufsize, unsigned int timeout)
 bool CLink_SPI::send(const char* str)
 {
     if (digitalRead(PIN_LINK_SPI_READY) == LOW) {
-#if VERBOSE_LINK
-    	Serial.println("[SPI NOT READY]");
-#endif
+    	ESP_LOGW(TAG_SPI, "<SPI SEND> NOT READY");
         return false;
     }
 	portMUX_TYPE m = portMUX_INITIALIZER_UNLOCKED;
-#if VERBOSE_LINK
-	Serial.print("[SPI SEND]");
-	Serial.println(str);
-#endif
 	int len = strlen(str);
+	ESP_LOGD(TAG_SPI, "<SPI SEND> x%i |%s|", len, str);
 	uint8_t tail = 0x1B;
 	portENTER_CRITICAL(&m);
 	digitalWrite(PIN_LINK_SPI_CS, LOW);
@@ -432,7 +403,7 @@ int CLink_SPI::sendCommand(const char* cmd, char* buf, int bufsize, unsigned int
         }
 		n = receive(buf, bufsize, timeout);
 		if (n == -1) {
-			Serial.print('_');
+			ESP_LOGV(TAG_SPI, "_");
 			n = 0;
 			continue;
 		}
@@ -449,18 +420,25 @@ int CLink_SPI::sendCommand(const char* cmd, char* buf, int bufsize, unsigned int
 void FreematicsESP32::gpsEnd()
 {
     // uninitialize
+    ESP_LOGI(TAG_GNSS, "<END>");
     if ((m_flags & FLAG_GNSS_USE_LINK)) {
         char buf[16];
         link->sendCommand("ATGPSOFF", buf, sizeof(buf), 0);
     } else {
         taskGPS.destroy();
-        if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) uart_driver_delete(gpsUARTNum);
+        if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) {
+            ESP_LOGD(TAG_GNSS, "<END> UART-%i", gpsUARTNum);
+            uart_driver_delete(gpsUARTNum);
+        }
         digitalWrite(m_pinGPSPower, LOW);
     }
 }
 
 bool FreematicsESP32::gpsBegin(int baudrate)
 {
+    ESP_LOGV(TAG_GNSS, "<BEGIN>");
+    // TODO: merge upstream(202204) `gpsBegin()` for set-baud/Link-GNSS/C3 enhancements.
+
     // try co-processor GPS link
     if (m_flags & FLAG_GNSS_USE_LINK) {
         char buf[128];
@@ -478,6 +456,8 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             gpsData = new GPS_DATA;
             memset(gpsData, 0, sizeof(GPS_DATA));
             m_pinGPSPower = 0;
+
+            ESP_LOGI(TAG_GNSS, "<BEGIN> through LINK");
             return true;
         }
         link->sendCommand("ATGPSOFF", buf, sizeof(buf), 100);
@@ -495,6 +475,14 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             .rx_flow_ctrl_thresh = 122,
         };
         bool legacy = devType <= 13;
+        ESP_LOGD(
+                TAG_GNSS,
+                "<BEGIN?> UART-%i(legacy: %i, txpin: %i, rxpin: %i, baud: %i)",
+                gpsUARTNum,
+                legacy,
+                legacy ? PIN_GPS_UART_TXD2 : PIN_GPS_UART_TXD,
+                legacy ? PIN_GPS_UART_RXD2 : PIN_GPS_UART_RXD,
+                baudrate);
         // configure UART parameters
         uart_param_config(gpsUARTNum, &uart_config);
         // set UART pins
@@ -507,6 +495,9 @@ bool FreematicsESP32::gpsBegin(int baudrate)
         // start decoding task
         taskGPS.create(gps_decode_task, "GPS", 1);
     } else {
+        ESP_LOGD(
+            TAG_GNSS, "<BEGIN?> UART-soft(%i, %i)",
+            PIN_GPS_UART_RXD, PIN_GPS_UART_TXD);
         pinMode(PIN_GPS_UART_RXD, INPUT);
         pinMode(PIN_GPS_UART_TXD, OUTPUT);
         setTxPinHigh();
@@ -538,6 +529,10 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             // data is coming in
             if (!gpsData) gpsData = new GPS_DATA;
             memset(gpsData, 0, sizeof(GPS_DATA));
+
+            ESP_LOGI(
+                TAG_GNSS, "<BEGIN> using UART-%i(99=soft)",
+                (m_flags & FLAG_GNSS_SOFT_SERIAL)? 99 : gpsUARTNum);
             return true;
         }
     }
@@ -548,6 +543,7 @@ bool FreematicsESP32::gpsBegin(int baudrate)
 
 bool FreematicsESP32::gpsGetData(GPS_DATA** pgd)
 {
+    ESP_LOGD(TAG_GNSS, "<READ ASKED>");
     if (!gpsData) return false;
     if (pgd) *pgd = gpsData;
     if (m_flags & FLAG_GNSS_USE_LINK) {
@@ -643,6 +639,7 @@ void FreematicsESP32::gpsSendCommand(const char* string, int len)
 
 bool FreematicsESP32::xbBegin(unsigned long baudrate, int pinRx, int pinTx)
 {
+    ESP_LOGD(TAG_GSM, "<BEGIN> UART-%i, %i, %i", BEE_UART_NUM, pinRx, pinTx);
     uart_config_t uart_config = {
         .baud_rate = (int)baudrate,
         .data_bits = UART_DATA_8_BITS,
@@ -652,12 +649,6 @@ bool FreematicsESP32::xbBegin(unsigned long baudrate, int pinRx, int pinTx)
         .rx_flow_ctrl_thresh = 122,
     };
 
-#if VERBOSE_XBEE
-    Serial.print("Bee Rx:");
-    Serial.print(pinRx);
-    Serial.print(" Tx:");
-    Serial.println(pinTx);
-#endif
     //Configure UART parameters
     uart_param_config(BEE_UART_NUM, &uart_config);
     //Set UART pins
@@ -674,24 +665,21 @@ bool FreematicsESP32::xbBegin(unsigned long baudrate, int pinRx, int pinTx)
 
 void FreematicsESP32::xbEnd()
 {
+    ESP_LOGD(TAG_GSM, "<END> UART-%i", BEE_UART_NUM);
     uart_driver_delete(BEE_UART_NUM);
     digitalWrite(PIN_BEE_PWR, LOW);
 }
 
 void FreematicsESP32::xbWrite(const char* cmd)
 {
-    uart_write_bytes(BEE_UART_NUM, cmd, strlen(cmd));
-#if VERBOSE_XBEE
-    Serial.print("=== SENT@");
-    Serial.print(millis());
-    Serial.println(" ===");
-	Serial.println(cmd);
-	Serial.println("==================");
-#endif
+    int len = strlen(cmd);
+    uart_write_bytes(BEE_UART_NUM, cmd, len);
+    ESP_LOGV(TAG_GSM, "<SEND> x%i |%s|", len, cmd);
 }
 
 void FreematicsESP32::xbWrite(const char* data, int len)
 {
+    ESP_LOGV(TAG_GSM, "<SEND> x%i |%.*s|", len, len, data);
     uart_write_bytes(BEE_UART_NUM, data, len);
 }
 
@@ -710,6 +698,8 @@ int FreematicsESP32::xbRead(char* buffer, int bufsize, unsigned int timeout)
             break;
         }
     } while (recv < bufsize && millis() - t < timeout);
+
+    ESP_LOGV(TAG_GSM, "<RECV> x%i |%.*s|", recv, recv, buffer);
     return recv;
 }
 
@@ -723,14 +713,8 @@ int FreematicsESP32::xbReceive(char* buffer, int bufsize, unsigned int timeout, 
 		}
 		int n = xbRead(buffer + bytesRecv, bufsize - bytesRecv - 1, 50);
 		if (n > 0) {
-#if VERBOSE_XBEE
-			Serial.print("=== RECV@");
-            Serial.print(millis());
-            Serial.println(" ===");
 			buffer[bytesRecv + n] = 0;
-			Serial.print(buffer + bytesRecv);
-			Serial.println("==================");
-#endif
+			ESP_LOGV(TAG_GSM, "<RECV> x%i |%s|", n, buffer + bytesRecv);
 			bytesRecv += n;
 			buffer[bytesRecv] = 0;
 			for (byte i = 0; i < expectedCount; i++) {
@@ -739,9 +723,7 @@ int FreematicsESP32::xbReceive(char* buffer, int bufsize, unsigned int timeout, 
 			}
 		} else if (n == -1) {
 			// an erroneous reading
-#if VERBOSE_XBEE
-			Serial.print("RECV ERROR");
-#endif
+			ESP_LOGW(TAG_GSM, "RECV ERROR");
 			break;
 		}
 	} while (millis() - t < timeout);
@@ -751,26 +733,23 @@ int FreematicsESP32::xbReceive(char* buffer, int bufsize, unsigned int timeout, 
 
 void FreematicsESP32::xbPurge()
 {
+    ESP_LOGD(TAG_LINK, "<PURGE>");
     uart_flush(BEE_UART_NUM);
 }
 
 void FreematicsESP32::xbTogglePower()
 {
 #ifdef PIN_BEE_PWR
+    ESP_LOGD(TAG_GNSS, "Toggle GSM POWER pin %i x2 times...", PIN_BEE_PWR);
     digitalWrite(PIN_BEE_PWR, HIGH);
     delay(100);
-#if VERBOSE_XBEE
-	Serial.println("xBee power pin set to low");
-#endif
 	digitalWrite(PIN_BEE_PWR, LOW);
-	delay(1010);
-#if VERBOSE_XBEE
-	Serial.println("xBee power pin set to high");
-#endif
+	delay(200);  // TODO: `delay(1010)` in upstream(202204)
     digitalWrite(PIN_BEE_PWR, HIGH);
 #endif
     delay(100);
     digitalWrite(PIN_BEE_PWR, LOW);
+    ESP_LOGV(TAG_GNSS, "Finished toggling GSM power");
 }
 
 byte FreematicsESP32::getDeviceType()
@@ -792,6 +771,7 @@ byte FreematicsESP32::getDeviceType()
 
 bool FreematicsESP32::reactivateLink()
 {
+    ESP_LOGD(TAG_LINK, "<REACTIVATE?> %i", bool(link));
     if (!link) return false;
     for (int n = 0; n < 30; n++) {
         char buf[32];
@@ -802,6 +782,7 @@ bool FreematicsESP32::reactivateLink()
 
 void FreematicsESP32::resetLink()
 {
+    ESP_LOGD(TAG_LINK, "<RESET>");
     char buf[16];
     if (link) link->sendCommand("ATR\r", buf, sizeof(buf), 100);
     if (devType == 11 || devType >= 14) {
@@ -813,6 +794,7 @@ void FreematicsESP32::resetLink()
 
 bool FreematicsESP32::begin(bool useCoProc, bool useCellular)
 {
+    ESP_LOGD(TAG, "<BEGIN ESP32> %i, %i", useCoProc, useCellular);
     if (link) return false;
 
     pinMode(PIN_LINK_RESET, OUTPUT);

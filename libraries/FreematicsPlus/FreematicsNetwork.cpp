@@ -74,7 +74,7 @@ int ClientWIFI::listAPs()
   } else {
     ESP_LOGI(TAG, "x%i nearby WiFi APs:", n);
     for (int i = 0; i < n; ++i) {
-        ESP_LOGI(TAG, "  +--%i: %s (%is)db)", (i + 1), WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+        ESP_LOGI(TAG, "  +--%i: %s (%idb)", (i + 1), WiFi.SSID(i).c_str(), WiFi.RSSI(i));
     }
   }
   return n;
@@ -430,7 +430,7 @@ bool HTTPClientSIM800::send(HTTP_METHOD method, const char* path, bool keepAlive
     }
   }
   m_state = HTTP_ERROR;
-  Serial.println(m_buffer);
+  ESP_LOGD(TAG, "%s", m_buffer);
   return false;
 }
 
@@ -447,7 +447,7 @@ char* HTTPClientSIM800::receive(int* pbytes, unsigned int timeout)
     if (!sendCommand(0, timeout, "+HTTPACTION")) return 0;
   }
   if (sendCommand("AT+HTTPREAD\r", 1000)) {
-    Serial.println(m_buffer);
+    ESP_LOGD(TAG, "%s", m_buffer);
     p = strstr(m_buffer, "+HTTPREAD: ");
     if (p) {
       p += 11;
@@ -480,7 +480,7 @@ bool ClientSIM5360::begin(CFreematics* device)
     for (byte m = 0; m < 5; m++) {
       if (sendCommand("AT\r") && sendCommand("ATE0\r") && sendCommand("ATI\r")) {
         // retrieve module info
-        //Serial.print(m_buffer);
+        ESP_LOGD(TAG, "%s", m_buffer);
         char *p = strstr(m_buffer, "Model:");
         if (p) p = strchr(p, '_');
         if (p++) {
@@ -557,7 +557,7 @@ bool ClientSIM5360::setup(const char* apn, unsigned int timeout)
     sendCommand("AT+CIPMODE=0\r");
     sendCommand("AT+NETOPEN\r");
   } while(0);
-  if (!success) Serial.println(m_buffer);
+  if (!success) ESP_LOGD(TAG, "%s", m_buffer);
   return success;
 }
 
@@ -737,7 +737,7 @@ bool UDPClientSIM5360::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
   if (!sendCommand(m_buffer, 3000)) {
     close();
-    Serial.println(m_buffer);
+    ESP_LOGD(TAG, "%s", m_buffer);
     return false;
   }
   return true;
@@ -805,7 +805,7 @@ bool HTTPClientSIM5360::open(const char* host, uint16_t port)
     checkGPS();
     return true;
   }
-  Serial.println(m_buffer);
+  ESP_LOGD(TAG, "%s", m_buffer);
   checkGPS();
   m_state = HTTP_ERROR;
   return false;
@@ -834,7 +834,7 @@ bool HTTPClientSIM5360::send(HTTP_METHOD method, const char* path, bool keepAliv
     m_state = HTTP_SENT;
     return true;
   }
-  //Serial.println(m_buffer);
+  ESP_LOGD(TAG, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -985,7 +985,7 @@ bool UDPClientSIM7600::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
   if (!sendCommand(m_buffer, 3000)) {
     close();
-    Serial.println(m_buffer);
+    ESP_LOGD(TAG, "%s", m_buffer);
     return false;
   }
   return true;
@@ -1053,7 +1053,7 @@ bool HTTPClientSIM7600::open(const char* host, uint16_t port)
     }
   }
   checkGPS();
-  Serial.println(m_buffer);
+  ESP_LOGD(TAG, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -1081,7 +1081,7 @@ bool HTTPClientSIM7600::send(HTTP_METHOD method, const char* path, bool keepAliv
     m_state = HTTP_SENT;
     return true;
   }
-  //Serial.println(m_buffer);
+  ESP_LOGD(TAG, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -1139,3 +1139,5 @@ char* HTTPClientSIM7600::receive(int* pbytes, unsigned int timeout)
     return payload;
   }
 }
+
+// TODO: merge upstream(202204) for SIM7070

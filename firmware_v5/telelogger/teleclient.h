@@ -18,6 +18,9 @@
 #define ELEMENT_FLOAT 2
 #define ELEMENT_FLOATX3 3
 
+// ESP_IDF logging tag used
+constexpr char TAG_BUF[] = "BUF";
+
 class CBuffer
 {
 public:
@@ -90,23 +93,10 @@ public:
             bytes += buffers[n]->offset;
             samples += buffers[n]->count;
             slots++;
-            /*
-            Serial.print(n);
-            Serial.print(':');
-            Serial.print(buffers[n]->count);
-            Serial.print(',');
-            Serial.print(buffers[n]->offset);
-            Serial.print(' ');
-            */
+            ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n, buffers[n]->count, buffers[n]->offset);
         }
         if (slots) {
-            Serial.print("[BUF] ");
-            Serial.print(samples);
-            Serial.print(" samples | ");
-            Serial.print(bytes);
-            Serial.print(" bytes | ");
-            Serial.print(slots * 100 / BUFFER_SLOTS);
-            Serial.println("%");
+            ESP_LOGI(TAG_BUF, "%i samples | %i bytes | %i%%", samples, bytes, slots * 100 / BUFFER_SLOTS);
         }
     }
     CBuffer* buffers[BUFFER_SLOTS];

@@ -28,6 +28,14 @@ extern char vin[];
 extern GPS_DATA* gd;
 extern char isoTime[];
 
+#if HIDE_SECRETS_IN_LOGS
+  constexpr const char* host2log = "***";
+  constexpr const int port2log = 0;
+#else
+  constexpr const char* host2log = SERVER_HOST;
+  constexpr const int port2log = SERVER_PORT;
+#endif
+
 CBuffer::CBuffer()
 {
   purge();
@@ -43,7 +51,7 @@ void CBuffer::add(uint16_t pid, int value)
     offset += sizeof(int);
     count++;
   } else {
-    Serial.println("FULL");
+    ESP_LOGW(TAG, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, uint32_t value)
@@ -56,7 +64,7 @@ void CBuffer::add(uint16_t pid, uint32_t value)
     offset += sizeof(uint32_t);
     count++;
   } else {
-    Serial.println("FULL");
+    ESP_LOGW(TAG, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, float value)
@@ -69,7 +77,7 @@ void CBuffer::add(uint16_t pid, float value)
     offset += sizeof(float);
     count++;
   } else {
-    Serial.println("FULL");
+    ESP_LOGW(TAG, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, float value[])
@@ -82,7 +90,7 @@ void CBuffer::add(uint16_t pid, float value[])
     offset += sizeof(float) * 3;
     count++;
   } else {
-      Serial.println("FULL");
+      ESP_LOGW(TAG, "FULL");
   }
 }
 void CBuffer::purge()
@@ -171,11 +179,12 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     netbuf.dispatch(payload, strlen(payload));
   }
   netbuf.tailer();
-  //Serial.println(netbuf.buffer());
+  ESP_LOGD(TAG, "TeleClientUDP notify: |%s|", netbuf.buffer());
   for (byte attempts = 0; attempts < 3; attempts++) {
     // send notification datagram
-    //Serial.println(netbuf.buffer());
-    if (!net.send(netbuf.buffer(), netbuf.length())) {
+    ESP_LOGV(TAG, "notify x%i...", attempts);
+    if (!net.send(netbuf.buffer(), netbuf.length()))
+    {
       // error sending data
       break;
     }
@@ -190,19 +199,18 @@ bool TeleClientUDP::notify(byte event, const char* payload)
       delay(100);
     } while (millis() - t < DATA_RECEIVING_TIMEOUT);
     if (!data) {
-      //Serial.println("Timeout");
+      ESP_LOGW(TAG, "recv timeout");
       continue;
     }
     // verify checksum
     if (!verifyChecksum(data)) {
-      Serial.print("Checksum mismatch:");
-      Serial.println(data);
+      ESP_LOGE(TAG, "Checksum mismatch: %s", data);
       continue;
     }
     char pattern[16];
     sprintf(pattern, "EV=%u", event);
     if (!strstr(data, pattern)) {
-      Serial.println("Invalid reply");
+      ESP_LOGE(TAG, "Invalid reply: %s, expected event: %i", data, event);
       continue;
     }
     if (event == EVENT_LOGIN) {
@@ -237,21 +245,21 @@ bool TeleClientUDP::connect()
   bool success = false;
   // connect to telematics server
   for (byte attempts = 0; attempts < 5; attempts++) {
-    Serial.print(event == EVENT_LOGIN ? "LOGIN" : "RECONNECT");
-    Serial.println("...");
-    //Serial.print(SERVER_HOST);
-    //Serial.print(':');
-    //Serial.print(SERVER_PORT);
-    //Serial.println(")...");
+    ESP_LOGI(
+      TAG,
+      "%s to %s:%i...",
+      event == EVENT_LOGIN ? "LOGIN" : "RECONNECT",
+      host2log,
+      port2log);
     if (!net.open(SERVER_HOST, SERVER_PORT)) {
-      Serial.println("Unable to connect");
+      ESP_LOGW(TAG, "Unable to connect x%i", attempts);
       delay(3000);
       continue;
     }
     // log in or reconnect to Freematics Hub
     if (!notify(event)) {
       net.close();
-      Serial.println("Server timeout");
+      ESP_LOGE(TAG, "Server timeout");
       continue;
     }
     success = true;
@@ -297,8 +305,7 @@ void TeleClientUDP::inbound()
     data[len] = 0;
     rxBytes += len;
     if (!verifyChecksum(data)) {
-      Serial.print("Checksum mismatch:");
-      Serial.println(data);
+      ESP_LOGE(TAG, "Checksum mismatch: %s", data);
       break;
     }
     char *p = strstr(data, "EV=");
@@ -313,8 +320,7 @@ void TeleClientUDP::inbound()
           uint16_t id = hex2uint16(data);
           if (id && id != feedid) {
             feedid = id;
-            Serial.print("FEED ID:");
-            Serial.println(feedid);
+            ESP_LOGI(TAG, "FEED ID: %i", feedid);
           }
         }
         break;
@@ -331,8 +337,7 @@ void TeleClientUDP::shutdown()
   }
   net.close();
   net.end();
-  Serial.print(net.deviceName());
-  Serial.println(" OFF");
+  ESP_LOGI(TAG, "<SHUTDOWN> %s", net.deviceName());
 }
 
 #if NET_DEVICE == NET_WIFI || NET_DEVICE == NET_SIM800 || NET_DEVICE == NET_SIM5360 || NET_DEVICE == NET_SIM7600
@@ -369,11 +374,20 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   success = net.send(METHOD_GET, url, true);
 #else
   len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
+  ESP_LOGD(TAG,
+      "TeleClientHTTP sending %i bytes to URL: %s",
+      packetSize,
+#if HIDE_SECRETS_IN_LOGS
+      "***"
+#else
+      url
+#endif
+  );
   success = net.send(METHOD_POST, url, true, packetBuffer, packetSize);
   len += packetSize;
 #endif
   if (!success) {
-    Serial.println("Connection closed");
+    ESP_LOGE(TAG, "Transmit failed. Closing net");
     net.close();
     return false;
   } else {
@@ -386,11 +400,11 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   char* response = net.receive(&bytes);
   if (!response) {
     // close connection on receiving timeout
-    Serial.println("No HTTP response");
+    ESP_LOGE(TAG, "No HTTP response.  Closing net.");
     net.close();
     return false;
   }
-  Serial.println(response);
+  ESP_LOGD(TAG, "tx-reply: %s", response);
   if (strstr(response, " 200 ")) {
     // successful
     lastSyncTime = millis();
@@ -412,16 +426,11 @@ bool TeleClientHTTP::connect()
     success = net.open(SERVER_HOST, SERVER_PORT);
   }
   if (!success) {
-    Serial.println("Error connecting to server");
+    ESP_LOGE(TAG, "Error connecting to server");
     return false;
   }
   if (!login) {
-    // Serial.print("LOGIN(");
-    // Serial.print(SERVER_HOST);
-    // Serial.print(':');
-    // Serial.print(SERVER_PORT);
-    //  Serial.println(")...");
-    Serial.println("LOGIN to server...");
+    ESP_LOGI(TAG, "LOGIN to %s:%i...", host2log, port2log);
     // log in or reconnect to Freematics Hub
     if (notify(EVENT_LOGIN)) {
       lastSyncTime = millis();
@@ -447,6 +456,7 @@ void TeleClientHTTP::shutdown()
   net.end();
   Serial.println(" OFF");
   started = false;
+  ESP_LOGI(TAG, "<SHUTDOWN> %s", net.deviceName());
 }
 
 #endif

@@ -36,6 +36,7 @@ void test_sys_info()
 #include <esp_log.h>
 #include <esp32-hal-log.h>
 
+constexpr char MY_TAG[] = "MY_TAG";
 
 /**
  * From the sample logs below (with CORE_DEBUG_LEVEL=5 (VERBOSE)),
@@ -108,17 +109,17 @@ void test_sys_info()
  */
 void _do_logs()
 {
-    ESP_LOGV(TAG, "ESP_LOGV");
+    ESP_LOGV(MY_TAG, "ESP_LOGV");
     ESP_LOGD(TAG, "ESP_LOGD");
     ESP_LOGI(TAG, "ESP_LOGI");
-    ESP_LOGW(TAG, "ESP_LOGW");
+    ESP_LOGW(TAG, "ESP_LOGW %s", "foo");
     ESP_LOGE(TAG, "ESP_LOGE");
 
     log_v("log_v");
     log_d("log_d");
     log_i("log_i");
     log_w("log_w");
-    log_e("log_e");
+    log_e("log_e %s", "foo");
 }
 void test_logging()
 {
