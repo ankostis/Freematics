@@ -3,6 +3,7 @@
 * Distributed under BSD
 * (C)2013-2018 Stanley Huang <stanley@freematics.com.au>
 *************************************************************************/
+#pragma once
 
 #include <Arduino.h>
 
@@ -60,4 +61,3 @@ private:
     byte m_col = 0;
     byte m_row = 0;
 };
-
