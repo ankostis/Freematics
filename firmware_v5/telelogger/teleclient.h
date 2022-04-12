@@ -84,7 +84,7 @@ public:
         }
         return m >= 0 ? buffers[m] : 0;
     }
-    void printStats()
+    void showCacheStats()
     {
         int bytes = 0;
         int slots = 0;
@@ -126,6 +126,17 @@ public:
     virtual bool connect() { return true; }
     virtual bool transmit(const char* packetBuffer, unsigned int packetSize)  { return true; }
     virtual void inbound() {}
+    void showNetStats(char *timestr) {
+        uint32_t t = millis() - startTime;
+        sprintf(timestr,
+                "%02u:%02u.%c",
+                t / 60000,
+                (t % 60000) / 1000,
+                (t % 1000) / 100 + '0');
+        ESP_LOGI(TAG_NET,
+            "<NET> %s | Packet #%i | Tx: %.2fKiB | Rx: %ibytes",
+            timestr, txCount, (float) txBytes / (1 << 10), rxBytes);
+    }
     uint32_t txCount = 0;
     uint32_t txBytes = 0;
     uint32_t rxBytes = 0;

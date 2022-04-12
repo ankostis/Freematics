@@ -715,24 +715,6 @@ bool processCommand(char* data)
   return true;
 }
 
-void showStats()
-{
-  uint32_t t = millis() - teleClient.startTime;
-  char timestr[24];
-  sprintf(timestr, "%02u:%02u.%c ", t / 60000, (t % 60000) / 1000, (t % 1000) / 100 + '0');
-  ESP_LOGI(TAG,
-    "<NET> %s| Packet #%i | Out: %.2fKiB | In: %ibytes",
-    timestr, teleClient.txCount, (float) teleClient.txBytes / (1 << 10), teleClient.rxBytes);
-#if ENABLE_OLED
-  oled.setCursor(0, 2);
-  oled.println(timestr);
-  oled.setCursor(0, 5);
-  oled.printInt(teleClient.txCount, 2);
-  oled.setCursor(80, 5);
-  oled.printInt(teleClient.txBytes >> 10, 3);
-#endif
-}
-
 bool waitMotion(long timeout)
 {
 #if ENABLE_MEMS
@@ -872,7 +854,7 @@ void process()
 
   // display file buffer stats
   if (startTime - lastStatsTime >= 3000) {
-    bufman.printStats();
+    bufman.showCacheStats();
     lastStatsTime = startTime;
   }
 
@@ -1107,7 +1089,16 @@ void telemetry(void* inst)
       if (teleClient.transmit(store.buffer(), store.length())) {
         // successfully sent
         connErrors = 0;
-        showStats();
+        char timestr[16];
+        teleClient.showNetStats(timestr);
+#if ENABLE_OLED
+        oled.setCursor(0, 2);
+        oled.println(timestr);
+        oled.setCursor(0, 5);
+        oled.printInt(teleClient.txCount, 2);
+        oled.setCursor(80, 5);
+        oled.printInt(teleClient.txBytes >> 10, 3);
+#endif
       } else {
         connErrors++;
         timeoutsNet++;
