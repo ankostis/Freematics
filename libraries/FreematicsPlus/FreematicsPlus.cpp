@@ -773,16 +773,6 @@ void FreematicsESP32::xbTogglePower()
     digitalWrite(PIN_BEE_PWR, LOW);
 }
 
-void FreematicsESP32::buzzer(int freq)
-{
-    if (freq) {
-        ledcWriteTone(0, freq);
-        ledcWrite(0, 255);
-    } else {
-        ledcWrite(0, 0);
-    }
-}
-
 byte FreematicsESP32::getDeviceType()
 {
     if (!link) return 0;
@@ -833,10 +823,6 @@ bool FreematicsESP32::begin(bool useCoProc, bool useCellular)
 
     m_flags = 0;
     m_pinGPSPower = PIN_GPS_POWER;
-
-    // set up buzzer
-    ledcSetup(0, 2000, 8);
-    ledcAttachPin(PIN_BUZZER, 0);
 
     if (useCoProc) do {
         CLink_UART *linkUART = new CLink_UART;

@@ -150,8 +150,6 @@ public:
   void xbPurge();
   // toggle xBee module power
   void xbTogglePower();
-  // control internal buzzer (if present)
-  void buzzer(int freq);
   // reset co-processor
   void resetLink();
   // reactivate co-processor

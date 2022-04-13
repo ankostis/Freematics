@@ -17,6 +17,7 @@
 
 #include <esp_log.h>
 #include <FreematicsPlus.h>
+#include <Buzzer.h>
 #include <httpd.h>
 #include "config.h"
 #include "telelogger.h"
@@ -149,6 +150,7 @@ public:
 };
 
 FreematicsESP32 sys;
+Buzzer buzzer(PIN_BUZZER);
 
 class OBD : public COBD
 {
@@ -511,11 +513,9 @@ void printTime()
 *******************************************************************************/
 void initialize()
 {
-    // turn on buzzer at 2000Hz frequency
-  sys.buzzer(2000);
+  buzzer.tone(2000);
   delay(100);
-  // turn off buzzer
-  sys.buzzer(0);
+  buzzer.tone(0);
 
   // dump buffer data
   bufman.purge();

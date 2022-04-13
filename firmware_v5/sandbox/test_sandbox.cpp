@@ -136,24 +136,63 @@ void test_logging()
 }
 
 
-#include <FreematicsPlus.h>
+#include <Buzzer.h>
+#include <FreematicsPlus.h>  // just for `PIN_BUZZER`
 
-FreematicsESP32 sys;
 void test_buzzer()
 {
+    Buzzer buzzer(PIN_BUZZER);
+
+    // volume on VLFs
+    constexpr const float lf = 1;
+    constexpr const int slow_delay = 1200;
+    buzzer.tone(lf, 0.01);
+    delay(slow_delay);
+    buzzer.tone(lf, 0.2);
+    delay(slow_delay);
+    buzzer.tone(lf, 0.5);
+    delay(slow_delay);
+    buzzer.tone(lf, 1.0);
+    delay(slow_delay * 2);
+    buzzer.tone(lf, 1.5);
+    delay(slow_delay);
+    buzzer.tone(lf, 1.99);
+    delay(slow_delay);
+    buzzer.tone(0);
+
+    delay(700);
+
     float freq = 12;
-    sys.begin(false, false);
-
-    sys.buzzer(freq); freq *= 1.618;
+    buzzer.tone(freq); freq *= 1.618;
     delay(700);
-    sys.buzzer(freq); freq *= 1.618;
+    buzzer.tone(freq); freq *= 1.618;
     delay(700);
-    sys.buzzer(freq); freq *= 1.618;
-    delay(700);
-    sys.buzzer(freq); freq *= 1.618;
+    buzzer.tone(freq); freq *= 1.618;
     delay(700);
 
-    sys.buzzer(0);
+    ESP_LOGI(TAG, "lower");
+    buzzer.tone(1000);
+    delay(300);
+    buzzer.tone(1000, 8);
+    delay(700);
+
+    ESP_LOGI(TAG, "silence");
+    buzzer.tone(0);
+    delay(300);
+    buzzer.tone(0, 0);
+    delay(300);
+    // buzzer.tone(1000, 0);
+    // delay(700);
+
+    buzzer.tone(0);
+
+    ESP_LOGI(TAG, "Logs only");
+    buzzer.setPin(0);
+    buzzer.tone(freq);      // Should log a warning.
+    delay(100);
+    buzzer.tone(freq, 0);   // Should log a warning.
+    delay(100);
+    buzzer.tone(0);         // Should log a warning.
 }
 
 
