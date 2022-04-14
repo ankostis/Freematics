@@ -47,6 +47,8 @@ void LogDeviceInfo(const char *devid)
 #   endif
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wformat"
     ESP_LOGE(TAG, "device_id: %s"
         "\n+--     board: %s-v%i@%ix%i"
         ",\n+--       mac: %llx"
@@ -108,6 +110,7 @@ void LogDeviceInfo(const char *devid)
 #   endif  // BOARD_HAS_PSRAM_HIGH
 #endif  // BOARD_HAS_PSRAM
         );
+#pragma GCC diagnostic pop
 
 #if BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE
     ESP_LOGI(TAG, "Writing PSRAM to validate it...");
