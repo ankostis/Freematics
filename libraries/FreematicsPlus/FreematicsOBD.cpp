@@ -475,6 +475,7 @@ bool COBD::isValidPID(byte pid)
 
 bool COBD::init(OBD_PROTOCOLS protocol)
 {
+	ESP_LOGI(TAG, "<init> proto: %i", protocol);
 	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
 	char buffer[64];
 	byte stage;
@@ -543,12 +544,14 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 
 void COBD::reset()
 {
+	ESP_LOGD(TAG, "<reset>");
 	char buf[32];
 	link->sendCommand("ATR\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
 }
 
 void COBD::uninit()
 {
+	ESP_LOGI(TAG, "<down>");
 	char buf[32];
 	link->sendCommand("ATPC\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
 }
@@ -640,5 +643,7 @@ int COBD::receiveData(byte* buf, int len)
 			if (buf[n++] != ' ') break;
 		}
 	}
+
+	ESP_LOGD(TAG, "<RECV> x%i, |%.*s|", bytes, bytes, buf);
 	return bytes;
 }
