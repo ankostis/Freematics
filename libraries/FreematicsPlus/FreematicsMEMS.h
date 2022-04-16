@@ -320,8 +320,10 @@ public:
     float               temp                ( void );// degrees celsius
 
 
-    ICM_20948_Status_e  status;                                                                 // Status from latest operation
-    const char*         statusString        ( ICM_20948_Status_e stat = ICM_20948_Stat_NUM );   // Returns a human-readable status message. Defaults to status member, but prints string for supplied status if supplied                                            
+    // Status from latest operation
+    ICM_20948_Status_e  status;
+    // Returns a human-readable status message. Defaults to status member, but prints string for supplied status if supplied
+    const char*         statusString        ( ICM_20948_Status_e stat = ICM_20948_Stat_NUM );
 
     // Device Level
     ICM_20948_Status_e	setBank			    ( uint8_t bank );					            // Sets the bank
@@ -330,21 +332,23 @@ public:
     ICM_20948_Status_e	lowPower		    ( bool on = true );							    // Set low power mode for the chip
     ICM_20948_Status_e	setClockSource	    ( ICM_20948_PWR_MGMT_1_CLKSEL_e source );       // Choose clock source
     ICM_20948_Status_e	checkID			    ( void );								        // Return 'ICM_20948_Stat_Ok' if whoami matches ICM_20948_WHOAMI
-    
+
     bool	            dataReady		    ( void );				                        // Returns 'true' if data is ready
     uint8_t             getWhoAmI		    ( void );								        // Return whoami in out prarmeter
-    bool                isConnected         ( void );                                       // Returns true if communications with the device are sucessful
+    // Returns true if communications with the device are sucessful
+    bool                isConnected         ( void );
 
 
     // Internal Sensor Options
-    ICM_20948_Status_e	setSampleMode	    ( uint8_t sensor_id_bm, uint8_t lp_config_cycle_mode );	// Use to set accel, gyro, and I2C master into cycled or continuous modes
+    // Use to set accel, gyro, and I2C master into cycled or continuous modes
+    ICM_20948_Status_e	setSampleMode	    ( uint8_t sensor_id_bm, uint8_t lp_config_cycle_mode );
     ICM_20948_Status_e	setFullScale 	    ( uint8_t sensor_id_bm, ICM_20948_fss_t fss );
-    ICM_20948_Status_e	setDLPFcfg		    ( uint8_t sensor_id_bm, ICM_20948_dlpcfg_t cfg );			
+    ICM_20948_Status_e	setDLPFcfg		    ( uint8_t sensor_id_bm, ICM_20948_dlpcfg_t cfg );
     ICM_20948_Status_e	enableDLPF		    ( uint8_t sensor_id_bm, bool enable );
     ICM_20948_Status_e	setSampleRate	    ( uint8_t sensor_id_bm, ICM_20948_smplrt_t smplrt );
 
     // Interrupts on INT and FSYNC Pins
-    ICM_20948_Status_e  clearInterrupts         ( void );                                   
+    ICM_20948_Status_e  clearInterrupts         ( void );
 
     ICM_20948_Status_e  cfgIntActiveLow         ( bool active_low );
     ICM_20948_Status_e  cfgIntOpenDrain         ( bool open_drain );
