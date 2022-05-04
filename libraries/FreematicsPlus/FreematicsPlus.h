@@ -137,6 +137,8 @@ public:
   void gpsEnd();
   // get parsed GPS data (returns the number of data parsed since last invoke)
   bool gpsGetData(GPS_DATA** pgd);
+  bool _gpsGetData_linkUart(GPS_DATA** pgd);
+  bool _gpsGetData_tinyGps(GPS_DATA** pgd);
   // get buffered NMEA data
   int gpsGetNMEA(char* buffer, int bufsize);
   // send command string to GPS

@@ -543,81 +543,101 @@ bool FreematicsESP32::gpsBegin(int baudrate)
 
 bool FreematicsESP32::gpsGetData(GPS_DATA** pgd)
 {
-    ESP_LOGD(TAG_GNSS, "<READ ASKED>");
+    bool ret;
+    ESP_LOGV(TAG_GNSS, "<READ ASKED>");
     if (!gpsData) return false;
     if (pgd) *pgd = gpsData;
     if (m_flags & FLAG_GNSS_USE_LINK) {
-        char buf[160];
-        if (link->sendCommand("ATGPS\r", buf, sizeof(buf), 100) == 0) {
-            return false;
-        }
-        char *s = strstr(buf, "$GNIFO,");
-        if (!s) return false;
-        s += 7;
-        float lat = 0;
-        float lng = 0;
-        float alt = 0;
-        bool good = false;
-        do {
-            uint32_t date = atoi(s);
-            if (!(s = strchr(s, ','))) break;
-            uint32_t time = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            if (!date) break;
-            gpsData->date = date;
-            gpsData->time = time;
-            lat = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            lng = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            alt = (float)atoi(++s) / 100;
-            good = true;
-            if (!(s = strchr(s, ','))) break;
-            gpsData->speed = (float)atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData->heading = atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData->sat = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            gpsData->hdop = atoi(++s);
-        } while(0);
-        if (good && (gpsData->lat || gpsData->lng || gpsData->alt)) {
-            // filter out invalid coordinates
-            good = (abs(lat * 1000000 - gpsData->lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData->lng * 1000000) < 100000);
-        }
-        if (!good) return false;
-        gpsData->lat = lat;
-        gpsData->lng = lng;
-        gpsData->alt = alt;
-        return true;
+        ret = _gpsGetData_linkUart(pgd);
     } else {
-        gps.stats(&gpsData->sentences, &gpsData->errors);
-        if (!gpsHasDecodedData) return false;
-        long lat, lng;
-        bool good = true;
-        gps.get_position(&lat, &lng, 0);
-        if (gpsData->lat || gpsData->lng) {
-            // filter out invalid coordinates
-            good = (abs(lat - gpsData->lat * 1000000) < 100000 && abs(lng - gpsData->lng * 1000000) < 100000);
-        }
-        if (!good) return false;
-        gpsData->ts = millis();
-        gpsData->lat = (float)lat / 1000000;
-        gpsData->lng = (float)lng / 1000000;
-        gps.get_datetime((unsigned long*)&gpsData->date, (unsigned long*)&gpsData->time, 0);
-        long alt = gps.altitude();
-        if (alt != TinyGPS::GPS_INVALID_ALTITUDE) gpsData->alt = (float)alt / 100;
-        unsigned long knot = gps.speed();
-        if (knot != TinyGPS::GPS_INVALID_SPEED) gpsData->speed = (float)knot / 100;
-        unsigned long course = gps.course();
-        if (course < 36000) gpsData->heading = course / 100;
-        unsigned short sat = gps.satellites();
-        if (sat != TinyGPS::GPS_INVALID_SATELLITES) gpsData->sat = sat;
-        unsigned long hdop = gps.hdop();
-        gpsData->hdop = hdop > 2550 ? 255 : hdop / 10;
-        gpsHasDecodedData = false;
-        return true;
+        ret = _gpsGetData_tinyGps(pgd);
     }
+    ESP_LOGD(
+            TAG_GNSS, "[READ %s] %s: sat: %u, err: %u, hdop: %u",
+            m_flags & FLAG_GNSS_USE_LINK? "LINK": "TinyGPS",
+            ret? "OK": "fail",
+            gpsData->sat,
+            gpsData->errors,
+            gpsData->hdop);
+    return ret;
+}
+
+bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
+{
+    char buf[160];
+    if (!link || link->sendCommand("ATGPS\r", buf, sizeof(buf), 100) == 0) {
+        return false;
+    }
+    char *s = strstr(buf, "$GNIFO,");
+    if (!s) return false;
+    s += 7;
+    float lat = 0;
+    float lng = 0;
+    float alt = 0;
+    bool good = false;
+    do {
+        uint32_t date = atoi(s);
+        if (!(s = strchr(s, ','))) break;
+        uint32_t time = atoi(++s);
+        if (!(s = strchr(s, ','))) break;
+        if (!date) break;
+        gpsData->date = date;
+        gpsData->time = time;
+        lat = (float)atoi(++s) / 1000000;
+        if (!(s = strchr(s, ','))) break;
+        lng = (float)atoi(++s) / 1000000;
+        if (!(s = strchr(s, ','))) break;
+        alt = (float)atoi(++s) / 100;
+        good = true;
+        if (!(s = strchr(s, ','))) break;
+        gpsData->speed = (float)atoi(++s) / 100;
+        if (!(s = strchr(s, ','))) break;
+        gpsData->heading = atoi(++s) / 100;
+        if (!(s = strchr(s, ','))) break;
+        gpsData->sat = atoi(++s);
+        if (!(s = strchr(s, ','))) break;
+        gpsData->hdop = atoi(++s);
+    } while(0);
+    if (good && (gpsData->lat || gpsData->lng)) {
+        // filter out invalid coordinates
+        good = (abs(lat * 1000000 - gpsData->lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData->lng * 1000000) < 100000);
+    }
+    if (!good) return false;
+    gpsData->lat = lat;
+    gpsData->lng = lng;
+    gpsData->alt = alt;
+    gpsData->ts = millis();
+    return true;
+}
+
+bool FreematicsESP32::_gpsGetData_tinyGps(GPS_DATA** pgd)
+{
+    gps.stats(&gpsData->sentences, &gpsData->errors);
+    if (!gpsHasDecodedData) return false;
+    long lat, lng;
+    bool good = true;
+    gps.get_position(&lat, &lng, 0);
+    if (gpsData->lat || gpsData->lng) {
+        // filter out invalid coordinates
+        good = (abs(lat - gpsData->lat * 1000000) < 100000 && abs(lng - gpsData->lng * 1000000) < 100000);
+    }
+    if (!good) return false;
+    gpsData->ts = millis();
+    gpsData->lat = (float)lat / 1000000;
+    gpsData->lng = (float)lng / 1000000;
+    gps.get_datetime((unsigned long*)&gpsData->date, (unsigned long*)&gpsData->time, 0);
+    long alt = gps.altitude();
+    if (alt != TinyGPS::GPS_INVALID_ALTITUDE) gpsData->alt = (float)alt / 100;
+    unsigned long knot = gps.speed();
+    if (knot != TinyGPS::GPS_INVALID_SPEED) gpsData->speed = (float)knot / 100;
+    unsigned long course = gps.course();
+    if (course < 36000) gpsData->heading = course / 100;
+    unsigned short sat = gps.satellites();
+    if (sat != TinyGPS::GPS_INVALID_SATELLITES) gpsData->sat = sat;
+    unsigned long hdop = gps.hdop();
+    gpsData->hdop = hdop > 2550 ? 255 : hdop / 10;
+    gpsHasDecodedData = false;
+    return true;
 }
 
 int FreematicsESP32::gpsGetNMEA(char* buffer, int bufsize)
