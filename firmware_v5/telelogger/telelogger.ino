@@ -1330,7 +1330,7 @@ void standby()
 #elif ENABLE_OBD
   do {
     delay(1000);
-  } while (obd.getVoltage() < JUMPSTART_VOLTAGE);
+  } while (obd.getVoltage() < THR_VOLTAGE);
 #else
   delay(5000);
 #endif
