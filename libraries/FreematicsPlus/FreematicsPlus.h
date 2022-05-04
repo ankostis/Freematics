@@ -89,7 +89,7 @@ public:
   void lock();
   void unlock();
 private:
-  void* xSemaphore;
+  QueueHandle_t xSemaphore;
 };
 
 class CLink_UART : public CLink {
