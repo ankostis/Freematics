@@ -112,7 +112,7 @@ float deviceTemp = 0;
 int16_t rssi = 0;
 char vin[18] = {0};
 uint16_t dtc[6] = {0};
-int16_t batteryVoltage = 0;
+float batteryVoltage = 0;
 GPS_DATA* gd = 0;
 char obfcmTest[128] = {0};
 
@@ -222,7 +222,7 @@ int handlerLiveData(UrlHandlerParam* param)
 {
     char *buf = param->pucBuffer;
     int bufsize = param->bufSize;
-    int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, (float)batteryVoltage / 100);
+    int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, batteryVoltage / 100);
     int n = snprintf(buf, bufsize, "{\"obfcm\":{\"obfcm\":\"%s\",\":[", obfcmTest);
     uint32_t t = millis();
     for (int i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
@@ -848,7 +848,7 @@ void process()
     batteryVoltage = obd.getVoltage() * 100;
   }
   if (batteryVoltage) {
-    buffer->add(PID_BATTERY_VOLTAGE, (int)batteryVoltage);
+    buffer->add(PID_BATTERY_VOLTAGE, batteryVoltage);
   }
 #endif
 
@@ -1176,7 +1176,7 @@ void standby()
 
   do {
     t = millis();
-    v = (float)obd.getVoltage();
+    v = obd.getVoltage();
 
     v_grad = (v - v_old)/(t - t_old)*1000;
     ESP_LOGI(
