@@ -1284,14 +1284,21 @@ void setup()
     // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
     //
     esp_log_level_set("*", RUNTIME_ALL_TAGS_LOG_LEVEL);
-    // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);  // logs in this file
-    // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);  // logs in this file
-    // esp_log_level_set(PROC, ESP_LOG_WARN);      // logs in this file
-    // esp_log_level_set(TAG_LINK, ESP_LOG_WARN);  // OBD(& GNSS?) (soft?)UART
-    // esp_log_level_set(TAG_GSM, ESP_LOG_WARN);   // GSM UART
-    // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);  // GNSS (if not through LINK)
-    // esp_log_level_set(TAG_SPI, ESP_LOG_WARN);   // MEMs(& LINK?) SPI
-    // esp_log_level_set(TAG_BUF, ESP_LOG_WARN);   // BufMan & Buffers @ teleclient.h
+    // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
+    // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file
+    // esp_log_level_set(TAG_PROC, ESP_LOG_WARN);     // logs in this file
+    // esp_log_level_set(TAG_LINK, ESP_LOG_WARN);     // OBD(& GNSS?) (soft?)UART
+    // esp_log_level_set(TAG_GSM, ESP_LOG_WARN);      // GSM UART
+    // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);     // GNSS (if not through LINK)
+    // esp_log_level_set(TAG_SPI, ESP_LOG_WARN);      // MEMs(& LINK?) SPI
+    // esp_log_level_set(TAG_BUF, ESP_LOG_WARN);      // BufMan & Buffers @ teleclient.h
+    // esp_log_level_set(TAG_MOTION, ESP_LOG_WARN);   // MEMs check-motion
+    // esp_log_level_set(TAG_WIFI, ESP_LOG_WARN);     // FreematcisNetwork
+    // esp_log_level_set(TAG_SIM800, ESP_LOG_WARN);   // FreematcisNetwork
+    // esp_log_level_set(TAG_SIM5360, ESP_LOG_WARN);  // FreematcisNetwork
+    // esp_log_level_set(TAG_SIM7600, ESP_LOG_WARN);  // FreematcisNetwork
+    // esp_log_level_set(TAG_SIM7070, ESP_LOG_WARN);  // FreematcisNetwork
+    // esp_log_level_set(TAG_HTTP, ESP_LOG_WARN);     // FreematcisNetwork
 
     // init LED pin
     pinMode(PIN_LED, OUTPUT);

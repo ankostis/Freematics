@@ -18,6 +18,14 @@
 
 #include "FreematicsBase.h"
 
+// ESP_IDF logging tags used
+constexpr const char *TAG_WIFI = "WIFI";
+constexpr const char *TAG_SIM800 = "SIM800";
+constexpr const char *TAG_SIM5360 = "SIM5360";
+constexpr const char *TAG_SIM7600 = "SIM7600";
+constexpr const char *TAG_SIM7070 = "SIM7070";
+constexpr const char *TAG_HTTP = "NetHTTP";
+
 #define XBEE_BAUDRATE 115200
 #define HTTP_CONN_TIMEOUT 10000
 

@@ -70,11 +70,14 @@ int ClientWIFI::listAPs()
   WiFi.disconnect();
   int n = WiFi.scanNetworks();
   if (n <= 0) {
-    ESP_LOGI(TAG, "No WiFi AP found");
+    ESP_LOGI(TAG_WIFI, "No WiFi AP found");
   } else {
-    ESP_LOGI(TAG, "x%i nearby WiFi APs:", n);
+    ESP_LOGI(TAG_WIFI, "x%i nearby WiFi APs:", n);
     for (int i = 0; i < n; ++i) {
-        ESP_LOGI(TAG, "  +--%i: %s (%idb)", (i + 1), WiFi.SSID(i).c_str(), WiFi.RSSI(i));
+        ESP_LOGI(TAG_WIFI,
+                 "  +--%i: %s (%idb)", (i + 1),
+                 WiFi.SSID(i).c_str(),
+                 WiFi.RSSI(i));
     }
   }
   return n;
@@ -194,6 +197,7 @@ char* HTTPClientWIFI::receive(int* pbytes, unsigned int timeout)
 
 bool ClientSIM800::begin(CFreematics* device)
 {
+  ESP_LOGD(TAG_SIM800, "<BEGIN>");
   m_device = device;
   for (byte n = 0; n < 10; n++) {
     // try turning on module
@@ -430,7 +434,7 @@ bool HTTPClientSIM800::send(HTTP_METHOD method, const char* path, bool keepAlive
     }
   }
   m_state = HTTP_ERROR;
-  ESP_LOGD(TAG, "%s", m_buffer);
+  ESP_LOGD(TAG_SIM800, "%s", m_buffer);
   return false;
 }
 
@@ -447,7 +451,7 @@ char* HTTPClientSIM800::receive(int* pbytes, unsigned int timeout)
     if (!sendCommand(0, timeout, "+HTTPACTION")) return 0;
   }
   if (sendCommand("AT+HTTPREAD\r", 1000)) {
-    ESP_LOGD(TAG, "%s", m_buffer);
+    ESP_LOGD(TAG_SIM800, "%s", m_buffer);
     p = strstr(m_buffer, "+HTTPREAD: ");
     if (p) {
       p += 11;
@@ -470,6 +474,7 @@ char* HTTPClientSIM800::receive(int* pbytes, unsigned int timeout)
 
 bool ClientSIM5360::begin(CFreematics* device)
 {
+  ESP_LOGD(TAG_SIM5360, "<BEGIN>");
   m_device = device;
   for (byte n = 0; n < 3; n++) {
     // try turning on module
@@ -480,7 +485,7 @@ bool ClientSIM5360::begin(CFreematics* device)
     for (byte m = 0; m < 5; m++) {
       if (sendCommand("AT\r") && sendCommand("ATE0\r") && sendCommand("ATI\r")) {
         // retrieve module info
-        ESP_LOGD(TAG, "%s", m_buffer);
+        ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
         char *p = strstr(m_buffer, "Model:");
         if (p) p = strchr(p, '_');
         if (p++) {
@@ -557,7 +562,7 @@ bool ClientSIM5360::setup(const char* apn, unsigned int timeout)
     sendCommand("AT+CIPMODE=0\r");
     sendCommand("AT+NETOPEN\r");
   } while(0);
-  if (!success) ESP_LOGD(TAG, "%s", m_buffer);
+  if (!success) ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
   return success;
 }
 
@@ -737,7 +742,7 @@ bool UDPClientSIM5360::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
   if (!sendCommand(m_buffer, 3000)) {
     close();
-    ESP_LOGD(TAG, "%s", m_buffer);
+    ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
     return false;
   }
   return true;
@@ -805,7 +810,7 @@ bool HTTPClientSIM5360::open(const char* host, uint16_t port)
     checkGPS();
     return true;
   }
-  ESP_LOGD(TAG, "%s", m_buffer);
+  ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
   checkGPS();
   m_state = HTTP_ERROR;
   return false;
@@ -834,7 +839,7 @@ bool HTTPClientSIM5360::send(HTTP_METHOD method, const char* path, bool keepAliv
     m_state = HTTP_SENT;
     return true;
   }
-  ESP_LOGD(TAG, "%s", m_buffer);
+  ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -985,7 +990,7 @@ bool UDPClientSIM7600::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
   if (!sendCommand(m_buffer, 3000)) {
     close();
-    ESP_LOGD(TAG, "%s", m_buffer);
+    ESP_LOGD(TAG_SIM7600, "%s", m_buffer);
     return false;
   }
   return true;
@@ -1053,7 +1058,7 @@ bool HTTPClientSIM7600::open(const char* host, uint16_t port)
     }
   }
   checkGPS();
-  ESP_LOGD(TAG, "%s", m_buffer);
+  ESP_LOGD(TAG_SIM7600, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -1081,7 +1086,7 @@ bool HTTPClientSIM7600::send(HTTP_METHOD method, const char* path, bool keepAliv
     m_state = HTTP_SENT;
     return true;
   }
-  ESP_LOGD(TAG, "%s", m_buffer);
+  ESP_LOGD(TAG_SIM7600, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
