@@ -936,8 +936,9 @@ bool initNetwork()
       }
     } else {
       ESP_LOGE(TAG_INIT, "No WiFi");
+      teleClient.net.listAPs();
     }
-  }
+  }  // wifi attempts loop
 #else // NET_DEVICE != NET_WIFI
   // power on network module
   if (teleClient.net.begin(&sys)) {
