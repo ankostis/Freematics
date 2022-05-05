@@ -1400,9 +1400,17 @@ void loop()
   while (Serial.available()) {
     char c = Serial.read();
     if (c == '\r' || c == '\n') {
+      ESP_LOGV(TAG_PROC, "cmd(%s)...", serialCommand.c_str());
       if (serialCommand.length() > 0) {
         String result = executeCommand(serialCommand.c_str());
-        ESP_LOGI(TAG_PROC, "cmd: %s, res: %s", serialCommand.c_str(), result.c_str());
+
+        bool is_err = result == "ERROR" || result == "INVALID";
+        ESP_LOG_LEVEL(
+            is_err? ESP_LOG_ERROR : ESP_LOG_INFO,
+            TAG_PROC,
+            "cmd(%s): %s",
+            serialCommand.c_str(),
+            result.c_str());
         serialCommand = "";
       }
     } else if (serialCommand.length() < 32) {
