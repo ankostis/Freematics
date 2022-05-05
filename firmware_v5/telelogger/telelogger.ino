@@ -1426,5 +1426,5 @@ void loop()
     }
   }
 
-  digitalWrite(26, digitalRead(34));
+  digitalWrite(PIN_SENSOR2, digitalRead(PIN_SENSOR1));
 }
