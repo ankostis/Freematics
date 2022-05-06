@@ -515,7 +515,7 @@ void initialize()
 {
   buzzer.tone(2000);
   delay(100);
-  buzzer.tone(0);
+  buzzer.tone(4, 0.5);  // 2Hz ta-ticks till `initialize()` ends.
 
   // dump buffer data
   bufman.purge();
@@ -626,7 +626,10 @@ void initialize()
   oled.setFontSize(FONT_SIZE_MEDIUM);
 #endif
 
-teleClient.notify(EVENT_PING); // Nestor
+  teleClient.notify(EVENT_PING); // Nestor
+
+  buzzer.tone(0);  // stop ticking
+  ESP_LOGI(TAG_INIT, "completed");
 }
 
 /*******************************************************************************
@@ -1101,9 +1104,11 @@ void telemetry(void* inst)
 
     if (!state.check(STATE_NET_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
+        buzzer.tone(1, 0.2);  // 0.5Hz ta-tick while waiting to reconnect.
         teleClient.shutdown();
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
         delay(10000);
+        buzzer.tone(0);
         continue;
       }
     }
@@ -1301,6 +1306,7 @@ void configMode()
 
 void setup()
 {
+    buzzer.tone(1);  // 1hz ticks until `initialize()`
     delay(500);
 
 #if ENABLE_OLED

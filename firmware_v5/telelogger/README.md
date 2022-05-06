@@ -38,6 +38,15 @@ Following types of data storage are supported.
 * MicroSD card storage
 * ESP32 built-in Flash memory storage (SPIFFS)
 
+Buzzer notes & patterns
+-----------------------
+While connected to OBD, the device may produce the following buzzing-sounds:
+
+- 1Hz tick: while booting (occurs again if "reboot" from standby configured).
+- 2Hz ta-tick: initialize, always follows boot, and wake-up from standby
+  (even if no "reboot" from standby configured).
+- 0.5Hz ta-tick: while waiting to reconnect, after multiple attempts to login.
+
 Remote Commands
 ---------------
 
