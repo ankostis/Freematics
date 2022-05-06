@@ -11,13 +11,18 @@
 
 class Buzzer {
  public:
-  Buzzer(uint8_t pin = 0, uint8_t duty_bits = 8) { setPin(pin, duty_bits); }
-  void setPin(uint8_t pin, uint8_t duty_bits = 8) {
+  Buzzer(const uint8_t pin = 0, const uint8_t duty_bits = 8,
+         const uint8_t channel = 0) {
+    setPin(pin, duty_bits, channel);
+  }
+  void setPin(const uint8_t pin, const uint8_t duty_bits = 8,
+              const uint8_t channel = 0) {
     this->pin = pin;
+    this->channel = channel;
+    this->duty_bits = duty_bits;
     if (pin > 0) {
-      this->duty_bits = duty_bits;
-      ledcSetup(0, 2000, duty_bits);
-      ledcAttachPin(pin, 0);
+      ledcSetup(channel, 2000, duty_bits);
+      ledcAttachPin(pin, channel);
     }
   }
   /**
@@ -30,21 +35,21 @@ class Buzzer {
    *      *
    * Setting any one of `freqHz`, `volume` to 0, mutes the buzzer.
    */
-  void tone(float freqHz, float volume = 1.0) {
+  void tone(const float freqHz, const float volume = 1.0) {
     if (pin) {
       if (freqHz && volume) {
-        ledcWriteTone(0, freqHz);
-        int duty_cycle = volume * volume * (1 << (duty_bits + 1));
-        ledcWrite(0, duty_cycle);
+        ledcWriteTone(channel, freqHz);
+        const int duty_cycle = volume * (1 << (duty_bits + 1));
+        ledcWrite(channel, duty_cycle);
       } else {
-        ledcWrite(0, 0);
+        ledcWrite(channel, 0);
       }
     } else {
-      ESP_LOGW(TAG, "Buzzer.tone(%f, %f) disabled - set a positive pin.",
-               freqHz, volume);
+      ESP_LOGW(TAG, "Buzzer.tone(%f, %f) muted", freqHz, volume);
     }
   }
-  // protected:  // no protection, adults may inspectit on runtime.
+  // protected:  // No protection, adults may inspect them.
   uint8_t pin = 0;
   uint8_t duty_bits = 0;
+  uint8_t channel = 0;
 };
