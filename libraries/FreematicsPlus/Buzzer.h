@@ -12,14 +12,8 @@
 class Buzzer {
  public:
   Buzzer(const uint8_t pin = 0, const uint8_t duty_bits = 8,
-         const uint8_t channel = 0) {
-    setPin(pin, duty_bits, channel);
-  }
-  void setPin(const uint8_t pin, const uint8_t duty_bits = 8,
-              const uint8_t channel = 0) {
-    this->pin = pin;
-    this->channel = channel;
-    this->duty_bits = duty_bits;
+         const uint8_t channel = 0)
+      : pin(pin), duty_bits(duty_bits), channel(channel) {
     if (pin > 0) {
       ledcSetup(channel, 2000, duty_bits);
       ledcAttachPin(pin, channel);
@@ -49,7 +43,7 @@ class Buzzer {
     }
   }
   // protected:  // No protection, adults may inspect them.
-  uint8_t pin = 0;
-  uint8_t duty_bits = 0;
-  uint8_t channel = 0;
+  const uint8_t pin = 0;
+  const uint8_t duty_bits = 0;
+  const uint8_t channel = 0;
 };

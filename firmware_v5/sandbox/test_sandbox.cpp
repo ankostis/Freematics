@@ -187,12 +187,12 @@ void test_buzzer()
     buzzer.tone(0);
 
     ESP_LOGI(TAG, "Logs only");
-    buzzer.setPin(0);
-    buzzer.tone(freq);      // Should log a warning.
+    Buzzer b2(0);
+    b2.tone(freq);      // Should log a warning.
     delay(100);
-    buzzer.tone(freq, 0);   // Should log a warning.
+    b2.tone(freq, 0);   // Should log a warning.
     delay(100);
-    buzzer.tone(0);         // Should log a warning.
+    b2.tone(0);         // Should log a warning.
 }
 
 
