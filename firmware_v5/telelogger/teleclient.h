@@ -96,7 +96,16 @@ public:
             ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n, buffers[n]->count, buffers[n]->offset);
         }
         if (slots) {
-            ESP_LOGI(TAG_BUF, "%i samples | %i bytes | %i%%", samples, bytes, slots * 100 / BUFFER_SLOTS);
+          ESP_LOGI(TAG_BUF,
+                   "%u samples (%ub/s)"
+                   ", %u/%u slots (%u%%)"
+                   ", %u/%u bytes (%u%%)"
+                   ", %u ram_free",
+                   samples, samples? bytes / samples: 0,
+                   slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
+                   bytes, BUFFER_SLOTS * BUFFER_LENGTH,
+                   100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
+                   ESP.getFreeHeap());
         }
     }
     CBuffer* buffers[BUFFER_SLOTS];
