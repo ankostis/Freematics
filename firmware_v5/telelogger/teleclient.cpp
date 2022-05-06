@@ -199,7 +199,7 @@ bool TeleClientUDP::notify(byte event, const char* payload)
       delay(100);
     } while (millis() - t < DATA_RECEIVING_TIMEOUT);
     if (!data) {
-      ESP_LOGW(TAG, "recv timeout");
+      ESP_LOGW(TAG, "RECV timeout for event(%i)", event);
       continue;
     }
     // verify checksum
@@ -244,27 +244,31 @@ bool TeleClientUDP::connect()
   byte event = login ? EVENT_RECONNECT : EVENT_LOGIN;
   bool success = false;
   // connect to telematics server
-  for (byte attempts = 0; attempts < 5; attempts++) {
-    ESP_LOGI(
-      TAG,
-      "%s to %s:%i...",
-      event == EVENT_LOGIN ? "LOGIN" : "RECONNECT",
-      host2log,
-      port2log);
+  for (byte attempts = 0; attempts < NET_CONNECT_RETRIES; attempts++) {
+    ESP_LOGD(TAG, "Connecting to %s:%i...", host2log, port2log);
     if (!net.open(SERVER_HOST, SERVER_PORT)) {
-      ESP_LOGW(TAG, "Unable to connect x%i", attempts);
-      delay(3000);
+      ESP_LOGW(TAG, "Fail no-%i to connect to %s:%i, wait %isec...",
+          attempts, host2log, port2log, UDP_CONNECT_RETRY_DELAY_MS);
+      delay(UDP_CONNECT_RETRY_DELAY_MS);
       continue;
     }
     // log in or reconnect to Freematics Hub
-    if (!notify(event)) {
-      net.close();
-      ESP_LOGE(TAG, "Server timeout");
-      continue;
-    }
-    success = true;
-    break;
-  }
+    success = notify(event);
+    ESP_LOG_LEVEL(
+      (success? ESP_LOG_INFO : ESP_LOG_ERROR),
+      TAG,
+      "%s to %s:%i (attempt no-%i) %s",
+      (event == EVENT_LOGIN ? "LOGIN" : "RECONNECT"),
+      host2log,
+      port2log,
+      attempts,
+      success? "OK" : "FAILED!");
+
+    if (success) break;
+
+    net.close();
+  }  // connect attempts loop
+
   startTime = millis();
   if (success) {
     lastSyncTime = startTime;
@@ -422,21 +426,27 @@ bool TeleClientHTTP::connect()
 
   // connect to HTTP server
   bool success = false;
-  for (byte attempts = 0; !success && attempts < 5; attempts++) {
+  for (byte attempts = 0; !success && attempts < NET_CONNECT_RETRIES; attempts++) {
     success = net.open(SERVER_HOST, SERVER_PORT);
+    // TODO: pick up http-connect fixes from upstream(202204).
   }
   if (!success) {
     ESP_LOGE(TAG, "Error connecting to server");
     return false;
   }
   if (!login) {
-    ESP_LOGI(TAG, "LOGIN to %s:%i...", host2log, port2log);
     // log in or reconnect to Freematics Hub
-    if (notify(EVENT_LOGIN)) {
+    if ((login = notify(EVENT_LOGIN))) {
       lastSyncTime = millis();
-      login = true;
     }
-  }
+    ESP_LOG_LEVEL(
+      (login? ESP_LOG_INFO : ESP_LOG_ERROR),
+      TAG,
+      "LOGIN to %s:%i %s",
+      host2log,
+      port2log,
+      login? "OK" : "FAILED!");
+  } // was not logged-in.
   return true;
 }
 

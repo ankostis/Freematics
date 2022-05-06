@@ -99,6 +99,10 @@
 // Currently, only server's URL * WiFi passwords considered secrets.
 #define HIDE_SECRETS_IN_LOGS 0
 
+// Attempts to open net-connection before reporting error.
+#define NET_CONNECT_RETRIES 5
+// How many time to attempt opening net-connection
+#define UDP_CONNECT_RETRY_DELAY_MS  3000
 // maximum consecutive communication errors before resetting network
 #define MAX_CONN_ERRORS_RECONNECT 3
 // maximum allowed connecting time
