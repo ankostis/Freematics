@@ -4,7 +4,12 @@
 /**************************************
 * Circular Buffer Configuration
 **************************************/
-#define BUFFER_SLOTS 32 /* max number of buffer */
+/**
+ * Max number of buffers
+ * If limit reached, the oldest slot is purged and re-populated,
+ * hence, gaps & out-of-order rows appear in the trace.
+ */
+#define BUFFER_SLOTS 512
 #define BUFFER_LENGTH 128 /* bytes per slot */
 #define SERIALIZE_BUFFER_SIZE 1024 /* bytes */
 
