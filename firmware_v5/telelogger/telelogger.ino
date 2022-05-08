@@ -1293,6 +1293,7 @@ void setup()
     // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);     // GNSS (if not through LINK)
     // esp_log_level_set(TAG_SPI, ESP_LOG_WARN);      // MEMs(& LINK?) SPI
     // esp_log_level_set(TAG_BUF, ESP_LOG_WARN);      // BufMan & Buffers @ teleclient.h
+    // esp_log_level_set(TAG_NET, ESP_LOG_WARN);      // TeleClientXXX @ teleclient.h
     // esp_log_level_set(TAG_MOTION, ESP_LOG_WARN);   // MEMs check-motion
     // esp_log_level_set(TAG_WIFI, ESP_LOG_WARN);     // FreematcisNetwork
     // esp_log_level_set(TAG_SIM800, ESP_LOG_WARN);   // FreematcisNetwork

@@ -20,6 +20,7 @@
 
 // ESP_IDF logging tag used
 constexpr char TAG_BUF[] = "BUF";
+constexpr char TAG_NET[] = "NET";
 
 class CBuffer
 {

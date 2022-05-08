@@ -51,7 +51,7 @@ void CBuffer::add(uint16_t pid, int value)
     offset += sizeof(int);
     count++;
   } else {
-    ESP_LOGW(TAG, "FULL");
+    ESP_LOGW(TAG_BUF, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, uint32_t value)
@@ -64,7 +64,7 @@ void CBuffer::add(uint16_t pid, uint32_t value)
     offset += sizeof(uint32_t);
     count++;
   } else {
-    ESP_LOGW(TAG, "FULL");
+    ESP_LOGW(TAG_BUF, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, float value)
@@ -77,7 +77,7 @@ void CBuffer::add(uint16_t pid, float value)
     offset += sizeof(float);
     count++;
   } else {
-    ESP_LOGW(TAG, "FULL");
+    ESP_LOGW(TAG_BUF, "FULL");
   }
 }
 void CBuffer::add(uint16_t pid, float value[])
@@ -90,7 +90,7 @@ void CBuffer::add(uint16_t pid, float value[])
     offset += sizeof(float) * 3;
     count++;
   } else {
-      ESP_LOGW(TAG, "FULL");
+      ESP_LOGW(TAG_BUF, "FULL");
   }
 }
 void CBuffer::purge()
@@ -179,10 +179,10 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     netbuf.dispatch(payload, strlen(payload));
   }
   netbuf.tailer();
-  ESP_LOGD(TAG, "TeleClientUDP notify: |%s|", netbuf.buffer());
+  ESP_LOGD(TAG_NET, "TeleClientUDP notify: |%s|", netbuf.buffer());
   for (byte attempts = 0; attempts < 3; attempts++) {
     // send notification datagram
-    ESP_LOGV(TAG, "notify x%i...", attempts);
+    ESP_LOGV(TAG_NET, "notify x%i...", attempts);
     if (!net.send(netbuf.buffer(), netbuf.length()))
     {
       // error sending data
@@ -199,18 +199,18 @@ bool TeleClientUDP::notify(byte event, const char* payload)
       delay(100);
     } while (millis() - t < DATA_RECEIVING_TIMEOUT);
     if (!data) {
-      ESP_LOGW(TAG, "RECV timeout for event(%i)", event);
+      ESP_LOGW(TAG_NET, "RECV timeout for event(%i)", event);
       continue;
     }
     // verify checksum
     if (!verifyChecksum(data)) {
-      ESP_LOGE(TAG, "Checksum mismatch: %s", data);
+      ESP_LOGE(TAG_NET, "Checksum mismatch: %s", data);
       continue;
     }
     char pattern[16];
     sprintf(pattern, "EV=%u", event);
     if (!strstr(data, pattern)) {
-      ESP_LOGE(TAG, "Invalid reply: %s, expected event: %i", data, event);
+      ESP_LOGE(TAG_NET, "Invalid reply: %s, expected event: %i", data, event);
       continue;
     }
     if (event == EVENT_LOGIN) {
@@ -245,9 +245,9 @@ bool TeleClientUDP::connect()
   bool success = false;
   // connect to telematics server
   for (byte attempts = 0; attempts < NET_CONNECT_RETRIES; attempts++) {
-    ESP_LOGD(TAG, "Connecting to %s:%i...", host2log, port2log);
+    ESP_LOGD(TAG_NET, "Connecting to %s:%i...", host2log, port2log);
     if (!net.open(SERVER_HOST, SERVER_PORT)) {
-      ESP_LOGW(TAG, "Fail no-%i to connect to %s:%i, wait %isec...",
+      ESP_LOGW(TAG_NET, "Fail no-%i to connect to %s:%i, wait %isec...",
           attempts, host2log, port2log, UDP_CONNECT_RETRY_DELAY_MS);
       delay(UDP_CONNECT_RETRY_DELAY_MS);
       continue;
@@ -256,7 +256,7 @@ bool TeleClientUDP::connect()
     success = notify(event);
     ESP_LOG_LEVEL(
       (success? ESP_LOG_INFO : ESP_LOG_ERROR),
-      TAG,
+      TAG_NET,
       "%s to %s:%i (attempt no-%i) %s",
       (event == EVENT_LOGIN ? "LOGIN" : "RECONNECT"),
       host2log,
@@ -309,7 +309,7 @@ void TeleClientUDP::inbound()
     data[len] = 0;
     rxBytes += len;
     if (!verifyChecksum(data)) {
-      ESP_LOGE(TAG, "Checksum mismatch: %s", data);
+      ESP_LOGE(TAG_NET, "Checksum mismatch: %s", data);
       break;
     }
     char *p = strstr(data, "EV=");
@@ -324,7 +324,7 @@ void TeleClientUDP::inbound()
           uint16_t id = hex2uint16(data);
           if (id && id != feedid) {
             feedid = id;
-            ESP_LOGI(TAG, "FEED ID: %i", feedid);
+            ESP_LOGI(TAG_NET, "FEED ID: %i", feedid);
           }
         }
         break;
@@ -341,7 +341,7 @@ void TeleClientUDP::shutdown()
   }
   net.close();
   net.end();
-  ESP_LOGI(TAG, "<SHUTDOWN> %s", net.deviceName());
+  ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
 }
 
 #if NET_DEVICE == NET_WIFI || NET_DEVICE == NET_SIM800 || NET_DEVICE == NET_SIM5360 || NET_DEVICE == NET_SIM7600
@@ -378,7 +378,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   success = net.send(METHOD_GET, url, true);
 #else
   len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
-  ESP_LOGD(TAG,
+  ESP_LOGD(TAG_NET,
       "TeleClientHTTP sending %i bytes to URL: %s",
       packetSize,
 #if HIDE_SECRETS_IN_LOGS
@@ -391,7 +391,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   len += packetSize;
 #endif
   if (!success) {
-    ESP_LOGE(TAG, "Transmit failed. Closing net");
+    ESP_LOGE(TAG_NET, "Transmit failed. Closing net");
     net.close();
     return false;
   } else {
@@ -404,11 +404,11 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   char* response = net.receive(&bytes);
   if (!response) {
     // close connection on receiving timeout
-    ESP_LOGE(TAG, "No HTTP response.  Closing net.");
+    ESP_LOGE(TAG_NET, "No HTTP response.  Closing net.");
     net.close();
     return false;
   }
-  ESP_LOGD(TAG, "tx-reply: %s", response);
+  ESP_LOGD(TAG_NET, "tx-reply: %s", response);
   if (strstr(response, " 200 ")) {
     // successful
     lastSyncTime = millis();
@@ -431,7 +431,7 @@ bool TeleClientHTTP::connect()
     // TODO: pick up http-connect fixes from upstream(202204).
   }
   if (!success) {
-    ESP_LOGE(TAG, "Error connecting to server");
+    ESP_LOGE(TAG_NET, "Error connecting to server");
     return false;
   }
   if (!login) {
@@ -441,7 +441,7 @@ bool TeleClientHTTP::connect()
     }
     ESP_LOG_LEVEL(
       (login? ESP_LOG_INFO : ESP_LOG_ERROR),
-      TAG,
+      TAG_NET,
       "LOGIN to %s:%i %s",
       host2log,
       port2log,
@@ -466,7 +466,7 @@ void TeleClientHTTP::shutdown()
   net.end();
   Serial.println(" OFF");
   started = false;
-  ESP_LOGI(TAG, "<SHUTDOWN> %s", net.deviceName());
+  ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
 }
 
 #endif
