@@ -1,5 +1,7 @@
 #include "config.h"
 
+// TODO: `teleclient.h' is a malstructured header-file, cannot include others.
+
 #define EVENT_LOGIN 1
 #define EVENT_LOGOUT 2
 #define EVENT_SYNC 3
@@ -84,7 +86,7 @@ public:
         }
         return m >= 0 ? buffers[m] : 0;
     }
-    void showCacheStats()
+    void showCacheStats(uint16_t state)
     {
         int bytes = 0;
         int slots = 0;
@@ -94,19 +96,24 @@ public:
             bytes += buffers[n]->offset;
             samples += buffers[n]->count;
             slots++;
-            ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n, buffers[n]->count, buffers[n]->offset);
+            ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n,
+                    buffers[n]->count, buffers[n]->offset);
         }
         if (slots) {
+          constexpr const uint RAM_SIZE_KiB = 320;
+          uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
           ESP_LOGI(TAG_BUF,
-                   "%u samples (%ub/s)"
-                   ", %u/%u slots (%u%%)"
-                   ", %u/%u bytes (%u%%)"
-                   ", %u ram_free",
-                   samples, samples? bytes / samples: 0,
+                   "PIDs: %u(%u b/PID)"
+                   ", slots: %u/%u(%u%%)"
+                   ", filled: %u/%u bytes (%u%%)"
+                   ", RAM: %u/%u KiB(%u%%)"
+                   ", state: %X",
+                   samples, samples ? bytes / samples : 0,
                    slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
                    bytes, BUFFER_SLOTS * BUFFER_LENGTH,
                    100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
-                   ESP.getFreeHeap());
+                   ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
+                   state);
         }
     }
     CBuffer* buffers[BUFFER_SLOTS];
@@ -126,7 +133,7 @@ public:
     virtual bool connect() { return true; }
     virtual bool transmit(const char* packetBuffer, unsigned int packetSize)  { return true; }
     virtual void inbound() {}
-    void showNetStats(char *timestr) {
+    void showNetStats(char *timestr, uint16_t state) {
         uint32_t t = millis() - startTime;
         sprintf(timestr,
                 "%02u:%02u.%c",
@@ -134,8 +141,14 @@ public:
                 (t % 60000) / 1000,
                 (t % 1000) / 100 + '0');
         ESP_LOGI(TAG_NET,
-            "<NET> %s | Packet #%i | Tx: %.2fKiB | Rx: %ibytes",
-            timestr, txCount, (float) txBytes / (1 << 10), rxBytes);
+            "%s: packet #%i, Tx: %.2fKiB, Rx: %ib, login: %i, feedid: %u, state: %X",
+            timestr,
+            txCount,
+            (float) txBytes / (1 << 10),
+            rxBytes,
+            login,
+            feedid,
+            state);
     }
     uint32_t txCount = 0;
     uint32_t txBytes = 0;

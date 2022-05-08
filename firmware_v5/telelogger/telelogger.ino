@@ -868,7 +868,7 @@ void process()
 
   // display file buffer stats
   if (startTime - lastStatsTime >= 3000) {
-    bufman.showCacheStats();
+    bufman.showCacheStats(state.m_state);
     lastStatsTime = startTime;
   }
 
@@ -1088,7 +1088,7 @@ void telemetry(void* inst)
         // successfully sent
         connErrors = 0;
         char timestr[16];
-        teleClient.showNetStats(timestr);
+        teleClient.showNetStats(timestr, state.m_state);
         OLED_SET_CURSOR(0, 2);
         OLED_PRINTLN(timestr);
         OLED_PRINTF("%2i", teleClient.txCount);
@@ -1348,9 +1348,7 @@ void setup()
     IPAddress ip;
     if (serverSetup(ip)) {
       ESP_LOGI(TAG, "HTTPD: %s\n", ip.toString().c_str());
-#if ENABLE_OLED
       OLED_PRINTF("HTTPD: %s\n", ip.c_str());
-#endif
     } else {
       ESP_LOGE(TAG, "HTTPD:NO");
     }
