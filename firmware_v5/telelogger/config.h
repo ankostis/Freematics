@@ -10,7 +10,11 @@
  * hence, gaps & out-of-order rows appear in the trace.
  */
 #define BUFFER_SLOTS 512
-#define BUFFER_LENGTH 128 /* bytes per slot */
+/**
+ * Bytes-per-slot
+ * PID-samples not fitting in the current slot, they are dropped!
+ */
+#define BUFFER_LENGTH 180
 #define SERIALIZE_BUFFER_SIZE 1024 /* bytes */
 
 /**************************************
