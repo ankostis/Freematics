@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 #
-# SYNTAX: ./status.py <hex-number>
-# Decode firmware status hex-codes
+# SYNTAX: ./freestate.py <hex-number>
+# Decode firmware hex-code states
 
 import sys
 
