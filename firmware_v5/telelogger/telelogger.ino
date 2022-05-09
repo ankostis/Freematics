@@ -33,7 +33,9 @@ constexpr char TAG_INIT[] = "INIT";
 constexpr char TAG_TELE[] = "TELE";
 constexpr char TAG_PROC[] = "PROC";
 
-// states
+/**
+ * NOTE: changes here, must convey to platformIO's monitor-filter.
+ */
 #define STATE_STORAGE_READY 0x1
 #define STATE_OBD_READY 0x2
 #define STATE_GPS_READY 0x4
