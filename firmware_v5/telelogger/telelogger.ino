@@ -1323,20 +1323,25 @@ void setup()
   if (!state.check(STATE_MEMS_READY)) {
     const char *mems_type;
 
-    mems = new MPU9250;
+    mems = new ICM_20948_I2C;
     byte ret = mems->begin(ENABLE_ORIENTATION);
     if (ret) {
       state.set(STATE_MEMS_READY);
-      mems_type = "MPU-9250";
+      mems_type = "ICM-20948";
     } else {
       mems->end();
       delete mems;
-      mems = new ICM_20948_I2C;
+      mems = nullptr;
+
+      mems = new MPU9250;
       ret = mems->begin(ENABLE_ORIENTATION);
       if (ret) {
         state.set(STATE_MEMS_READY);
-        mems_type = "ICM-20948";
+        mems_type = "MPU-9250";
       } else {
+        mems->end();
+        delete mems;
+        mems = nullptr;
         mems_type = "NO";
       }
     }
