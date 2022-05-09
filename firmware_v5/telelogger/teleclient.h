@@ -53,7 +53,12 @@ public:
     }
     void purge()
     {
-        for (int n = 0; n < BUFFER_SLOTS; n++) buffers[n]->purge();
+        int purged = 0;
+        for (auto *buf: buffers) {
+            if (buf->count) purged++;
+            buf->purge();
+        }
+        ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
     }
     CBuffer* get(byte state = BUFFER_STATE_EMPTY)
     {
