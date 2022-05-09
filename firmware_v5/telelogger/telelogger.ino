@@ -172,7 +172,7 @@ protected:
 
 OBD obd;
 
-MEMS_I2C* mems = 0;
+MEMS_I2C* mems = nullptr;
 
 #if STORAGE == STORAGE_SPIFFS
 SPIFFSLogger logger;
@@ -1321,25 +1321,12 @@ void setup()
 
 #if ENABLE_MEMS
   if (!state.check(STATE_MEMS_READY)) {
-    mems = new ICM_20948_I2C;
-    if (mems->begin(ENABLE_ORIENTATION)) {
+    mems = init_MEMS(ENABLE_ORIENTATION);
+    if (mems) {
       state.set(STATE_MEMS_READY);
-    } else {
-      mems->end();
-      delete mems;
-
-      mems = new MPU9250;
-      if (mems->begin(ENABLE_ORIENTATION)) {
-        state.set(STATE_MEMS_READY);
-      } else {
-        mems->end();
-        delete mems;
-        mems = nullptr;
-      }
     }
-
     ESP_LOGI(TAG_INIT, "MEMS: %s", mems? mems->name() : "NO");
-  }
+  }  // !STATE_MEMS_READY
 #endif
 
 #if ENABLE_HTTPD

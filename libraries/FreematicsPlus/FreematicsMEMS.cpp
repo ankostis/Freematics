@@ -1423,3 +1423,20 @@ bool ICM_20948_I2C::read(float* acc, float* gyr, float* mag, float* tmp, ORIENTA
   }
   return true;
 }
+
+MEMS_I2C *init_MEMS(bool enable_orientation) {
+  MEMS_I2C *mems = new ICM_20948_I2C;
+  if (!mems->begin(enable_orientation)) {
+    mems->end();
+    delete mems;
+
+    mems = new MPU9250;
+    if (!mems->begin(enable_orientation)) {
+      mems->end();
+      delete mems;
+      mems = nullptr;
+    }
+  }
+
+  return mems;
+}

@@ -411,4 +411,7 @@ public:
     bool                magIsConnected( void );
     ICM_20948_Status_e  getMagnetometerData     ( ICM_20948_AGMT_t* pagmt );
 };
-#endif
+
+MEMS_I2C* init_MEMS(bool enable_orientation);
+
+#endif  // FREEMATICS_MEMS
