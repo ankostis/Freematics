@@ -1162,17 +1162,22 @@ void standby()
   calibrateMEMS();
 
   do {
+      if (ledMode == 0) digitalWrite(PIN_LED, HIGH);
     t = millis();
     v = obd.getVoltage();
 
     v_grad = (v - v_old)/(t - t_old)*1000;
     ESP_LOGI(
         TAG_PROC,
-        "Wake-up trigger dt: %.2fs, Voltage old: %.2f, Voltage new: %.2f, Gradient: %.2f",
-        (float)(t - t_old) / 1000,
-        v_old,
-        v,
-        v_grad);
+        "Wake-up trigger dt: %.2fs"
+        ", Voltage old: %.2f, Voltage new: %.2f, Gradient: %.2f"
+        ", state: %X"
+        , (float)(t - t_old) / 1000
+        , v_old
+        , v
+        , v_grad
+        , state.m_state);
+      if (ledMode == 0) digitalWrite(PIN_LED, LOW);
 
     if (waitMotion(-1)) {
       break;
