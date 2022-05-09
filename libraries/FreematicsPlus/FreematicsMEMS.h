@@ -247,6 +247,7 @@ public:
   virtual byte begin(bool fusion = false) = 0;
   virtual void end() { uninitI2C(); }
   virtual bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0) = 0;
+  virtual const char *name();
 protected:
   bool initI2C(unsigned long clock);
   void uninitI2C();
@@ -257,6 +258,7 @@ class MPU9250 : public MEMS_I2C
 public:
   byte begin(bool fusion = false);
   bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0);
+  virtual const char* name() { return "MPU9250";  }
 private:
   void writeByte(uint8_t, uint8_t);
   uint8_t readByte(uint8_t);
@@ -395,6 +397,8 @@ public:
     uint8_t                 _ad0;
     bool                    _ad0val;
     ICM_20948_Serif_t       _serif;
+
+    virtual const char* name() { return "ICM_20948";  }
 
     virtual ICM_20948_Status_e  readMag( uint8_t reg, uint8_t* pdata, uint8_t len );
     virtual ICM_20948_Status_e  writeMag( uint8_t reg, uint8_t* pdata, uint8_t len );

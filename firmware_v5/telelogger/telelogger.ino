@@ -1321,31 +1321,24 @@ void setup()
 
 #if ENABLE_MEMS
   if (!state.check(STATE_MEMS_READY)) {
-    const char *mems_type;
-
     mems = new ICM_20948_I2C;
-    byte ret = mems->begin(ENABLE_ORIENTATION);
-    if (ret) {
+    if (mems->begin(ENABLE_ORIENTATION)) {
       state.set(STATE_MEMS_READY);
-      mems_type = "ICM-20948";
     } else {
       mems->end();
       delete mems;
-      mems = nullptr;
 
       mems = new MPU9250;
-      ret = mems->begin(ENABLE_ORIENTATION);
-      if (ret) {
+      if (mems->begin(ENABLE_ORIENTATION)) {
         state.set(STATE_MEMS_READY);
-        mems_type = "MPU-9250";
       } else {
         mems->end();
         delete mems;
         mems = nullptr;
-        mems_type = "NO";
       }
     }
-    ESP_LOGI(TAG_INIT, "MEMS: %s", mems_type);
+
+    ESP_LOGI(TAG_INIT, "MEMS: %s", mems? mems->name() : "NO");
   }
 #endif
 
