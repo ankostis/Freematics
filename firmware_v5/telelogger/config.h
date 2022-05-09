@@ -178,6 +178,7 @@
 #define PIN_SENSOR2 26
 
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
+#define COOLING_DOWN_SLEEP_SEC 5 /* celsius degrees */
 
 /**************************************
  * Secrets & per-device overrides, like:

@@ -1123,7 +1123,7 @@ void telemetry(void* inst)
       if (deviceTemp >= COOLING_DOWN_TEMP) {
         // device too hot, cool down by pause transmission
         ESP_LOGE(TAG_TELE, "Overheat %.2f!  Purging cached samples.", deviceTemp);
-        delay(5000);
+        delay(COOLING_DOWN_SLEEP_SEC * 1000);
         bufman.purge();
       }
 
