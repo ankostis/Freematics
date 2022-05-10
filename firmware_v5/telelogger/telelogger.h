@@ -127,15 +127,15 @@ public:
     {
         if (m_id == 0) return;
 
-        if (m_file.write((uint8_t*)buf, len) != len) {
+        if (m_data_file.write((uint8_t*)buf, len) != len) {
             // try again
-            if (m_file.write((uint8_t*)buf, len) != len) {
-                ESP_LOGE(TAG, "Failed twice writing data to file: %s.", m_file.path());
+            if (m_data_file.write((uint8_t*)buf, len) != len) {
+                ESP_LOGE(TAG, "Failed twice writing data to file: %s.", m_data_file.path());
                 end();
                 return;
             }
         }
-        m_file.write('\n');
+        m_data_file.write('\n');
         m_size += (len + 1);
     }
     virtual uint32_t size()
@@ -144,13 +144,13 @@ public:
     }
     void end()
     {
-        m_file.close();
+        m_data_file.close();
         m_id = 0;
         m_size = 0;
     }
     virtual void flush()
     {
-        m_file.flush();
+        m_data_file.flush();
     }
 protected:
     int getFileID(File& root)
@@ -174,7 +174,7 @@ protected:
     uint32_t m_dataCount = 0;
     uint32_t m_size = 0;
     uint32_t m_id = 0;
-    File m_file;
+    File m_data_file;
 };
 
 class SDLogger : public FileLogger {
@@ -200,8 +200,8 @@ public:
         char path[24];
         sprintf(path, "/DATA/%u.CSV", m_id);
         ESP_LOGI(TAG, "Opening SD file: %s", path);
-        m_file = SD.open(path, FILE_WRITE);
-        if (!m_file) {
+        m_data_file = SD.open(path, FILE_WRITE);
+        if (!m_data_file) {
             ESP_LOGE(TAG, "Failed opening SD file: %s", path);
             m_id = 0;
         }
@@ -212,9 +212,9 @@ public:
     {
         char path[24];
         sprintf(path, "/DATA/%u.CSV", m_id);
-        m_file.close();
-        m_file = SD.open(path, FILE_APPEND);
-        if (!m_file) {
+        m_data_file.close();
+        m_data_file = SD.open(path, FILE_APPEND);
+        if (!m_data_file) {
             ESP_LOGE(TAG, "Failed flushing SD file: %s", path);
         }
     }
@@ -246,8 +246,8 @@ public:
         char path[24];
         sprintf(path, "/DATA/%u.CSV", m_id);
         ESP_LOGI(TAG, "Opening SPIFFS file: %s", path);
-        m_file = SPIFFS.open(path, FILE_WRITE);
-        if (!m_file) {
+        m_data_file = SPIFFS.open(path, FILE_WRITE);
+        if (!m_data_file) {
             ESP_LOGE(TAG, "Failed opening SPIFFS file: %s", path);
             m_id = 0;
         }
@@ -268,14 +268,14 @@ private:
             }
         }
         if (idx) {
-            m_file.close();
+            m_data_file.close();
             char path[32];
             sprintf(path, "/DATA/%u.CSV", idx);
             SPIFFS.remove(path);
             ESP_LOGI(TAG, "Purged SPIFFS file: %s", path);
             sprintf(path, "/DATA/%u.CSV", m_id);
-            m_file = SPIFFS.open(path, FILE_APPEND);
-            if (!m_file) m_id = 0;
+            m_data_file = SPIFFS.open(path, FILE_APPEND);
+            if (!m_data_file) m_id = 0;
         }
     }
 };
