@@ -25,9 +25,9 @@
 #   include "esp32/himem.h"
 #endif
 #include "FreematicsPlus.h"
-#include "DeviceInfo.h"
+#include "NodeInfo.h"
 
-void LogDeviceInfo(const freematics_cfg_t &node_cfg)
+void log_node_info(const freematics_cfg_t &node_cfg)
 {
     int PartitionSize = esp_ota_get_running_partition()->size;  // +395 from compiler report
     int SketchSize = ESP.getSketchSize();

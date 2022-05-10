@@ -21,7 +21,7 @@
 #include <httpd.h>
 #include "config.h"
 #include "telelogger.h"
-#include "DeviceInfo.h"
+#include "NodeInfo.h"
 #include "telemesh.h"
 #include "teleclient.h"
 #if ENABLE_OLED
@@ -1320,7 +1320,7 @@ void setup()
     pinMode(PIN_SENSOR2, INPUT);
 #endif
 
-    LogDeviceInfo(node_cfg);
+    log_node_info(node_cfg);
     OLED_CLEAR();
     OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",

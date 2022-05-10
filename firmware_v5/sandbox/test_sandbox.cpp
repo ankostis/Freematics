@@ -32,7 +32,7 @@
 void test_sys_info()
 {
   freematics_cfg_t node_cfg{"TESTDEV", "TESTVIN"};
-  LogDeviceInfo(node_cfg);
+  log_node_info(node_cfg);
 }
 
 #include <esp_log.h>
