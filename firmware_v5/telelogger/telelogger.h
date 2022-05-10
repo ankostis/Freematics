@@ -11,36 +11,36 @@ class CStorage {
 public:
     virtual bool init() { return true; }
     virtual void uninit() {}
-    virtual void log(uint16_t pid, int value)
+    void log(uint16_t pid, int value)
     {
         char buf[24];
         byte len = sprintf(buf, "%X%c%d", pid, m_delimiter, value);
         dispatch(buf, len);
     }
-    virtual void log(uint16_t pid, uint32_t value)
+    void log(uint16_t pid, uint32_t value)
     {
         char buf[24];
         byte len = sprintf(buf, "%X%c%u", pid, m_delimiter, value);
         dispatch(buf, len);
     }
-    virtual void log(uint16_t pid, float value)
+    void log(uint16_t pid, float value)
     {
         char buf[24];
         byte len = sprintf(buf, "%X%c%f", pid, m_delimiter, value);
         dispatch(buf, len);
     }
-    virtual void log(uint16_t pid, float value[])
+    void log(uint16_t pid, float value[])
     {
         char buf[48];
         byte len = sprintf(buf, "%X%c%.2f;%.2f;%.2f", pid, m_delimiter, value[0], value[1], value[2]);
         dispatch(buf, len);
     }
-    virtual void timestamp(uint32_t ts)
+    void timestamp(uint32_t ts)
     {
         log(0, ts);
     }
     virtual void purge() { m_samples = 0; }
-    virtual uint16_t samples() { return m_samples; }
+    uint16_t samples() { return m_samples; }
     virtual void dispatch(const char* buf, byte len)
     {
         // output data via serial
@@ -142,7 +142,7 @@ public:
     {
         return m_size;
     }
-    virtual void end()
+    void end()
     {
         m_file.close();
         m_id = 0;
