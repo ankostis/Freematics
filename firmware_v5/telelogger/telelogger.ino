@@ -29,6 +29,7 @@
 #endif
 
 // ESP_IDF logging tags of this file
+constexpr char TAG_BOOT[] = "BOOT";
 constexpr char TAG_INIT[] = "INIT";
 constexpr char TAG_TELE[] = "TELE";
 constexpr char TAG_PROC[] = "PROC";
@@ -922,19 +923,19 @@ bool initNetwork()
 #if NET_DEVICE == NET_WIFI
   OLED_PRINT("Connecting WiFi...");
   for (byte attempts = 0; attempts < 3; attempts++) {
-    ESP_LOGI(TAG_INIT, "Joining WiFi: %s", WIFI_SSID);
+    ESP_LOGI(TAG_NET, "Joining WiFi: %s", WIFI_SSID);
     teleClient.net.begin(WIFI_SSID, WIFI_PASSWORD);
     if (teleClient.net.setup()) {
       state.set(STATE_NET_READY);
       String ip = teleClient.net.getIP();
       if (ip.length()) {
         state.set(STATE_NET_CONNECTED);
-        ESP_LOGI(TAG_INIT, "WiFi IP: %s", ip.c_str());
+        ESP_LOGI(TAG_NET, "WiFi IP: %s", ip.c_str());
         OLED_PRINTLN(ip);
         break;
       }
     } else {
-      ESP_LOGE(TAG_INIT, "No WiFi");
+      ESP_LOGE(TAG_NET, "No WiFi");
       teleClient.net.listAPs();
     }
   }  // wifi attempts loop
@@ -943,40 +944,40 @@ bool initNetwork()
   if (teleClient.net.begin(&sys)) {
     state.set(STATE_NET_READY);
   } else {
-    ESP_LOGE(TAG_INIT, "CELL: NO");
+    ESP_LOGE(TAG_NET, "CELL: NO");
     OLED_PRINTLN("No Cell Module");
     return false;
   }
 #if NET_DEVICE >= SIM800
     OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
-  ESP_LOGI(TAG_INIT, "CELL: %s", teleClient.net.deviceName());
+  ESP_LOGI(TAG_NET, "CELL: %s", teleClient.net.deviceName());
   if (!teleClient.net.checkSIM(SIM_CARD_PIN)) {
-    ESP_LOGE(TAG_INIT, "NO SIM CARD");
+    ESP_LOGE(TAG_NET, "NO SIM CARD");
     return false;
   }
-  ESP_LOGI(TAG_INIT, "IMEI: %s", teleClient.net.IMEI);
+  ESP_LOGI(TAG_NET, "IMEI: %s", teleClient.net.IMEI);
   if (state.check(STATE_NET_READY) && !state.check(STATE_NET_CONNECTED)) {
     if (teleClient.net.setup(CELL_APN)) {
       String op = teleClient.net.getOperatorName();
       if (op.length()) {
-        ESP_LOGI(TAG_INIT, "Operator: %s", op.c_str());
+        ESP_LOGI(TAG_NET, "Operator: %s", op.c_str());
         OLED_PRINTLN(op);
       }
 
 #if GNSS == GNSS_CELLULAR
       if (teleClient.net.setGPS(true)) {
-        ESP_LOGI(TAG_INIT, "CELL GNSS:OK");
+        ESP_LOGI(TAG_NET, "CELL GNSS:OK");
       }
 #endif
 
       String ip = teleClient.net.getIP();
       if (ip.length()) {
-        ESP_LOGI(TAG_INIT, "IP: %s", ip.c_str());
+        ESP_LOGI(TAG_NET, "IP: %s", ip.c_str());
         OLED_PRINTF("IP: %s\n",ip.c_str());
       }
       rssi = teleClient.net.getSignal();
       if (rssi) {
-        ESP_LOGI(TAG_INIT, "RSSI: %idBm", rssi);
+        ESP_LOGI(TAG_NET, "CELL RSSI: %idBm", rssi);
         OLED_PRINTF("RSSI: %idBm\n", rssi);
       }
       state.set(STATE_NET_CONNECTED);
@@ -985,10 +986,10 @@ bool initNetwork()
       if (p) {
         char *q = strchr(p, '\r');
         if (q) *q = 0;
-        ESP_LOGD(TAG_INIT, "net buf: %s", p + 7);
+        ESP_LOGD(TAG_NET, "raw info: %s", p + 7);
         OLED_PRINTLN(p + 7);
       } else {
-        ESP_LOGD(TAG_INIT, "net buf: %s", teleClient.net.getBuffer());
+        ESP_LOGD(TAG_NET, "raw buf: %s", teleClient.net.getBuffer());
       }
     }
     timeoutsNet = 0;
@@ -1285,6 +1286,7 @@ void setup()
     // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
     //
     esp_log_level_set("*", RUNTIME_ALL_TAGS_LOG_LEVEL);
+    // esp_log_level_set(TAG_BOOT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_PROC, ESP_LOG_WARN);     // logs in this file
@@ -1293,7 +1295,7 @@ void setup()
     // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);     // GNSS (if not through LINK)
     // esp_log_level_set(TAG_SPI, ESP_LOG_WARN);      // MEMs(& LINK?) SPI
     // esp_log_level_set(TAG_BUF, ESP_LOG_WARN);      // BufMan & Buffers @ teleclient.h
-    // esp_log_level_set(TAG_NET, ESP_LOG_WARN);      // TeleClientXXX @ teleclient.h
+    // esp_log_level_set(TAG_NET, ESP_LOG_WARN);      // TeleClientXXX & netInit()
     // esp_log_level_set(TAG_MOTION, ESP_LOG_WARN);   // MEMs check-motion
     // esp_log_level_set(TAG_WIFI, ESP_LOG_WARN);     // FreematcisNetwork
     // esp_log_level_set(TAG_SIM800, ESP_LOG_WARN);   // FreematcisNetwork
