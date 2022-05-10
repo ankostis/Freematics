@@ -1,3 +1,5 @@
+#pragma once
+
 #include <SPI.h>
 #include <FS.h>
 #include <SD.h>
