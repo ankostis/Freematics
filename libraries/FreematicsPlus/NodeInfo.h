@@ -24,6 +24,9 @@ struct freematics_cfg_t {
   int serial_autoconf_timeout;
   uint8_t log_level_run;
   uint8_t log_level_build;
+  uint8_t log_sink;
+  const char* log_sink_fpath;
+  float disk_usage_purge_prcnt;
   int nslots;
   int slot_len;
   int serialize_len;

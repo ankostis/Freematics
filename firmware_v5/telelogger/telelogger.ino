@@ -24,6 +24,9 @@
 #include "NodeInfo.h"
 #include "telemesh.h"
 #include "teleclient.h"
+#if LOG_SINK
+#include "LogSink.h"
+#endif
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -94,6 +97,9 @@ freematics_cfg_t node_cfg{
   .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
   .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
   .log_level_build = CORE_DEBUG_LEVEL,
+  .log_sink = LOG_SINK,
+  .log_sink_fpath = LOG_SINK_FPATH,
+  .disk_usage_purge_prcnt = LOG_SINK_DISK_USAGE_PURGE_RATIO,
   .nslots = BUFFER_SLOTS,
   .slot_len = BUFFER_LENGTH,
   .serialize_len = SERIALIZE_BUFFER_SIZE,
@@ -175,7 +181,7 @@ uint32_t lastObfcmTime = 0;
 int32_t syncInterval = SERVER_SYNC_INTERVAL * 1000;
 int32_t dataInterval = 1000;
 
-#if STORAGE != STORAGE_NONE
+#if STORAGE
 int fileid = 0;
 uint16_t lastSizeKB = 0;
 #endif
@@ -223,9 +229,9 @@ OBD obd;
 MEMS_I2C* mems = nullptr;
 #endif  // ENABLE_MEMS
 
-#if STORAGE == STORAGE_SPIFFS
+#if (STORAGE == STORAGE_SPIFFS)
 SPIFFSLogger logger;
-#elif STORAGE == STORAGE_SD
+#elif (STORAGE == STORAGE_SD)
 SDLogger logger;
 #endif
 
@@ -617,7 +623,7 @@ void initialize()
   }
 #endif
 
-#if STORAGE != STORAGE_NONE
+#if STORAGE
   if (!state.check(STATE_STORAGE_READY)) {
     // init storage
     if (logger.init()) {
@@ -689,7 +695,7 @@ String executeCommand(const char* cmd)
     digitalWrite(PIN_LED, (ledMode == 2) ? HIGH : LOW);
     result = "OK";
   } else if (!strcmp(cmd, "REBOOT")) {
-  #if STORAGE != STORAGE_NONE
+  #if STORAGE
     if (state.check(STATE_STORAGE_READY)) {
       logger.end();
       state.clear(STATE_STORAGE_READY);
@@ -924,7 +930,7 @@ void process()
     lastStatsTime = startTime;
   }
 
-#if STORAGE != STORAGE_NONE
+#if STORAGE
   if (state.check(STATE_STORAGE_READY)) {
     buffer->serialize(logger);
     uint16_t sizeKB = (uint16_t)(logger.size() >> 10);
@@ -1188,7 +1194,7 @@ void telemetry(void* inst)
 *******************************************************************************/
 void standby()
 {
-#if STORAGE != STORAGE_NONE
+#if STORAGE
   if (state.check(STATE_STORAGE_READY)) {
     logger.end();
   }
@@ -1317,6 +1323,52 @@ void configMode()
 }
 #endif
 
+#if (STORAGE == STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
+bool _setup_SD()
+{
+    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ)) {
+        uint total = SD.totalBytes() >> 20;
+        uint used = SD.usedBytes() >> 20;
+        ESP_LOGI(TAG, "SD: %i MB total, %i MB used", total, used);
+        return true;
+    } else {
+        ESP_LOGE(TAG, "No SD card");
+        return false;
+    }
+}
+#endif  // (STORAGE == STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
+
+#if (STORAGE == STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
+bool _setup_SPIFFS()
+{
+    bool mounted = SPIFFS.begin();
+    if (!mounted) {
+        ESP_LOGI(TAG, "Formatting SPIFFS...");
+        mounted = SPIFFS.begin(true);
+    }
+    if (mounted) {
+        ESP_LOGI(
+            TAG,
+            "SPIFFS: %i bytes total, %i bytes used",
+            SPIFFS.totalBytes(), SPIFFS.usedBytes());
+    } else {
+        ESP_LOGE(TAG, "No SPIFFS");
+    }
+    return mounted;
+}
+#endif // (STORAGE & STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
+
+void setup_FS() {
+#if STORAGE || LOG_SINK
+#   if (STORAGE & STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
+    _setup_SD();
+#   endif  // SD
+#   if (STORAGE == STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
+    _setup_SPIFFS();
+#   endif  // SPIFFS
+#endif  // STORAGE || LOG_SINK
+}
+
 void setup()
 {
     buzzer.tone(1);  // 1hz ticks until `initialize()`
@@ -1349,6 +1401,14 @@ void setup()
     // esp_log_level_set(TAG_SIM7600, ESP_LOG_WARN);  // FreematcisNetwork
     // esp_log_level_set(TAG_SIM7070, ESP_LOG_WARN);  // FreematcisNetwork
     // esp_log_level_set(TAG_HTTP, ESP_LOG_WARN);     // FreematcisNetwork
+
+    setup_FS();
+#if (LOG_SINK & LOG_SINK_SD)
+    logsinks::log_sinks[0].enable(true);
+#endif
+#if (LOG_SINK & LOG_SINK_SPIFFS)
+    logsinks::log_sinks[1].enable(true);
+#endif
 
     // init LED pin
     pinMode(PIN_LED, OUTPUT);

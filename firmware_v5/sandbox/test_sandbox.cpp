@@ -256,10 +256,42 @@ void test_ClientWIFI_connect_and_listAPs() {
 }
 
 
+# include <LogSink.h>
+# include <FreematicsPlus.h> // for PIN_SD_CS , SPI_FREQ
+#include <FS.h>
+
+void test_SD() {
+  esp_log_level_set("*", ESP_LOG_VERBOSE);
+
+    // SPI-num: VSPI
+    // #define PIN_NUM_MISO 19
+    // #define PIN_NUM_MOSI 23
+    // #define PIN_NUM_CLK  18
+    // #define PIN_NUM_CS   5
+  if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 5, true)) {
+    uint total = SD.totalBytes() >> 20;
+    uint used = SD.usedBytes() >> 20;
+    ESP_LOGE(TAG, "SD: %i MB total, %i MB used", total, used);
+
+    auto f = SD.open("/ttt", "a");
+    ESP_LOGE(TAG, "FOPEN: %i", f.available());
+    f.printf("FFF: %li\n", millis());
+    ESP_LOGE(TAG, "FWRITE: %i", f.available());
+    f.close();
+    ESP_LOGE(TAG, "FCLOSED: %i", f.available());
+
+    File root = SD.open("/");
+    while(File file = root.openNextFile())
+      ESP_LOGE(TAG, "%s: %5u", file.name(), file.size());
+    root.close();
+  }
+}
+
 void process() {
     UNITY_BEGIN();
     RUN_TEST(test_sys_info);
     RUN_TEST(test_logging);
+    RUN_TEST(test_SD);
     RUN_TEST(test_buzzer);
     RUN_TEST(test_ClientWIFI_connect_and_listAPs);
     UNITY_END();

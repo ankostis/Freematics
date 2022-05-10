@@ -177,21 +177,9 @@ protected:
     File m_data_file;
 };
 
+/** ATTENTION: must have enabled `SD` instance before calling `begin()`. */
 class SDLogger : public FileLogger {
 public:
-    bool init()
-    {
-        SPI.begin();
-        if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ)) {
-            unsigned int total = SD.totalBytes() >> 20;
-            unsigned int used = SD.usedBytes() >> 20;
-            ESP_LOGI(TAG, "SD: %i MB total, %i MB used", total, used);
-            return true;
-        } else {
-            ESP_LOGE(TAG, "No SD card");
-            return false;
-        }
-    }
     uint32_t begin()
     {
         File root = SD.open("/DATA");
@@ -220,25 +208,10 @@ public:
     }
 };
 
+/** ATTENTION: must have enabled `SPIFFS` instance before calling `begin()`. */
 class SPIFFSLogger : public FileLogger {
 public:
-    bool init()
-    {
-        bool mounted = SPIFFS.begin();
-        if (!mounted) {
-            ESP_LOGI(TAG, "Formatting SPIFFS...");
-            mounted = SPIFFS.begin(true);
-        }
-        if (mounted) {
-            ESP_LOGI(
-                TAG,
-                "SPIFFS: %i bytes total, %i bytes used",
-                SPIFFS.totalBytes(), SPIFFS.usedBytes());
-        } else {
-            ESP_LOGE(TAG, "No SPIFFS");
-        }
-        return mounted;
-    }
+
     uint32_t begin()
     {
         File root = SPIFFS.open("/");
