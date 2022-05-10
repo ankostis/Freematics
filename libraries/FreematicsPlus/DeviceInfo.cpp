@@ -24,9 +24,10 @@
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #   include "esp32/himem.h"
 #endif
+#include "FreematicsPlus.h"
 #include "DeviceInfo.h"
 
-void LogDeviceInfo(const char *devid)
+void LogDeviceInfo(const freematics_cfg_t &node_cfg)
 {
     int PartitionSize = esp_ota_get_running_partition()->size;  // +395 from compiler report
     int SketchSize = ESP.getSketchSize();
@@ -69,7 +70,7 @@ void LogDeviceInfo(const char *devid)
 #   endif
 #endif
         "\n"
-        , devid
+        , node_cfg.devid
         , ESP.getChipModel()
         , ESP.getChipRevision()
         , ESP.getCpuFreqMHz()

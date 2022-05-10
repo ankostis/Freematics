@@ -172,4 +172,10 @@ private:
   byte m_flags = 0;
   byte m_pinGPSPower = 0;
 };
-#endif
+
+struct freematics_cfg_t {
+  char devid[12]; // populated after boot
+  char vin[18]; // populated after boot
+};
+
+#endif // FREEMATICS_PLUS

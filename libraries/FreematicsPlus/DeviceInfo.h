@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 #pragma once
-
+#include "FreematicsPlus.h"
 /**
  * Sample output:
  *
@@ -40,4 +40,4 @@
  * [need the PSRAM workaround](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1)
  *
  */
-void LogDeviceInfo(const char *devid);
+void LogDeviceInfo(const freematics_cfg_t &node_cfg);

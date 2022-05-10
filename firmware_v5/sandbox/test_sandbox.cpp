@@ -27,10 +27,12 @@
 // }
 
 #include <DeviceInfo.h>
+#include <FreematicsPlus.h>
 
 void test_sys_info()
 {
-    LogDeviceInfo("<test_case>");
+  freematics_cfg_t node_cfg{"TESTDEV", "TESTVIN"};
+  LogDeviceInfo(node_cfg);
 }
 
 #include <esp_log.h>

@@ -89,6 +89,10 @@ DS_CAN_MSG obdDataMulti[]=
   {0}
 };
 
+freematics_cfg_t node_cfg{
+  // More fields will be added later.
+};
+
 typedef struct {
   byte pid;
   byte tier;
@@ -112,13 +116,11 @@ float deviceTemp = 0;
 
 // live data
 int16_t rssi = 0;
-char vin[18] = {0};
 uint16_t dtc[6] = {0};
 float batteryVoltage = 0;
 GPS_DATA* gd = 0;
 char obfcmTest[128] = {0};
 
-char devid[12] = {0};
 char isoTime[26] = {0};
 
 // stats data
@@ -242,6 +244,7 @@ void processExtInputs(CBuffer* buffer)
 #if ENABLE_HTTPD
 int handlerLiveData(UrlHandlerParam* param)
 {
+    char *vin = node_cfg.vin;
     char *buf = param->pucBuffer;
     int bufsize = param->bufSize;
     int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, batteryVoltage / 100);
@@ -583,6 +586,8 @@ void initialize()
 
   // re-try OBD if connection not established
 #if ENABLE_OBD
+  char *vin = node_cfg.vin;
+
   if (state.check(STATE_OBD_READY)) {
     char buf[128];
     if (obd.getVIN(buf, sizeof(buf))) {
@@ -613,7 +618,7 @@ void initialize()
 #if ENABLE_OLED
   delay(1000);  // This `delay()` forces #ifdef OLED.
   oled.clear();
-  oled.printf("DEVICE ID: %s\n", devid);
+  oled.printf("DEVICE ID: %s\n", node_cfg.devid);
   oled.setCursor(0, 7);
   oled.print("Packets");
   oled.setCursor(80, 7);
@@ -1074,7 +1079,7 @@ void telemetry(void* inst)
 
       buffer->state = BUFFER_STATE_LOCKED;
 #if SERVER_PROTOCOL == PROTOCOL_UDP
-      store.header(devid);
+      store.header(node_cfg.devid);
 #endif
       store.timestamp(buffer->timestamp);
       buffer->serialize(store);
@@ -1215,8 +1220,9 @@ void standby()
 /*******************************************************************************
   Tasks to perform in idle/waiting time
 *******************************************************************************/
-void genDeviceID(char* buf)
+void genDeviceID()
 {
+  char *buf = node_cfg.devid;
     uint64_t seed = ESP.getEfuseMac() >> 8;
     for (int i = 0; i < 8; i++, seed >>= 5) {
       byte x = (byte)seed & 0x1f;
@@ -1301,7 +1307,7 @@ void setup()
     digitalWrite(PIN_LED, HIGH);
 
    // generate unique device ID
-    genDeviceID(devid);
+    genDeviceID();
 
 #if CONFIG_MODE_TIMEOUT
     configMode();
@@ -1312,11 +1318,12 @@ void setup()
     pinMode(PIN_SENSOR2, INPUT);
 #endif
 
-    LogDeviceInfo(devid);
+    LogDeviceInfo(node_cfg);
     OLED_CLEAR();
     OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
-        (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20), devid);
+        (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
+        node_cfg.devid);
 
     if (sys.begin()) {
       ESP_LOGI(TAG_INIT, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
