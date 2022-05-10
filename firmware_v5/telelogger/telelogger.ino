@@ -91,9 +91,9 @@ DS_CAN_MSG obdDataMulti[]=
 };
 
 freematics_cfg_t node_cfg{
+  .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
   .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
   .log_level_build = CORE_DEBUG_LEVEL,
-  .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
   .nslots = BUFFER_SLOTS,
   .slot_len = BUFFER_LENGTH,
   .serialize_len = SERIALIZE_BUFFER_SIZE,
@@ -101,13 +101,12 @@ freematics_cfg_t node_cfg{
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   .gnss = GNSS,
   .enable_flags = (
-    (STORAGE & 1) \
-    | ((ENABLE_OBD && 1) << 1) \
-    | ((ENABLE_MEMS && 1) << 2) \
-    | ((ENABLE_ORIENTATION && 1) << 3) \
-    | ((ENABLE_OLED && 1) << 4) \
-    | ((ENABLE_HTTPD && 1) << 5) \
-    | ((ENABLE_BUZZING_INIT && 6) << 6)
+    ((ENABLE_OBD && 1) << 0) \
+    | ((ENABLE_MEMS && 1) << 1) \
+    | ((ENABLE_ORIENTATION && 1) << 2) \
+    | ((ENABLE_OLED && 1) << 3) \
+    | ((ENABLE_HTTPD && 1) << 4) \
+    | ((ENABLE_BUZZING_INIT && 6) << 5)
   ),
   .net_dev = NET_DEVICE,
   .wifi_ssd = (char*)WIFI_SSID,
@@ -1327,7 +1326,7 @@ void setup()
 
     // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
     //
-    esp_log_level_set("*", RUNTIME_ALL_TAGS_LOG_LEVEL);
+    esp_log_level_set("*", (esp_log_level_t)node_cfg.log_level_run);
     // esp_log_level_set(TAG_BOOT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file

@@ -45,7 +45,7 @@
  * Logging (see also `platformio.ini`)
  **************************************/
 // Works only when ESP_IDF logging-lib selected in `platformio.ini`.
-#define RUNTIME_ALL_TAGS_LOG_LEVEL (esp_log_level_t)CORE_DEBUG_LEVEL
+#define RUNTIME_ALL_TAGS_LOG_LEVEL CORE_DEBUG_LEVEL
 
 /**************************************
 * OBD-II configurations

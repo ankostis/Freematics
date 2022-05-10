@@ -20,6 +20,44 @@
 struct freematics_cfg_t {
   char devid[12]; // populated after boot
   char vin[18]; // populated after boot
+
+  int serial_autoconf_timeout;
+  uint8_t log_level_run;
+  uint8_t log_level_build;
+  int nslots;
+  int slot_len;
+  int serialize_len;
+  /** Bit for enable/disable decided on compile-time.  */
+  uint8_t storage;
+  /** NOTE: changes here, must convey to platformIO's monitor-filter. */
+  uint8_t gnss;
+  /** NOTE: remember to increase size if more is-enabled? flags added. */
+  uint8_t enable_flags;
+  uint8_t net_dev;
+  const char* wifi_ssd;
+  const char* wifi_pwd;
+  const char* cell_apn;
+  const char* sim_card_pin;
+  uint8_t srv_proto;
+  const char* srv_host;
+  const char* srv_path;
+  uint16_t srv_port;
+  uint32_t net_recv_timeout;
+  uint32_t srv_sync_timeout;
+  uint8_t net_retries;
+  uint16_t net_udp_reconnect_delay;
+  uint16_t stationary_timeout_vals[3];
+  uint16_t data_interval_vals[3];
+  uint32_t obfcm_interval;
+  uint8_t obd_max_errors;
+  uint16_t ping_back_interval;
+  uint8_t wakeup_reset;
+  float wakeup_motion_thr;
+  float wakeup_jumpstart_thr;
+  float cool_temp;
+  uint16_t cool_delay;
+  uint8_t pin_sensor1;
+  uint8_t pin_sensor2;
 };
 
 /**
