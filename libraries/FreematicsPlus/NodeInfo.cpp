@@ -24,7 +24,6 @@
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #   include "esp32/himem.h"
 #endif
-#include "FreematicsPlus.h"
 #include "NodeInfo.h"
 
 void log_node_info(const freematics_cfg_t &node_cfg)

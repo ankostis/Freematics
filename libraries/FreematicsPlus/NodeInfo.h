@@ -16,7 +16,12 @@
  ******************************************************************************/
 
 #pragma once
-#include "FreematicsPlus.h"
+
+struct freematics_cfg_t {
+  char devid[12]; // populated after boot
+  char vin[18]; // populated after boot
+};
+
 /**
  * Sample output:
  *

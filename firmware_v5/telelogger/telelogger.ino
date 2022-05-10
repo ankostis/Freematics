@@ -91,7 +91,49 @@ DS_CAN_MSG obdDataMulti[]=
 };
 
 freematics_cfg_t node_cfg{
-  // More fields will be added later.
+  .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
+  .log_level_build = CORE_DEBUG_LEVEL,
+  .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
+  .nslots = BUFFER_SLOTS,
+  .slot_len = BUFFER_LENGTH,
+  .serialize_len = SERIALIZE_BUFFER_SIZE,
+  .storage = STORAGE,
+  /** NOTE: changes here, must convey to platformIO's monitor-filter. */
+  .gnss = GNSS,
+  .enable_flags = (
+    (STORAGE & 1) \
+    | ((ENABLE_OBD && 1) << 1) \
+    | ((ENABLE_MEMS && 1) << 2) \
+    | ((ENABLE_ORIENTATION && 1) << 3) \
+    | ((ENABLE_OLED && 1) << 4) \
+    | ((ENABLE_HTTPD && 1) << 5) \
+    | ((ENABLE_BUZZING_INIT && 6) << 6)
+  ),
+  .net_dev = NET_DEVICE,
+  .wifi_ssd = (char*)WIFI_SSID,
+  .wifi_pwd = (char*)WIFI_PASSWORD,
+  .cell_apn = (char*)CELL_APN,
+  .sim_card_pin = (char*)SIM_CARD_PIN,
+  .srv_proto = SERVER_PROTOCOL,
+  .srv_host = (char*)SERVER_HOST,
+  .srv_path = (char*)SERVER_PATH,
+  .srv_port = SERVER_PORT,
+  .net_recv_timeout = DATA_RECEIVING_TIMEOUT,
+  .srv_sync_timeout = SERVER_SYNC_INTERVAL,
+  .net_retries = NET_CONNECT_RETRIES,
+  .net_udp_reconnect_delay = UDP_CONNECT_RETRY_DELAY_MS,
+  .stationary_timeout_vals = STATIONARY_TIME_TABLE,
+  .data_interval_vals = DATA_INTERVAL_TABLE,
+  .obfcm_interval = OBFCM_INTERVAL_MS,
+  .obd_max_errors = MAX_OBD_ERRORS,
+  .ping_back_interval = PING_BACK_INTERVAL,
+  .wakeup_reset = RESET_AFTER_WAKEUP,
+  .wakeup_motion_thr = MOTION_THRESHOLD,
+  .wakeup_jumpstart_thr = THR_VOLTAGE,
+  .cool_temp = COOLING_DOWN_TEMP,
+  .cool_delay = COOLING_DOWN_SLEEP_SEC,
+  .pin_sensor1 = PIN_SENSOR1,
+  .pin_sensor2 = PIN_SENSOR2,
 };
 
 typedef struct {

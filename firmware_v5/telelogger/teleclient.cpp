@@ -16,6 +16,7 @@
 ******************************************************************************/
 
 #include <FreematicsPlus.h>
+#include <NodeInfo.h>
 #include "telelogger.h"
 #include "telemesh.h"
 #include "teleclient.h"

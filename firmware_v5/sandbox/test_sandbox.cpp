@@ -26,8 +26,7 @@
 // // clean stuff up here
 // }
 
-#include <DeviceInfo.h>
-#include <FreematicsPlus.h>
+#include <NodeInfo.h>
 
 void test_sys_info()
 {
