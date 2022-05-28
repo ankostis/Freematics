@@ -1,6 +1,15 @@
 # ELM327 AT commands summary
 
-**Note:** Settings which are shown with an asterisk (*) are the default values
+It is assumed that STM32F103 co-processor hooked on the CAN-bus on *freematics*
+is running *some* version of the [ubiquitous ELM327 firmware](https://en.wikipedia.org/wiki/ELM327).
+The list of AT-commands below are provided as an aid to the developers,
+to facilitate quick text-searches while understanding the code.
+
+The commands were manually extracted from the 99-page PDF document on [elm327 IC, v2.3](https://www.elmelectronics.com/ic/elm327l/)
+([waybacked](https://web.archive.org/web/20220324203957/https://www.elmelectronics.com/ic/elm327l/))
+on May 2022 (a month before the closing of ELM company).
+
+> **Note:** Settings which are shown with an asterisk (*) are the default values.
 
 ## General Commands
 
