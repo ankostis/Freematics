@@ -13,148 +13,161 @@ on May 2022 (a month before the closing of ELM company).
 
 ## General Commands
 
-- <CR>: repeat the last command
-- BRD hh: try Baud Rate Divisor hh
-- BRT hh: set Baud Rate Timeout
-- D: set all to Defaults
-- E0, E1: Echo off, or on*
-- FE: Forget Events
-- I: print the version ID
-- L0, L1: Linefeeds off, or on
-- LP: go to Low Power mode
-- M0, M1: Memory off, or on
-- RD: Read the stored Data
-- SD hh: Save Data byte hh
-- WS: Warm Start (quick software reset)
-- Z: reset all
-- @1: display the device description
-- @2: display the device identifier
-- @3 cccccccccccc store the @2 identifier
+- `<CR>`: repeat the last command (`\r`, or ASCII(0x0D))
+- ATBRD hh: try Baud Rate Divisor hh
+- ATBRT hh: set Baud Rate Timeout
+- ATD: set all to Defaults
+- ATE0: Echo off
+- ATE1: Echo on*
+- ATFE: Forget Events
+- ATI: print the version ID
+- ATL0: Linefeeds off
+- ATL1: Linefeeds on
+- ATLP: go to Low Power mode
+- ATM0: Memory off
+- ATM1: Memory on
+- ATRD: Read the stored Data
+- ATSD hh: Save Data byte hh
+- ATWS: Warm Start (quick software reset)
+- ATZ: reset all
+- AT@1: display the device description
+- AT@2: display the device identifier
+- AT@3 cccccccccccc store the @2 identifier
 
 
 ## Programmable Parameter Commands
 
-- PP xx OFF: disable Prog Parameter xx
-- PP FF OFF: all Prog Parameters disabled
-- PP xx ON: enable Prog Parameter xx
-- PP FF ON: all Prog Parameters enabled
-- PP xx SV yy: for PP xx, Set the Value to yy
-- PPS: print a PP Summary
+- ATPP xx OFF: disable Prog Parameter xx
+- ATPP FF OFF: all Prog Parameters disabled
+- ATPP xx ON: enable Prog Parameter xx
+- ATPP FF ON: all Prog Parameters enabled
+- ATPP xx SV yy: for PP xx, Set the Value to yy
+- ATPPS: print a PP Summary
 
 
 ## Voltage Reading Commands
-- CV dddd: Calibrate the Voltage to dd.dd volts
-- CV 0000: restore CV value to factory setting
-- RV: Read the input Voltage
+- ATCV dddd: Calibrate the Voltage to dd.dd volts
+- ATCV 0000: restore CV value to factory setting
+- ATRV: Read the input Voltage
 
 ## Other
 
-- IGN: read the IgnMon input level
+- ATIGN: read the IgnMon input level
 
 
 ## OBD Commands
 
-- AL: Allow Long (>7 byte) messages
-- AMC: display Activity Monitor Count
-- AMT hh: set the Activity Mon Timeout to hh
-- AR: Automatically Receive
-- AT0, 1, 2: Adaptive Timing off, auto1*, auto2
-- BD: perform a Buffer Dump
-- BI: Bypass the Initialization sequence
-- DP: Describe the current Protocol
-- DPN: Describe the Protocol by Number
-- FT: Filter for Transmitter off*
-- FT hh: Filter for Transmitter = hh
-- H0, H1: Headers off*, or on
-- IA: Is the protocol Active?
-- MA: Monitor All
-- MR hh: Monitor for Receiver = hh
-- MT hh: Monitor for Transmitter = hh
-- NL: Normal Length messages*
-- PC: Protocol Close
-- R0, R1: Responses off, or on*
-- RA hh: set the Receive Address to hh
-- S0, S1: printing of Spaces off, or on*
-- SH xyz: Set Header to xyz
-- SH xxyyzz: Set Header to xxyyzz
-- SH wwxxyyzz: Set Header to wwxxyyzz
-- SP h: Set Protocol to h and save it
-- SP Ah: Set Protocol to Auto, h and save it
-- SP 00: Erase stored protocol
-- SR hh: Set the Receive address to hh
-- SS: use Standard Search order (J1978)
-- ST hh: Set Timeout to hh x 4 msec
-- TA hh: set Tester Address to hh
-- TP h: Try Protocol h
-- TP Ah: Try Protocol h with Auto search
+- ATAL: Allow Long (>7 byte) messages
+- ATAMC: display Activity Monitor Count
+- ATAMT hh: set the Activity Mon Timeout to hh
+- ATAR: Automatically Receive
+- ATAT0, 1, 2: Adaptive Timing off, auto1*, auto2
+- ATBD: perform a Buffer Dump
+- ATBI: Bypass the Initialization sequence
+- ATDP: Describe the current Protocol
+- ATDPN: Describe the Protocol by Number
+- ATFT: Filter for Transmitter off*
+- ATFT hh: Filter for Transmitter = hh
+- ATH0: Headers off*
+- ATH1: Headers on
+- ATIA: Is the protocol Active?
+- ATMA: Monitor All
+- ATMR hh: Monitor for Receiver = hh
+- ATMT hh: Monitor for Transmitter = hh
+- ATNL: Normal Length messages*
+- ATPC: Protocol Close
+- ATR0: Responses off
+- ATR1: Responses on*
+- ATRA hh: set the Receive Address to hh
+- ATS0: printing of Spaces off
+- ATS1: printing of Spaces on*
+- ATSH xyz: Set Header to xyz
+- ATSH xxyyzz: Set Header to xxyyzz
+- ATSH wwxxyyzz: Set Header to wwxxyyzz
+- ATSP h: Set Protocol to h and save it
+- ATSP Ah: Set Protocol to Auto, h and save it
+- ATSP 00: Erase stored protocol
+- ATSR hh: Set the Receive address to hh
+- ATSS: use Standard Search order (J1978)
+- ATST hh: Set Timeout to hh x 4 msec
+- ATTA hh: set Tester Address to hh
+- ATTP h: Try Protocol h
+- ATTP Ah: Try Protocol h with Auto search
 
 
 ## J1850 Specific Commands (protocols 1 and 2)
 
-- IFR0, 1, 2: IFRs off, auto*, or on, if not monitoring
-- IFR4, 5, 6: IFRs off, auto, or on, at all times
-- IFR H, S: IFR value from Header* or Source
+- ATIFR0, 1, 2: IFRs off, auto*, or on, if not monitoring
+- ATIFR4, 5, 6: IFRs off, auto, or on, at all times
+- ATIFR H, S: IFR value from Header* or Source
 
 
 ## ISO Specific Commands (protocols 3 to 5)
 
-- FI: perform a Fast Initiation
-- IB10: set the ISO Baud rate to 10400*
-- IB12: set the ISO Baud rate to 12500
-- IB15: set the ISO Baud rate to 15625
-- IB48: set the ISO Baud rate to 4800
-- IB96: set the ISO Baud rate to 9600
-- IIA hh: set ISO (slow) Init Address to hh
-- KW: display the Key Words
-- KW0, KW1: Key Word checking off, or on*
-- SI: perform a Slow (5 baud) Initiation
-- SW hh: Set Wakeup interval to hh x 20 msec
-- SW 00: Stop sending Wakeup messages
-- WM [1 - 6 bytes]: set the Wakeup Message
+- ATFI: perform a Fast Initiation
+- ATIB10: set the ISO Baud rate to 10400*
+- ATIB12: set the ISO Baud rate to 12500
+- ATIB15: set the ISO Baud rate to 15625
+- ATIB48: set the ISO Baud rate to 4800
+- ATIB96: set the ISO Baud rate to 9600
+- ATIIA hh: set ISO (slow) Init Address to hh
+- ATKW: display the Key Words
+- ATKW0: Key Word checking off
+- ATKW1: Key Word checking on*
+- ATSI: perform a Slow (5 baud) Initiation
+- ATSW hh: Set Wakeup interval to hh x 20 msec
+- ATSW 00: Stop sending Wakeup messages
+- ATWM [1 - 6 bytes]: set the Wakeup Message
 
 
 ## CAN Specific Commands (protocols 6 to C)
 
-- C0, C1: send Confirmation off, or on*
-- CAF0, CAF1: Automatic Formatting off, or on*
-- CEA: turn off CAN Extended Addressing
-- CEA hh: use CAN Extended Address hh
-- CER hh: set CAN Extended Rx address to hh
-- CF hhh: set the ID Filter to hhh
-- CF hhhhhhhh: set the ID Filter to hhhhhhhh
-- CFC0, CFC1: Flow Controls off, or on*
-- CM hhh: set the ID Mask to hhh
-- CM hhhhhhhh: set the ID Mask to hhhhhhhh
-- CP hh: set CAN Priority to hh (29 bit)
-- CRA: reset the Receive Address filters
-- CRA hhh: set CAN Receive Address to hhh
-- CRA hhhhhhhh: set the Rx Address to hhhhhhhh
-- CS: show the CAN Status counts
-- CSM0, CSM1: Silent Monitoring off, or on*
-- CTM1: set Timer Multiplier to 1*
-- CTM5: set Timer Multiplier to 5
-- D0, D1: display of the DLC off*, or on
-- FC SM h: Flow Control, Set the Mode to h
-- FC SH hhh: FC, Set the Header to hhh
-- FC SH hhhhhhhh: Set the Header to hhhhhhhh
-- FC SD [1 - 5 bytes]: FC, Set Data to [...]
-- PB xx yy: Protocol B options and baud rate
-- RTR: send an RTR message
-- V0, V1: use of Variable DLC off*, or on
+- ATC0: send Confirmation off
+- ATC1: send Confirmation on*
+- ATCAF0: Automatic Formatting off
+- ATCAF1: Automatic Formatting on*
+- ATCEA: turn off CAN Extended Addressing
+- ATCEA hh: use CAN Extended Address hh
+- ATCER hh: set CAN Extended Rx address to hh
+- ATCF hhh: set the ID Filter to hhh
+- ATCF hhhhhhhh: set the ID Filter to hhhhhhhh
+- ATCFC0: Flow Controls off
+- ATCFC1: Flow Controls on*
+- ATCM hhh: set the ID Mask to hhh
+- ATCM hhhhhhhh: set the ID Mask to hhhhhhhh
+- ATCP hh: set CAN Priority to hh (29 bit)
+- ATCRA: reset the Receive Address filters
+- ATCRA hhh: set CAN Receive Address to hhh
+- ATCRA hhhhhhhh: set the Rx Address to hhhhhhhh
+- ATCS: show the CAN Status counts
+- ATCSM0: Silent Monitoring off
+- ATCSM1: Silent Monitoring on*
+- ATCTM1: set Timer Multiplier to 1*
+- ATCTM5: set Timer Multiplier to 5
+- ATD0: display of the DLC off*
+- ATD1: display of the DLC on
+- ATFC SM h: Flow Control, Set the Mode to h
+- ATFC SH hhh: FC, Set the Header to hhh
+- ATFC SH hhhhhhhh: Set the Header to hhhhhhhh
+- ATFC SD [1 - 5 bytes]: FC, Set Data to [...]
+- ATPB xx yy: Protocol B options and baud rate
+- ATRTR: send an RTR message
+- ATV0: use of Variable DLC off*
+- ATV1: use of Variable DLC on
 
 
 ## J1939 CAN Specific Commands (protocols A to C)
 
-- DM1: monitor for DM1 messages
-- JE: use J1939 Elm data format*
-- JHF0, JHF1: Header Formatting off, or on*
-- JS: use J1939 SAE data format
-- JTM1: set Timer Multiplier to 1*
-- JTM5: set Timer Multiplier to 5
-- MP hhhh: Monitor for PGN 0hhhh
-- MP hhhh n: ^ ^ ^ and get n messages
-- MP hhhhhh: Monitor for PGN hhhhhh
-- MP hhhhhh n: ^ ^ ^ and get n messages
+- ATDM1: monitor for DM1 messages
+- ATJE: use J1939 Elm data format*
+- ATJHF0, JHF1: Header Formatting off, or on*
+- ATJS: use J1939 SAE data format
+- ATJTM1: set Timer Multiplier to 1*
+- ATJTM5: set Timer Multiplier to 5
+- ATMP hhhh: Monitor for PGN 0hhhh
+- ATMP hhhh n: ^ ^ ^ and get n messages
+- ATMP hhhhhh: Monitor for PGN hhhhhh
+- ATMP hhhhhh n: ^ ^ ^ and get n messages
 
 
 ## Protocols
