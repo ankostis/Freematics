@@ -56,23 +56,17 @@ void _unlock(void) {
  * (instead of replicating formatting inside both `v(f)printf()`).
  */
 static int _log_printf(const char *format, va_list args) {
-  char loc_buf[256];
-  char *temp = loc_buf;
-  int len = vsnprintf(temp, sizeof(loc_buf), format, args);
-  if (len < 0) {
-    return 0;
-  };
-  if (len >= sizeof(loc_buf)) {
-    temp = (char *)malloc(len + 1);
-    if (temp == NULL) {
-      return 0;
-    }
-    len = vsnprintf(temp, len + 1, format, args);
-  }
+  char stack_buf[256];
+  char *buf = stack_buf;
+  int len, buflen = sizeof(stack_buf);
+
+  while ((len = vsnprintf(buf, buflen, format, args)) >= buflen)
+    if (len < 0 || !(buf = (char *)malloc(buflen = len + 1))) return 0;
 
   int len1, len2;
 
-  len1 = Serial.write(temp, len);  // TODO: write serial-logs in an RTOS-task.
+  // TODO: conditionally write serial-logs (and in a RTOS-task).
+  len1 = Serial.write(buf, len);
 
   _lock();
 
@@ -81,7 +75,7 @@ static int _log_printf(const char *format, va_list args) {
   for (auto &sink : log_sinks) {
     if (sink.enabled()) {
       // TODO: check indeed written, not just the last one.
-      len2 = sink.file.write((uint8_t *)temp, len);
+      len2 = sink.file.write((uint8_t *)buf, len);
 
       if ((now - sink.last_synced_ms) > sink.sync_interval_ms) {
         sink.file.flush();
@@ -92,9 +86,8 @@ static int _log_printf(const char *format, va_list args) {
 
   _unlock();
 
-  if (temp != loc_buf) {
-    free(temp);
-  }
+  if (buf != stack_buf) free(buf);
+
   return (len == len1) && (len == len2) ? len : 0;
 }
 
