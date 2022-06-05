@@ -219,8 +219,9 @@ protected:
 
 OBD obd;
 #endif  // ENABLE_OBD
-
+#if ENABLE_MEMS
 MEMS_I2C* mems = nullptr;
+#endif  // ENABLE_MEMS
 
 #if STORAGE == STORAGE_SPIFFS
 SPIFFSLogger logger;
