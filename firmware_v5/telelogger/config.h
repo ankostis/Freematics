@@ -119,7 +119,7 @@
 // maximum consecutive communication errors before resetting network
 #define MAX_CONN_ERRORS_RECONNECT 3
 // maximum allowed connecting time
-#define MAX_CONN_TIME 10000 /* ms */
+#define MAX_CONN_TIME 10000 /* ms */  // TODO: drop unused cfg
 // data receiving timeout
 #define DATA_RECEIVING_TIMEOUT 5000 /* ms */
 // expected maximum server sync signal interval

@@ -185,7 +185,7 @@ String serialCommand;
 
 byte ledMode = 0;
 
-bool serverSetup(IPAddress& ip);
+bool serverSetup(IPAddress& ip);  // TODO: drop unused code
 void serverProcess(int timeout);
 String executeCommand(const char* cmd);
 bool processCommand(char* data);
@@ -207,7 +207,7 @@ Buzzer buzzer(PIN_BUZZER);
 class OBD : public COBD
 {
 protected:
-  void idleTasks()
+  void idleTasks()  // TODO: drop obd `idle_tasks()` and run mems in a task.
   {
     // do some quick tasks while waiting for OBD response
 #if ENABLE_MEMS
@@ -318,7 +318,7 @@ int handlerLiveData(UrlHandlerParam* param)
     return FLAG_DATA_RAW;
 }
 
-int handlerControl(UrlHandlerParam* param)
+int handlerControl(UrlHandlerParam* param)  // TODO: drop unused code
 {
     char *cmd = mwGetVarValue(param->pxVars, "cmd", 0);
     if (!cmd) return 0;
