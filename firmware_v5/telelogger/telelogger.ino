@@ -293,7 +293,7 @@ int handlerLiveData(UrlHandlerParam* param)
     char *buf = param->pucBuffer;
     int bufsize = param->bufSize;
     int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, batteryVoltage / 100);
-    int n = snprintf(buf, bufsize, "{\"obfcm\":{\"obfcm\":\"%s\",\":[", obfcmTest);
+    n = snprintf(buf, bufsize, "{\"obfcm\":{\"obfcm\":\"%s\",\":[", obfcmTest);
     uint32_t t = millis();
     for (int i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
         n += snprintf(buf + n, bufsize - n, "{\"pid\":%u,\"value\":%d,\"age\":%u},",
