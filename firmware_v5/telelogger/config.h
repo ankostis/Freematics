@@ -41,6 +41,10 @@
 #define PROTOCOL_METHOD_GET 0
 #define PROTOCOL_METHOD_POST 1
 
+#define LOG_EXT_SENSORS_NONE    0
+#define LOG_EXT_SENSORS_DIGITAL 1
+#define LOG_EXT_SENSORS_ANALOG  2
+
 /**************************************
  * Logging (see also `platformio.ini`)
  **************************************/
@@ -183,6 +187,8 @@
 
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
 #define COOLING_DOWN_SLEEP_SEC 5 /* celsius degrees */
+
+#define LOG_EXT_SENSORS LOG_EXT_SENSORS_NONE
 
 /**************************************
  * Secrets & per-device overrides, like:

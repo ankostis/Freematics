@@ -271,11 +271,11 @@ void processExtInputs(CBuffer* buffer)
 {
   int pins[] = {PIN_SENSOR1, PIN_SENSOR2};
   int pids[] = {PID_EXT_SENSOR1, PID_EXT_SENSOR2};
-#if LOG_EXT_SENSORS == 1
+#if LOG_EXT_SENSORS == LOG_EXT_SENSORS_DIGITAL
   for (int i = 0; i < 2; i++) {
     buffer->add(pids[i], digitalRead(pins[i]));
   }
-#elif LOG_EXT_SENSORS == 2
+#elif LOG_EXT_SENSORS == LOG_EXT_SENSORS_ANALOG
   for (int i = 0; i < 2; i++) {
     buffer->add(pids[i], analogRead(pins[i]));
   }
