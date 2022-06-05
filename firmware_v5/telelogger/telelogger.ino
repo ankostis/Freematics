@@ -203,6 +203,7 @@ public:
 FreematicsESP32 sys;
 Buzzer buzzer(PIN_BUZZER);
 
+#if ENABLE_OBD
 class OBD : public COBD
 {
 protected:
@@ -217,6 +218,7 @@ protected:
 };
 
 OBD obd;
+#endif  // ENABLE_OBD
 
 MEMS_I2C* mems = nullptr;
 
@@ -1200,7 +1202,9 @@ void standby()
   oled.clear();
 #endif
   // this will put co-processor into sleep mode
+#if ENABLE_OBD
   obd.enterLowPowerMode();
+#endif  // ENABLE_OBD
 #if ENABLE_MEMS
   uint32_t t;
   float v;
