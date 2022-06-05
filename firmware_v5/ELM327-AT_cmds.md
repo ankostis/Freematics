@@ -185,3 +185,41 @@ on May 2022 (a month before the closing of ELM company).
 - A: SAE J1939 CAN (29 bit ID, 250* kbaud)
 - B: User1 CAN (11* bit ID, 125* kbaud)
 - C: User2 CAN (11* bit ID, 50* kbaud)
+
+
+## Commands used in the code
+
+### FreematicsOBD.cpp
+
+- ATLP: go to Low Power mode (in `enterLowPowerMode()`)
+- ATI: print the version ID (in `leaveLowPowerMode()`)
+- ATRV: Read the input Voltage (in `COBD::getVoltage()`)
+- ATE0: Echo off (in `COBD::init()`)
+- ATH0: Headers off (in `COBD::init()`)
+- ATZ: reset all (in `COBD::init()`)
+- ATSP h: Set Protocol to h and save it (in `COBD::init()`)
+- ATPC: Protocol Close (in `COBD::uninit()`)
+- ATSH: set Header (in `COBD::setHeaderID()`)
+- ATCP: set CAN Priority to hh (29 bit) (in `COBD::setHeaderID()`)
+- ATM0/1: Memory off/on (in `COBD::sniff()`)
+- ATCF: set the ID Filter (in `COBD::setHeaderFilter()`)
+- ATCM: set the ID Filter (in `COBD::setHeaderMask()`)
+
+#### extras
+
+- ATR: in `COBD::reset()`
+
+### FreematicsPlus.cpp
+
+- ATI: in `getDeviceType()`, `reactivateLink()`
+
+#### extras
+
+- ATR: in `resetLink()`
+- ATBR1: in `CLink_UART::changeBaudRate()`
+- ATGPSOFF: in `FreematicsESP32::gpsEnd()/gpsBegin()`
+- ATGPSON: in `FreematicsESP32::gpsBegin()`
+- ATGPS: in `FreematicsESP32::_gpsGetData_linkUart`
+- ATGRR: in `FreematicsESP32::gpsGetNMEA()`
+
+See also [freematics announcement](https://blog.freematics.com/2014/freematics-obd-ii-adapter-v2-sample-completed/)
