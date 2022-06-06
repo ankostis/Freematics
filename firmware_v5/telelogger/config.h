@@ -9,7 +9,7 @@
  * If limit reached, the oldest slot is purged and re-populated,
  * hence, gaps & out-of-order rows appear in the trace.
  */
-#define BUFFER_SLOTS 512
+#define BUFFER_SLOTS 256
 /**
  * Bytes-per-slot
  * PID-samples not fitting in the current slot, they are dropped!
