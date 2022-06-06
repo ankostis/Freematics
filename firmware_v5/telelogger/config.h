@@ -27,9 +27,13 @@
 #define NET_WIFI_MESH 5
 #define NET_SERIAL 6
 
-#define STORAGE_NONE 0
-#define STORAGE_SPIFFS 1
-#define STORAGE_SD 2
+#define STORAGE_NONE    0
+/**
+ * Store trip-traces into SD/SPIFFS;  SD & SPIFFS are mutual-exclusive.
+ * NOTE: Storing trips delays boot due to enumerating old files.
+ */
+#define STORAGE_SPIFFS  1
+#define STORAGE_SD      2
 
 #define GNSS_NONE 0
 #define GNSS_STANDALONE 1
@@ -176,7 +180,13 @@
 // When enabled, significant states produce buzzing patterns,
 // as explained in `./README.md` file.
 #define ENABLE_BUZZING_INIT 1
-// enable(1)/disable(0) http server
+/**
+ * Enable(1)/disable(0) http server.
+ *
+ * NOTE: MUST enable also some STORAGE_SD/SPIFFS, for having something to send,
+ * or else compilation fails with:
+ *      dataserver.cpp:243:9: error: 'root' was not declared in this scope
+ */
 #define ENABLE_HTTPD 0
 // enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED 0
