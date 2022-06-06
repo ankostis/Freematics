@@ -55,7 +55,7 @@ struct LogSink {
 inline LogSink log_sinks[]{
     {
         "SD",
-        SD,
+        SD,  // FIXME: it's not equal to "public" fs instance!
         default_log_fpath,
         FILE_APPEND,
         default_disk_usage_purge_ratio,
@@ -63,7 +63,7 @@ inline LogSink log_sinks[]{
     },
     {
         "SPIFFS",
-        SPIFFS,
+        SPIFFS,  // FIXME: it's not equal to "public" fs instance!
         default_log_fpath,
         FILE_WRITE,
         default_disk_usage_purge_ratio,

@@ -1326,7 +1326,7 @@ void configMode()
 #if (STORAGE == STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
 bool _setup_SD()
 {
-    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ)) {
+    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 3/* files open */, true)) {
         uint total = SD.totalBytes() >> 20;
         uint used = SD.usedBytes() >> 20;
         ESP_LOGI(TAG, "SD: %i MB total, %i MB used", total, used);
@@ -1404,9 +1404,11 @@ void setup()
 
     setup_FS();
 #if (LOG_SINK & LOG_SINK_SD)
+    logsinks::log_sinks[0].fs = SD;  // FIXME: it's not equal to "public" fs instance!
     logsinks::log_sinks[0].enable(true);
 #endif
 #if (LOG_SINK & LOG_SINK_SPIFFS)
+    logsinks::log_sinks[1].fs = SPIFFS;  // FIXME: it's not equal to "public" fs instance!
     logsinks::log_sinks[1].enable(true);
 #endif
 
