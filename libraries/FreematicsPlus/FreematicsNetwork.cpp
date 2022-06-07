@@ -428,9 +428,10 @@ bool HTTPClientSIM800::send(HTTP_METHOD method, const char* path, bool keepAlive
   } else {
     sprintf(m_buffer, "AT+HTTPDATA=%u,10000\r", payloadSize);
     if (sendCommand(m_buffer)) {
-      if (sendCommand("AT+HTTPACTION=1\r", HTTP_CONN_TIMEOUT))
+      if (sendCommand("AT+HTTPACTION=1\r", HTTP_CONN_TIMEOUT)) {
         m_state = HTTP_SENT;
         return true;
+      }
     }
   }
   m_state = HTTP_ERROR;
