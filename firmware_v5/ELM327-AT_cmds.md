@@ -223,3 +223,139 @@ on May 2022 (a month before the closing of ELM company).
 - ATGRR: in `FreematicsESP32::gpsGetNMEA()`
 
 See also [freematics announcement](https://blog.freematics.com/2014/freematics-obd-ii-adapter-v2-sample-completed/)
+
+
+## Diffs of cmds in published PDF from [GPL sources](https://github.com/ankostis/elm327-allpro/)
+
+```diff
+$ colordiff --side-by-side  atcmds-pdf.txt  atcmds-sources.txt
+AT@1                                                            AT@1
+AT@2                                                          | AT#1
+AT@3                                                          | AT#3
+                                                              > AT#RSN
+ATAL                                                            ATAL
+ATAMC                                                         <
+ATAMT                                                         <
+ATAR                                                            ATAR
+ATAT0                                                           ATAT0
+                                                              > ATAT1
+                                                              > ATAT2
+ATBD                                                            ATBD
+ATBI                                                            ATBI
+ATBRD                                                           ATBRD
+ATBRT                                                           ATBRT
+ATC0                                                          <
+ATC1                                                          <
+ATCAF0                                                          ATCAF0
+ATCAF1                                                          ATCAF1
+ATCEA                                                           ATCEA
+ATCEA                                                           ATCEA
+ATCER                                                           ATCER
+ATCF                                                            ATCF
+ATCF                                                            ATCF
+ATCFC0                                                          ATCFC0
+ATCFC1                                                          ATCFC1
+ATCM                                                            ATCM
+ATCM                                                            ATCM
+ATCP                                                            ATCP
+ATCRA                                                           ATCRA
+ATCRA                                                           ATCRA
+ATCRA                                                           ATCRA
+ATCS                                                            ATCS
+ATCSM0                                                          ATCSM0
+ATCSM1                                                          ATCSM1
+ATCTM1                                                        | ATCTM
+ATCTM5                                                        <
+ATCV                                                          <
+ATCV                                                            ATCV
+ATD                                                             ATD
+ATD0                                                            ATD0
+ATD1                                                            ATD1
+ATDM1                                                           ATDM1
+ATDP                                                            ATDP
+ATDPN                                                           ATDPN
+ATE0                                                            ATE0
+ATE1                                                            ATE1
+ATFC                                                          | ATFCSD
+ATFC                                                          | ATFCSH
+ATFC                                                          | ATFCSH
+ATFC                                                          | ATFCSM
+ATFE                                                            ATFE
+ATFI                                                            ATFI
+ATFT                                                          <
+ATFT                                                          <
+ATH0                                                            ATH0
+ATH1                                                            ATH1
+ATI                                                             ATI
+ATIA                                                          | ATIB
+ATIB10                                                        <
+ATIB12                                                        <
+ATIB15                                                        <
+ATIB48                                                        <
+ATIB96                                                        <
+ATIFR                                                           ATIFR
+ATIFR0                                                        <
+ATIFR4                                                        <
+ATIGN                                                         <
+ATIIA                                                           ATIIA
+ATJE                                                            ATJE
+ATJHF0                                                          ATJHF0
+                                                              > ATJHF1
+ATJS                                                            ATJS
+ATJTM1                                                        | ATJTM
+ATJTM5                                                        <
+ATKW                                                            ATKW
+ATKW0                                                           ATKW0
+ATKW1                                                           ATKW1
+ATL0                                                            ATL0
+ATL1                                                            ATL1
+ATLP                                                            ATLP
+ATM0                                                            ATM0
+ATM1                                                            ATM1
+ATMA                                                          <
+ATMP                                                          <
+ATMP                                                          <
+ATMP                                                          <
+ATMP                                                            ATMP
+ATMR                                                          <
+ATMT                                                          <
+ATNL                                                            ATNL
+ATPB                                                            ATPB
+ATPC                                                            ATPC
+ATPP                                                          | ATPPFFOFF
+ATPP                                                          | ATPPFFON
+ATPP                                                          <
+ATPP                                                          <
+ATPP                                                          <
+ATPPS                                                         <
+ATR0                                                            ATR0
+ATR1                                                            ATR1
+ATRA                                                            ATRA
+ATRD                                                          <
+ATRTR                                                           ATRTR
+ATRV                                                            ATRV
+ATS0                                                            ATS0
+ATS1                                                            ATS1
+ATSD                                                          <
+ATSH                                                            ATSH
+ATSH                                                            ATSH
+ATSH                                                            ATSH
+ATSI                                                            ATSI
+ATSP                                                            ATSP
+ATSP                                                          <
+ATSP                                                          <
+ATSR                                                            ATSR
+ATSS                                                            ATSS
+ATST                                                            ATST
+ATSW                                                            ATSW
+ATSW                                                          <
+ATTA                                                            ATTA
+ATTP                                                            ATTP
+ATTP                                                            ATTP
+ATV0                                                            ATV0
+ATV1                                                            ATV1
+                                                              > ATVPW
+ATWM                                                            ATWM
+ATWS                                                            ATWS
+ATZ                                                           / ATZ
+```
