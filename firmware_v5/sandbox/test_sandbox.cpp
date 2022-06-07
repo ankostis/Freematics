@@ -37,7 +37,7 @@ void test_sys_info()
 #include <esp_log.h>
 #include <esp32-hal-log.h>
 
-constexpr char MY_TAG[] = "MY_TAG";
+constexpr const char MY_TAG[] = "MY_TAG";
 
 /**
  * From the sample logs below (with CORE_DEBUG_LEVEL=5 (VERBOSE)),
