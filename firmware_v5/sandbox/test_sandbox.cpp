@@ -255,6 +255,33 @@ void test_ClientWIFI_connect_and_listAPs() {
     // ESP_LOGI("ss", "Disconnected after: %ims", ok_delay_ms);
 }
 
+#include <FS.h>
+#include <SPIFFS.h>
+#include <SD.h>
+#include <fsutil.h>
+
+#include <sstream>
+
+void test_fsutil() {
+  File root;
+  std::stringstream out;
+
+  out << "SD:\n";
+  if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 5, FORMAT_SD_IF_FAILED)) {
+    root = SD.open("/");
+    listDir(root, out);
+  } else
+    ESP_LOGE(TAG, "SD-INIT FAILED!");
+
+  if (SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
+    out << "SPIFFS:\n";
+    root = SPIFFS.open("/");
+    listDir(root, out);
+  } else
+    ESP_LOGE(TAG, "SPIFFS-INIT FAILED!");
+
+  ESP_LOGE(TAG, "%s", out.str().c_str());
+}
 
 # include <LogSink.h>
 # include <FreematicsPlus.h> // for PIN_SD_CS , SPI_FREQ
@@ -288,9 +315,12 @@ void test_SD() {
 }
 
 void process() {
+    esp_log_level_set("*", ESP_LOG_VERBOSE);
+
     UNITY_BEGIN();
     RUN_TEST(test_sys_info);
     RUN_TEST(test_logging);
+    RUN_TEST(test_fsutil);
     RUN_TEST(test_SD);
     RUN_TEST(test_buzzer);
     RUN_TEST(test_ClientWIFI_connect_and_listAPs);

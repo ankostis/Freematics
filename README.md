@@ -12,9 +12,8 @@ in a x10 reduction in space/bandwidth (~45mb) and time to clone:
 git clone --sparse <repo-url>
 cd <repo-dir>
 git sparse-checkout set --cone \
-    README.md\
     server\
-    libraries/{FreematicsPlus,httpd,TinyGPS}\
+    libraries/{FreematicsPlus,httpd,TinyGPS,Utils}\
     firmware_v5/{telelogger,sandbox}
 ```
 
