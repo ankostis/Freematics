@@ -641,10 +641,11 @@ String executeCommand(const char* cmd)
 {
   String result;
   ESP_LOGI(TAG_PROC, "cmd: %s", cmd);
-  if (!strncmp(cmd, "LED", 3) && cmd[4]) {
+  if (!strncmp(cmd, "LED ", 4) && cmd[4]) {
     ledMode = (byte)atoi(cmd + 4);
     digitalWrite(PIN_LED, (ledMode == 2) ? HIGH : LOW);
     result = "OK";
+
   } else if (!strcmp(cmd, "REBOOT")) {
   #if STORAGE
     if (state.check(STATE_STORAGE_READY)) {
@@ -655,48 +656,46 @@ String executeCommand(const char* cmd)
     teleClient.shutdown();
     ESP.restart();
     // never reach here
+
   } else if (!strcmp(cmd, "STANDBY")) {
     state.clear(STATE_WORKING);
     result = "OK";
+
   } else if (!strcmp(cmd, "WAKEUP")) {
     state.clear(STATE_STANDBY);
     result = "OK";
-  } else if (!strncmp(cmd, "SET", 3) && cmd[3]) {
+
+  } else if (!strncmp(cmd, "SET ", 4) && cmd[4]) {
     const char* subcmd = cmd + 4;
-    if (!strncmp(subcmd, "SYNC", 4) && subcmd[4]) {
-      syncInterval = atoi(subcmd + 4 + 1);
+
+    if (!strncmp(subcmd, "SYNC ", 5) && subcmd[5]) {
+      syncInterval = atoi(subcmd + 5);
       result = "OK";
     } else {
       result = "ERROR";
     }
+
   } else if (!strcmp(cmd, "STATS")) {
     char buf[64];
     sprintf(buf, "TX:%u OBD:%u NET:%u", teleClient.txCount, timeoutsOBD, timeoutsNet);
     result = buf;
+
 #if ENABLE_OBD
-  } else if (!strncmp(cmd, "OBD", 3) && cmd[4]) {
+  } else if (!strncmp(cmd, "OBD ", 4) && cmd[4]) {
     // send OBD command
     char buf[256];
     sprintf(buf, "%s\r", cmd + 4);
     if (obd.link && obd.link->sendCommand(buf, buf, sizeof(buf), OBD_TIMEOUT_LONG) > 0) {
-      ESP_LOGD(TAG_PROC, "cmd-->OBD: %s", buf);
-      for (int n = 0; buf[n]; n++) {
-        switch (buf[n]) {
-        case '\r':
-        case '\n':
-          result += ' ';
-          break;
-        default:
-          result += buf[n];
-        }
-      }
+      result = buf;
     } else {
       result = "ERROR";
     }
-#endif
+#endif  // ENABLE_OBD
+
   } else {
-    return "INVALID";
+    result = "INVALID CMD";
   }
+
   return result;
 }
 
@@ -1438,7 +1437,7 @@ void loop()
       if (serialCommand.length() > 0) {
         String result = executeCommand(serialCommand.c_str());
 
-        bool is_err = result == "ERROR" || result == "INVALID";
+        bool is_err = result == "ERROR" || result == "INVALID CMD";
         ESP_LOG_LEVEL(
             is_err? ESP_LOG_ERROR : ESP_LOG_INFO,
             TAG_PROC,
