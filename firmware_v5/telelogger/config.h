@@ -186,6 +186,22 @@
 /**************************************
 * Additional features
 **************************************/
+/**
+ * Over-the-air firmware-upgrade from HTTPS enabled?
+ * Performed with "OTA[ url]" command,
+ * where any `path` is appended at the end of the `OTA_UPDATE_URL`
+ *
+ * If enabled, MUST also define `OTA_UPDATE_URL` and `OTA_UPDATE_CERT_PEM`.
+ */
+#define ENABLE_OTA_UPDATE      0
+/** The HTTPS site to download the firmware from. */
+#define OTA_UPDATE_URL  ""
+/**
+ * The certificate-chain in pem format is needed here,
+ * taken from, eg `/etc/letsencrypt/live/<server.url>/chain.pem`.
+ */
+#define OTA_UPDATE_CERT_PEM  ""
+
 // When enabled, significant states produce buzzing patterns,
 // as explained in `./README.md` file.
 #define ENABLE_BUZZING_INIT 1

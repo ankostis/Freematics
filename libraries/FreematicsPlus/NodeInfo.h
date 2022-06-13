@@ -36,6 +36,8 @@ struct freematics_cfg_t {
   uint8_t gnss;
   /** NOTE: remember to increase size if more is-enabled? flags added. */
   uint8_t enable_flags;
+  const char* ota_update_url;
+  const char* ota_update_cert_pem;
   uint8_t net_dev;
   const char* wifi_ssd;
   const char* wifi_pwd;

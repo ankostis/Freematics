@@ -106,12 +106,15 @@ freematics_cfg_t node_cfg{
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   .gnss = GNSS,
   .enable_flags = (
-    ((ENABLE_OBD && 1) << 0) \
-    | ((ENABLE_MEMS && 1) << 1) \
-    | ((ENABLE_ORIENTATION && 1) << 2) \
-    | ((ENABLE_OLED && 1) << 3) \
+    ((ENABLE_OBD && 1) << 0)
+    | ((ENABLE_MEMS && 1) << 1)
+    | ((ENABLE_ORIENTATION && 1) << 2)
+    | ((ENABLE_OLED && 1) << 3)
     | ((ENABLE_BUZZING_INIT && 1) << 4)
+    | ((ENABLE_OTA_UPDATE && 1) << 5)
   ),
+  .ota_update_url = OTA_UPDATE_URL,
+  .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
   .net_dev = NET_DEVICE,
   .wifi_ssd = (char*)WIFI_SSID,
   .wifi_pwd = (char*)WIFI_PASSWORD,
@@ -637,6 +640,29 @@ void initialize()
 /*******************************************************************************
   Executing a remote command
 *******************************************************************************/
+#if ENABLE_OTA_UPDATE
+#include <esp_https_ota.h>
+
+/**
+ * :param ota_url:
+ *    if null, read from `node_cfg`.
+ */
+void do_firmware_upgrade(const char *ota_url = nullptr) {
+  esp_http_client_config_t http_cfg = {
+      .url = ota_url? ota_url : node_cfg.ota_update_url,
+      .cert_pem = node_cfg.ota_update_cert_pem,
+  };
+  ESP_LOGI(TAG_PROC, "OTA update from %s...", http_cfg.url);
+  esp_err_t ret = esp_https_ota(&http_cfg);
+  ESP_LOG_LEVEL(
+      (ret == ESP_OK? ESP_LOG_INFO : ESP_LOG_ERROR),
+      TAG_PROC,
+      "OTA updated from %s OK.\n  Rebooting.",
+      http_cfg.url);
+  if (ret == ESP_OK) esp_restart();
+}
+#endif // ENABLE_OTA_UPDATE
+
 String executeCommand(const char* cmd)
 {
   String result;
@@ -656,6 +682,13 @@ String executeCommand(const char* cmd)
     teleClient.shutdown();
     ESP.restart();
     // never reach here
+
+#if ENABLE_OTA_UPDATE
+  } else if (!strcmp(cmd, "OTA") || !strncmp(cmd, "OTA ", 4)) {
+    const char *ota_url = (cmd[3] && cmd[4]) ? cmd + 4 : nullptr;
+    do_firmware_upgrade(ota_url);  // Reboots on success.
+    result = "ERROR";
+#endif  // ENABLE_OTA_UPDATE
 
   } else if (!strcmp(cmd, "STANDBY")) {
     state.clear(STATE_WORKING);
