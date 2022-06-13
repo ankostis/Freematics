@@ -18,7 +18,6 @@
 #include <esp_log.h>
 #include <FreematicsPlus.h>
 #include <Buzzer.h>
-#include <httpd.h>
 #include "config.h"
 #include "telelogger.h"
 #include "NodeInfo.h"
@@ -111,8 +110,7 @@ freematics_cfg_t node_cfg{
     | ((ENABLE_MEMS && 1) << 1) \
     | ((ENABLE_ORIENTATION && 1) << 2) \
     | ((ENABLE_OLED && 1) << 3) \
-    | ((ENABLE_HTTPD && 1) << 4) \
-    | ((ENABLE_BUZZING_INIT && 6) << 5)
+    | ((ENABLE_BUZZING_INIT && 1) << 4)
   ),
   .net_dev = NET_DEVICE,
   .wifi_ssd = (char*)WIFI_SSID,
@@ -286,53 +284,6 @@ void processExtInputs(CBuffer* buffer)
     buffer->add(pids[i], analogRead(pins[i]));
   }
 #endif
-}
-#endif
-
-/*******************************************************************************
-  HTTP API
-*******************************************************************************/
-#if ENABLE_HTTPD
-int handlerLiveData(UrlHandlerParam* param)
-{
-    char *vin = node_cfg.vin;
-    char *buf = param->pucBuffer;
-    int bufsize = param->bufSize;
-    int n = snprintf(buf, bufsize, "{\"obd\":{\"vin\":\"%s\",\"battery\":%.1f,\"pid\":[", vin, batteryVoltage / 100);
-    n = snprintf(buf, bufsize, "{\"obfcm\":{\"obfcm\":\"%s\",\":[", obfcmTest);
-    uint32_t t = millis();
-    for (int i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
-        n += snprintf(buf + n, bufsize - n, "{\"pid\":%u,\"value\":%d,\"age\":%u},",
-            0x100 | obdData[i].pid, obdData[i].value, (unsigned int)(t - obdData[i].ts));
-    }
-    n--;
-    n += snprintf(buf + n, bufsize - n, "]}");
-#if ENABLE_MEMS
-    if (accCount) {
-      n += snprintf(buf + n, bufsize - n, ",\"mems\":{\"acc\":[%d,%d,%d],\"stationary\":%u}",
-          (int)((accSum[0] / accCount - accBias[0]) * 100), (int)((accSum[1] / accCount - accBias[1]) * 100), (int)((accSum[2] / accCount - accBias[2]) * 100),
-          (unsigned int)(millis() - lastMotionTime));
-    }
-#endif
-    if (gd && gd->ts) {
-      n += snprintf(buf + n, bufsize - n, ",\"gps\":{\"utc\":\"%s\",\"lat\":%f,\"lng\":%f,\"alt\":%f,\"speed\":%f,\"sat\":%d,\"age\":%u}",
-          isoTime, gd->lat, gd->lng, gd->alt, gd->speed, (int)gd->sat, (unsigned int)(millis() - gd->ts));
-    }
-    buf[n++] = '}';
-    param->contentLength = n;
-    param->contentType=HTTPFILETYPE_JSON;
-    return FLAG_DATA_RAW;
-}
-
-int handlerControl(UrlHandlerParam* param)  // TODO: drop unused code
-{
-    char *cmd = mwGetVarValue(param->pxVars, "cmd", 0);
-    if (!cmd) return 0;
-    String result = executeCommand(cmd);
-    param->contentLength = snprintf(param->pucBuffer, param->bufSize,
-        "{\"result\":\"%s\"}", result.c_str());
-    param->contentType=HTTPFILETYPE_JSON;
-    return FLAG_DATA_RAW;
 }
 #endif
 
@@ -1451,16 +1402,6 @@ void setup()
     }
     ESP_LOGI(TAG_INIT, "MEMS: %s", mems? mems->name() : "NO");
   }  // !STATE_MEMS_READY
-#endif
-
-#if ENABLE_HTTPD
-    IPAddress ip;
-    if (serverSetup(ip)) {
-      ESP_LOGI(TAG, "HTTPD: %s\n", ip.toString().c_str());
-      OLED_PRINTF("HTTPD: %s\n", ip.c_str());
-    } else {
-      ESP_LOGE(TAG, "HTTPD:NO");
-    }
 #endif
 
     state.set(STATE_WORKING);

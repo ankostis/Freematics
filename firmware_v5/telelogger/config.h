@@ -190,7 +190,8 @@
 // as explained in `./README.md` file.
 #define ENABLE_BUZZING_INIT 1
 /**
- * Enable(1)/disable(0) http server.
+ * Enable(1)/disable(0) http server for `dataserver.cpp`.
+ * (httpd has been dropped from `telelogger.ino`).
  *
  * NOTE: MUST enable also some STORAGE_SD/SPIFFS, for having something to send,
  * or else compilation fails with:
