@@ -1479,7 +1479,7 @@ void loop()
             result.c_str());
         serialCommand = "";
       }
-    } else if (serialCommand.length() < 32) {
+    } else if (serialCommand.length() < CMD_SERIAL_MAX_LEN) {
       serialCommand += c;
     }
   }

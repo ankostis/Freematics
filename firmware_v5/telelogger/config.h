@@ -221,10 +221,13 @@
 #define PIN_SENSOR1 34
 #define PIN_SENSOR2 26
 
+#define LOG_EXT_SENSORS LOG_EXT_SENSORS_NONE
+
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
 #define COOLING_DOWN_SLEEP_SEC 5 /* celsius degrees */
 
-#define LOG_EXT_SENSORS LOG_EXT_SENSORS_NONE
+/** How long commands read from the serial can be? */
+#define CMD_SERIAL_MAX_LEN     128
 
 /**************************************
  * Secrets & per-device overrides, like:
