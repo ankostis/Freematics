@@ -43,12 +43,14 @@ struct FileSink : public Sink {
    * NOTE: SD & SPIFFS MUST have been initialized before enabling stuff here!
    */
   FileSink(std::string name, FS &fs, const char *fpath, const char *open_mode,
-           float disk_usage_purge_ratio)
+           float disk_usage_purge_ratio, int32_t sync_interval_ms)
       : Sink(name + ":" + fpath),
         fs{fs},
         fpath{fpath},
         open_mode{open_mode},
-        disk_usage_purge_ratio{disk_usage_purge_ratio} {};
+        disk_usage_purge_ratio{disk_usage_purge_ratio},
+        sync_interval_ms{sync_interval_ms},
+        last_synced_ms{0} {};
   virtual bool enableChanged(bool enabled);
   virtual void write(const char *buf, int buflen);
   float disk_usage_ratio();
@@ -59,6 +61,10 @@ struct FileSink : public Sink {
   const char *open_mode;
   /** When to delete log-file?  Check happens when enabling. */
   float disk_usage_purge_ratio;
+  /** How often to sync log-file?  Check happens when writing logs. */
+  int32_t sync_interval_ms;
+  time_t last_synced_ms;
+  File file;
 };
 
 /**

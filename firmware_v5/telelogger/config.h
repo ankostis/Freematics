@@ -80,6 +80,7 @@
 #define LOG_SINK                            LOG_SINK_SERIAL
 #define LOG_SINK_FPATH                      "/logs.txt"
 #define LOG_SINK_DISK_USAGE_PURGE_RATIO     0.90f
+#define LOG_SINK_SYNC_INTERVAL_MS           3141
 
 /**************************************
 * OBD-II configurations

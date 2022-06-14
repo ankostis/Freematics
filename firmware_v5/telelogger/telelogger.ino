@@ -125,6 +125,7 @@ freematics_cfg_t node_cfg{
   .log_sink = LOG_SINK,
   .log_sink_fpath = LOG_SINK_FPATH,
   .log_sink_disk_usage_purge_prcnt = LOG_SINK_DISK_USAGE_PURGE_RATIO,
+  .log_sink_sync_interval_ms = LOG_SINK_SYNC_INTERVAL_MS,
   .nslots = BUFFER_SLOTS,
   .slot_len = BUFFER_LENGTH,
   .serialize_len = SERIALIZE_BUFFER_SIZE,
@@ -1430,6 +1431,7 @@ void setup_multilog() {
             node_cfg.log_sink_fpath,
             FILE_APPEND,
             node_cfg.log_sink_disk_usage_purge_prcnt,
+            node_cfg.log_sink_sync_interval_ms,
     };
     multilog::log_sinks[1] = &sd_sink;
 #endif
@@ -1440,6 +1442,7 @@ void setup_multilog() {
             node_cfg.log_sink_fpath,
             FILE_APPEND,
             node_cfg.log_sink_disk_usage_purge_prcnt,
+            node_cfg.log_sink_sync_interval_ms,
     };
     multilog::log_sinks[2] = &spiffs_sink;
 #endif

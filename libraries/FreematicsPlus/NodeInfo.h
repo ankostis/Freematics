@@ -29,6 +29,7 @@ struct freematics_cfg_t {
   uint8_t log_sink;
   const char* log_sink_fpath;
   float log_sink_disk_usage_purge_prcnt;
+  int32_t log_sink_sync_interval_ms;
   int nslots;
   int slot_len;
   int serialize_len;

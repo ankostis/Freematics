@@ -85,12 +85,13 @@ bool FileSink::enableChanged(bool enabled) {
     purge = exist && disk_usage_ratio() >= disk_usage_purge_ratio;
     if (purge) fs.remove(fpath);
 
-    File log_file = fs.open(fpath, open_mode);
+    file = fs.open(fpath, open_mode);
 
     // NOTE: write something before checking `file.available()`, below
     // or else, it returns 0 immediately after `open()`!
-    int len = log_file.printf("--((NEW SESSION LOG@%lu))--\n", millis());
-    ok = log_file.available() || len;
+    int len = file.printf("--((NEW SESSION LOG@%lu))--\n", millis());
+    ok = file.available() || len;
+    last_synced_ms = millis();
   }
 
   ESP_LOGI(TAG_MULTILOG, "%sable multi-logs --> file(%s)%s%s: %s",
@@ -102,7 +103,13 @@ bool FileSink::enableChanged(bool enabled) {
 }
 
 void FileSink::write(const char *buf, int buflen) {
-  fs.open(fpath, open_mode).write((uint8_t *)buf, buflen);
+  if (!file) file = fs.open(fpath, open_mode);
+  file.write((uint8_t *)buf, buflen);
+  time_t now = millis();
+  if ((now - last_synced_ms) > sync_interval_ms) {
+       file.flush();
+       last_synced_ms = now;
+  }
 }
 
 float FileSink::disk_usage_ratio() {
