@@ -187,6 +187,23 @@
 * Additional features
 **************************************/
 /**
+ * Enable filesystem access commands?
+ * The respective filesystem is implicitly enabled when
+ * any of `STORAGE_XXX` or `MULTILINE+LOG_SINK_XXX` are used.
+ */
+#define ENABLE_SD       0
+#define ENABLE_SPIFFS   0
+#define FORMAT_SD_IF_FAILED                 true
+#define FORMAT_SPIFFS_IF_FAILED             true
+
+/** How long commands read from the serial can be? */
+#define CMD_SERIAL_MAX_LEN     128
+/** How many lines `HEAD` command prints? */
+#define CMD_HEAD_NLINES        64
+/** How many bytes the `TAIL` command to backtrack from the end-of-file? */
+#define CMD_TAIL_NBYTES        -4096
+
+/**
  * Over-the-air firmware-upgrade from HTTPS enabled?
  * Performed with "OTA[ url]" command,
  * where any `path` is appended at the end of the `OTA_UPDATE_URL`
@@ -226,9 +243,6 @@
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
 #define COOLING_DOWN_SLEEP_SEC 5 /* celsius degrees */
 
-/** How long commands read from the serial can be? */
-#define CMD_SERIAL_MAX_LEN     128
-
 /**************************************
  * Secrets & per-device overrides, like:
  * ```
@@ -255,5 +269,10 @@
 #if __has_include("secrets.h")
 #   include "secrets.h"
 #endif
+
+#define _NEED_SD        (ENABLE_SD || (STORAGE == STORAGE_SD) || \
+            (LOG_SINK & LOG_SINK_SD))
+#define _NEED_SPIFFS    (ENABLE_SPIFFS || (STORAGE == STORAGE_SPIFFS) || \
+            (LOG_SINK & LOG_SINK_SPIFFS))
 
 #endif // CONFIG_H_INCLUDED

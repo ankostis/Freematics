@@ -16,6 +16,11 @@
 ******************************************************************************/
 
 #include <esp_log.h>
+#include <cstdio>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
 #include <FreematicsPlus.h>
 #include <Buzzer.h>
 #include "config.h"
@@ -23,9 +28,14 @@
 #include "NodeInfo.h"
 #include "telemesh.h"
 #include "teleclient.h"
-#if LOG_SINK
+#if _NEED_SD
+#include "SD.h"
+#endif  // _NEED_SD
+#if _NEED_SPIFFS
+#include "SPIFFS.h"
+#endif  // _NEED_SPIFFS
 #include "LogSink.h"
-#endif
+#include "fsutil.h"
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -112,6 +122,8 @@ freematics_cfg_t node_cfg{
     | ((ENABLE_OLED && 1) << 3)
     | ((ENABLE_BUZZING_INIT && 1) << 4)
     | ((ENABLE_OTA_UPDATE && 1) << 5)
+    | ((_NEED_SD && 1) << 6)
+    | ((_NEED_SPIFFS && 1) << 7)
   ),
   .ota_update_url = OTA_UPDATE_URL,
   .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
@@ -725,6 +737,65 @@ String executeCommand(const char* cmd)
     }
 #endif  // ENABLE_OBD
 
+#if _NEED_SD || _NEED_SPIFFS
+  /**************************
+   * # Filesystem commands
+   *
+   * Try:
+   *    CAT /sd/logs.txt
+   *    TAIL /spiffs/logs.txt
+   */
+
+  } else if (!strcmp(cmd, "LS")) {
+    std::stringstream out;
+
+    File f = SD.open("/");
+    out << "\nSD: ";
+    listDir(f, out);
+
+    f = SPIFFS.open("/");
+    out << "\nSPIFFS: ";
+    listDir(f, out);
+
+    std::cout << out.str();
+    result = "OK";
+
+  } else if (!strncmp(cmd, "CAT ", 4) && cmd[4]) {
+    std::ifstream ifs(cmd + 4);
+    if (ifs.is_open()) {
+      std::cout << ifs.rdbuf();
+      result = "OK";
+    } else {
+      result = "ERROR";
+    }
+
+  } else if (!strncmp(cmd, "HEAD ", 5) && cmd[5]) {
+    std::ifstream ifs(cmd + 5);
+    if (ifs.is_open()) {
+      std::string line;
+      for (int i = 0; i < (CMD_HEAD_NLINES) && ifs; i++) {
+        std::getline(ifs, line);
+        if(ifs) std::cout << line << std::endl;
+      }
+      result = "OK";
+    } else {
+      result = "ERROR";
+    }
+
+  } else if (!strncmp(cmd, "TAIL ", 5) && cmd[5]) {
+    std::ifstream ifs(cmd + 5);
+    if (ifs.is_open()) {
+      ifs.seekg(CMD_TAIL_NBYTES, ifs.end);
+      std::cout << ifs.rdbuf();
+      result = "OK";
+    } else {
+      result = "ERROR";
+    }
+
+  } else if (!strncmp(cmd, "RM ", 3) && cmd[3]) {
+    result = std::remove(cmd + 3)? "ERROR" : "OK";
+#endif // _NEED_SD || _NEED_SPIFFS
+
   } else {
     result = "INVALID CMD";
   }
@@ -1306,51 +1377,39 @@ void configMode()
 }
 #endif
 
-#if (STORAGE == STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
-bool _setup_SD()
+#if _NEED_SD
+bool setup_SD()
 {
-    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 3/* files open */, true)) {
-        uint total = SD.totalBytes() >> 20;
-        uint used = SD.usedBytes() >> 20;
-        ESP_LOGI(TAG, "SD: %i MB total, %i MB used", total, used);
+    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 5/* files open */, FORMAT_SD_IF_FAILED)) {
+        uint64_t total = SD.totalBytes();
+        uint64_t used = SD.usedBytes();
+        float used_ratio = 100.0 * used / total;
+        ESP_LOGI(TAG, "SD: %u MB total, %u MB used (%%%.2f)",
+                 (uint)(total >> 20), (uint)(used >> 20), used_ratio);
         return true;
     } else {
         ESP_LOGE(TAG, "No SD card");
         return false;
     }
 }
-#endif  // (STORAGE == STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
+#endif // _NEED_SD
 
-#if (STORAGE == STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
-bool _setup_SPIFFS()
+#if _NEED_SPIFFS
+bool setup_SPIFFS()
 {
-    bool mounted = SPIFFS.begin();
-    if (!mounted) {
-        ESP_LOGI(TAG, "Formatting SPIFFS...");
-        mounted = SPIFFS.begin(true);
-    }
-    if (mounted) {
-        ESP_LOGI(
-            TAG,
-            "SPIFFS: %i bytes total, %i bytes used",
-            SPIFFS.totalBytes(), SPIFFS.usedBytes());
+    if (SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
+        uint64_t total = SPIFFS.totalBytes();
+        uint64_t used = SPIFFS.usedBytes();
+        float used_ratio = 100.0 * used / total;
+        ESP_LOGI(TAG, "SPIFFS: %llu bytes total, %llu bytes used (%%%.2f)",
+                total, used, used_ratio);
+        return true;
     } else {
         ESP_LOGE(TAG, "No SPIFFS");
+        return false;
     }
-    return mounted;
 }
-#endif // (STORAGE & STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
-
-void setup_FS() {
-#if STORAGE || LOG_SINK
-#   if (STORAGE & STORAGE_SD) || (LOG_SINK & LOG_SINK_SD)
-    _setup_SD();
-#   endif  // SD
-#   if (STORAGE == STORAGE_SPIFFS) || (LOG_SINK & LOG_SINK_SPIFFS)
-    _setup_SPIFFS();
-#   endif  // SPIFFS
-#endif  // STORAGE || LOG_SINK
-}
+#endif // _NEED_SPIFFS
 
 void setup()
 {
@@ -1385,7 +1444,13 @@ void setup()
     // esp_log_level_set(TAG_SIM7070, ESP_LOG_WARN);  // FreematcisNetwork
     // esp_log_level_set(TAG_HTTP, ESP_LOG_WARN);     // FreematcisNetwork
 
-    setup_FS();
+#if _NEED_SD
+    setup_SD();
+#endif  // _NEED_SD
+#if _NEED_SPIFFS
+    setup_SPIFFS();
+#endif  // _NEED_SPIFFS
+
 #if (LOG_SINK & LOG_SINK_SD)
     logsinks::log_sinks[0].fs = SD;  // FIXME: it's not equal to "public" fs instance!
     logsinks::log_sinks[0].enable(true);
