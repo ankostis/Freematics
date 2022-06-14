@@ -283,7 +283,7 @@ void test_fsutil() {
   ESP_LOGE(TAG, "%s", out.str().c_str());
 }
 
-# include <LogSink.h>
+# include <multilog.h>
 # include <FreematicsPlus.h> // for PIN_SD_CS , SPI_FREQ
 #include <FS.h>
 

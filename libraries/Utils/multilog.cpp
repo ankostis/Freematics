@@ -2,7 +2,7 @@
  * Deflect logs (in addition to Serial) also to SD or SPIFFS-memory.
  */
 #include <FS.h>
-#include <LogSink.h>
+#include <multilog.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/semphr.h"

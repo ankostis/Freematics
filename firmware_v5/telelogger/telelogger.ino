@@ -38,7 +38,7 @@
 #include "fsutil.h"
 #endif  // _NEED_SD || _NEED_SPIFFS
 #if ENABLE_MULTILOG && USE_ESP_IDF_LOG
-#include "LogSink.h"
+#include "multilog.h"
 #endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
