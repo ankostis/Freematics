@@ -68,17 +68,6 @@ struct FileSink : public Sink {
 };
 
 /**
- * Surround  operations on log-sinks with `lock()`/`unlock()` calls.
- *
- * ATTENTION: do not issue log-statements when holding lock!
- *
- * Copied from esp-idf/components/log/log_freertos.c
- */
-bool lock();
-void unlock();
-
-/**
- * ATTENTION: guard any operation on this list with `lock()`/`unlock()` calls.
  * NOTE: take care the memory of items inserted & deleted.
  *
  * Public, for adults to see.

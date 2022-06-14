@@ -4,46 +4,12 @@
 #include <FS.h>
 #include <multilog.h>
 
-#include "freertos/FreeRTOS.h"
-#include "freertos/semphr.h"
-#include "freertos/task.h"
-
 using namespace fs;
 using namespace multilog;
 
 //////////////////////////
 //// IDF-LOG replacement machinery
 //////////////////////////
-
-// Maximum time to wait for the mutex in a logging statement.
-// (see `log_freertos.c`)
-#define MAX_MUTEX_WAIT_MS 10
-#define MAX_MUTEX_WAIT_TICKS \
-  ((MAX_MUTEX_WAIT_MS + portTICK_PERIOD_MS - 1) / portTICK_PERIOD_MS)
-
-static SemaphoreHandle_t s_mutex = nullptr;
-
-/**
- * To protect operations on the log-files.
- *
- * Copied from esp-idf/components/log/log_freertos.c
- */
-bool multilog::lock() {
-  if (unlikely(!s_mutex)) {
-    s_mutex = xSemaphoreCreateMutex();
-  }
-  if (unlikely(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)) {
-    return true;
-  }
-  return xSemaphoreTake(s_mutex, MAX_MUTEX_WAIT_TICKS) == pdTRUE;
-}
-void multilog::unlock() {
-  if (unlikely(xTaskGetSchedulerState() == taskSCHEDULER_NOT_STARTED)) {
-    return;
-  }
-  xSemaphoreGive(s_mutex);
-}
-
 /**
  * This fn replaces ISP-IDF's logs receiver (when enabled).
  *
