@@ -34,8 +34,12 @@
 #if _NEED_SPIFFS
 #include "SPIFFS.h"
 #endif  // _NEED_SPIFFS
-#include "LogSink.h"
+#if _NEED_SD || _NEED_SPIFFS
 #include "fsutil.h"
+#endif  // _NEED_SD || _NEED_SPIFFS
+#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
+#include "LogSink.h"
+#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -108,7 +112,7 @@ freematics_cfg_t node_cfg{
   .log_level_build = CORE_DEBUG_LEVEL,
   .log_sink = LOG_SINK,
   .log_sink_fpath = LOG_SINK_FPATH,
-  .disk_usage_purge_prcnt = LOG_SINK_DISK_USAGE_PURGE_RATIO,
+  .log_sink_disk_usage_purge_prcnt = LOG_SINK_DISK_USAGE_PURGE_RATIO,
   .nslots = BUFFER_SLOTS,
   .slot_len = BUFFER_LENGTH,
   .serialize_len = SERIALIZE_BUFFER_SIZE,
@@ -124,6 +128,8 @@ freematics_cfg_t node_cfg{
     | ((ENABLE_OTA_UPDATE && 1) << 5)
     | ((_NEED_SD && 1) << 6)
     | ((_NEED_SPIFFS && 1) << 7)
+    | ((ENABLE_MULTILOG && 1) << 8)
+    | ((USE_ESP_IDF_LOG && 1) << 9)
   ),
   .ota_update_url = OTA_UPDATE_URL,
   .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
@@ -1411,6 +1417,37 @@ bool setup_SPIFFS()
 }
 #endif // _NEED_SPIFFS
 
+#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
+void setup_multilog() {
+#if (LOG_SINK & LOG_SINK_SERIAL)
+    static multilog::SerialSink serial_link;
+    multilog::log_sinks[0] = &serial_link;
+#endif  // (LOG_SINK & LOG_SINK_SERIAL)
+#if (LOG_SINK & LOG_SINK_SD)
+    static multilog::FileSink sd_sink{
+            "SD",
+            SD,
+            node_cfg.log_sink_fpath,
+            FILE_APPEND,
+            node_cfg.log_sink_disk_usage_purge_prcnt,
+    };
+    multilog::log_sinks[1] = &sd_sink;
+#endif
+#if (LOG_SINK & LOG_SINK_SPIFFS)
+    static multilog::FileSink spiffs_sink{
+            "SPIFFS",
+            SPIFFS,
+            node_cfg.log_sink_fpath,
+            FILE_APPEND,
+            node_cfg.log_sink_disk_usage_purge_prcnt,
+    };
+    multilog::log_sinks[2] = &spiffs_sink;
+#endif
+
+    multilog::enable(true);
+}  // setup_multilog()
+#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
+
 void setup()
 {
     buzzer.tone(1);  // 1hz ticks until `initialize()`
@@ -1430,6 +1467,7 @@ void setup()
     // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_PROC, ESP_LOG_WARN);     // logs in this file
+    // esp_log_level_set(TAG_MULTILOG, ESP_LOG_WARN);
     // esp_log_level_set(TAG_LINK, ESP_LOG_WARN);     // OBD(& GNSS?) (soft?)UART
     // esp_log_level_set(TAG_GSM, ESP_LOG_WARN);      // GSM UART
     // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);     // GNSS (if not through LINK)
@@ -1451,14 +1489,13 @@ void setup()
     setup_SPIFFS();
 #endif  // _NEED_SPIFFS
 
-#if (LOG_SINK & LOG_SINK_SD)
-    logsinks::log_sinks[0].fs = SD;  // FIXME: it's not equal to "public" fs instance!
-    logsinks::log_sinks[0].enable(true);
-#endif
-#if (LOG_SINK & LOG_SINK_SPIFFS)
-    logsinks::log_sinks[1].fs = SPIFFS;  // FIXME: it's not equal to "public" fs instance!
-    logsinks::log_sinks[1].enable(true);
-#endif
+#if ENABLE_MULTILOG
+#if USE_ESP_IDF_LOG
+    setup_multilog();
+#else
+    ESP_LOGW(TAG_INIT, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
+#endif  // USE_ESP_IDF_LOG
+#endif  // ENABLE_MULTILOG
 
     // init LED pin
     pinMode(PIN_LED, OUTPUT);

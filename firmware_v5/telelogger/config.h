@@ -28,8 +28,16 @@
 #define NET_SERIAL 6
 
 #define LOG_SINK_NONE   0
-#define LOG_SINK_SD     0x1     // LOG_SINK_SD & LOG_SINK_SPIFFS may be OR-ed
-#define LOG_SINK_SPIFFS 0x2
+#define LOG_SINK_SERIAL 0x1
+#define LOG_SINK_SD     0x2
+/**
+ * NOTE: Logging into SPIFFS is not a good idea, prefer to persist them into SD.
+ * SPIFFS has reduced space and may fragment, suited for persisting few
+ * controlled data-files.
+ * Besides, the docs mention over a second write-time, occasionally:
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html#notes
+ */
+#define LOG_SINK_SPIFFS 0x4
 
 #define STORAGE_NONE    0
 /**
@@ -59,10 +67,19 @@
 // Works only when ESP_IDF logging-lib selected in `platformio.ini`.
 #define RUNTIME_ALL_TAGS_LOG_LEVEL CORE_DEBUG_LEVEL
 
-/** Either `LOG_SINK_NONE` or `LOG_SINK_xxx` flags OR-ed together. */
-#define LOG_SINK   LOG_SINK_NONE
-#define LOG_SINK_FPATH "/logs.txt"
-#define LOG_SINK_DISK_USAGE_PURGE_RATIO  0.90f
+/**
+ * Whether to enabled multiple log destinations (sinks).
+ *
+ * NOTE: enabling this without any `LOG_SINK_XX` will produce no logs at all!
+ */
+#define ENABLE_MULTILOG                     0
+/**
+ * Which log destinations (sinks) to enable (relevant only if `ENABLE_MULTILOG`).
+ * Either `LOG_SINK_NONE` or `LOG_SINK_XXX` constants OR-ed together.
+ */
+#define LOG_SINK                            LOG_SINK_SERIAL
+#define LOG_SINK_FPATH                      "/logs.txt"
+#define LOG_SINK_DISK_USAGE_PURGE_RATIO     0.90f
 
 /**************************************
 * OBD-II configurations
@@ -271,8 +288,8 @@
 #endif
 
 #define _NEED_SD        (ENABLE_SD || (STORAGE == STORAGE_SD) || \
-            (LOG_SINK & LOG_SINK_SD))
+        (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SD)))
 #define _NEED_SPIFFS    (ENABLE_SPIFFS || (STORAGE == STORAGE_SPIFFS) || \
-            (LOG_SINK & LOG_SINK_SPIFFS))
+        (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SPIFFS)))
 
 #endif // CONFIG_H_INCLUDED

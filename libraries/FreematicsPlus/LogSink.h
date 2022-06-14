@@ -1,5 +1,5 @@
 /**
- * Deflect logs (in addition to Serial) also to SD or SPIFFS-memory.
+ * Deflect ESP_IDF logs (in addition to Serial) also to SD or SPIFFS-memory.
  */
 #pragma once
 
@@ -7,68 +7,86 @@
 #include <SD.h>
 #include <SPIFFS.h>
 
-namespace logsinks {
+#include <string>
 
-constexpr const char *default_log_fpath = "/logs.txt";
-constexpr const float default_disk_usage_purge_ratio = 0.9f;
-constexpr const time_t default_log_sink_sync_interval_ms = 3141;
+namespace multilog {
 
-struct LogSink {
-  LogSink(const char *name, FS fs, const char *fpath, const char *open_mode,
-          float disk_usage_purge_ratio, time_t sync_interval_ms)
-      : name{name},
-        fs{fs},
-        fpath{fpath},
-        open_mode{open_mode},
-        disk_usage_purge_ratio{disk_usage_purge_ratio},
-        sync_interval_ms(sync_interval_ms),
-        last_synced_ms(0) {}
-  /**
-   * When `enable` true, start writting logs also to SD-card/SPIFFS.
+constexpr const int MULTILOG_INITIAL_SPRINTF_BUFLEN = 256;
+constexpr const char TAG_MULTILOG[] = "ENABLE_MULTILOG";
+
+struct Sink {
+ public:
+  Sink(std::string name) : name{name} {};
+  virtual bool enableChanged(bool enabled) {
+    ESP_LOGI(TAG_MULTILOG, "%sabled multi-logs --> %s.",
+             (enabled ? "En" : "Dis"), name.c_str());
+    return true;
+  }
+  virtual void write(const char *buf, int buflen) = 0;
+  /** debugging aid */
+  std::string name;
+};
+
+struct SerialSink : public Sink {
+ public:
+  SerialSink() : Sink("Serial"){};
+  /** Called after `lock()` - `unlock()`. */
+  virtual void write(const char *buf, int buflen) { Serial.write(buf, buflen); }
+};
+
+struct FileSink : public Sink {
+ public:
+  /*
+   * Start writing logs also to SD-card/SPIFFS.
    * (needs `DUSE_ESP_IDF_LOG=1` in build-flags.)
    *
    * NOTE: SD & SPIFFS MUST have been initialized before enabling stuff here!
    */
-  void enable(BaseType_t enabled);
-  void flush();
+  FileSink(std::string name, FS &fs, const char *fpath, const char *open_mode,
+           float disk_usage_purge_ratio)
+      : Sink(name + ":" + fpath),
+        fs{fs},
+        fpath{fpath},
+        open_mode{open_mode},
+        disk_usage_purge_ratio{disk_usage_purge_ratio} {};
+  virtual bool enableChanged(bool enabled);
+  virtual void write(const char *buf, int buflen);
   float disk_usage_ratio();
-  void close() { enable(false); }
-  BaseType_t enabled() { return file.available(); }
-  void purge() {
-    if (enabled()) enable(true);
-  }
 
   //  protected:  // No, we're adults.
-  const char *name;
   FS &fs;
   const char *fpath;
   const char *open_mode;
   /** When to delete log-file?  Check happens when enabling. */
   float disk_usage_purge_ratio;
-  /** How often to sync log-file?  Check happens when writing logs. */
-  time_t sync_interval_ms;
-  time_t last_synced_ms;
-  File file;
 };
 
-/** public, for adults to see. */
-inline LogSink log_sinks[]{
-    {
-        "SD",
-        SD,  // FIXME: it's not equal to "public" fs instance!
-        default_log_fpath,
-        FILE_APPEND,
-        default_disk_usage_purge_ratio,
-        default_log_sink_sync_interval_ms,
-    },
-    {
-        "SPIFFS",
-        SPIFFS,  // FIXME: it's not equal to "public" fs instance!
-        default_log_fpath,
-        FILE_WRITE,
-        default_disk_usage_purge_ratio,
-        default_log_sink_sync_interval_ms,
-    },
-};
+/**
+ * Surround  operations on log-sinks with `lock()`/`unlock()` calls.
+ *
+ * ATTENTION: do not issue log-statements when holding lock!
+ *
+ * Copied from esp-idf/components/log/log_freertos.c
+ */
+bool lock();
+void unlock();
 
-}  // namespace logsinks
+/**
+ * ATTENTION: guard any operation on this list with `lock()`/`unlock()` calls.
+ * NOTE: take care the memory of items inserted & deleted.
+ *
+ * Public, for adults to see.
+ */
+inline Sink *log_sinks[3]{nullptr};
+
+/**
+ * :param enable:
+ *    When `true`, logs reach multiple log-sinks (or none if empty), otherwise
+ *    the default ESP_IDF logging-behavior is restored and existing loggers
+ *    are closed.
+ *
+ * :see-also: `esp_log.h:esp_log_set_vprintf()`.
+ */
+void enable(bool enable);
+
+}  // namespace multilog

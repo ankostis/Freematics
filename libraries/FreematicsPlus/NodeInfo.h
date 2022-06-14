@@ -26,7 +26,7 @@ struct freematics_cfg_t {
   uint8_t log_level_build;
   uint8_t log_sink;
   const char* log_sink_fpath;
-  float disk_usage_purge_prcnt;
+  float log_sink_disk_usage_purge_prcnt;
   int nslots;
   int slot_len;
   int serialize_len;
@@ -35,7 +35,7 @@ struct freematics_cfg_t {
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   uint8_t gnss;
   /** NOTE: remember to increase size if more is-enabled? flags added. */
-  uint8_t enable_flags;
+  uint16_t enable_flags;
   const char* ota_update_url;
   const char* ota_update_cert_pem;
   uint8_t net_dev;
