@@ -21,6 +21,8 @@ struct freematics_cfg_t {
   char devid[12]; // populated after boot
   char vin[18]; // populated after boot
 
+  /** NOTE: remember to increase `enable_flags` size if more flags added. */
+  uint16_t enable_flags;
   int serial_autoconf_timeout;
   uint8_t log_level_run;
   uint8_t log_level_build;
@@ -34,8 +36,6 @@ struct freematics_cfg_t {
   uint8_t storage;
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   uint8_t gnss;
-  /** NOTE: remember to increase size if more is-enabled? flags added. */
-  uint16_t enable_flags;
   const char* ota_update_url;
   const char* ota_update_cert_pem;
   uint8_t net_dev;

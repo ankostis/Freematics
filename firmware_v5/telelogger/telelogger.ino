@@ -107,6 +107,18 @@ DS_CAN_MSG obdDataMulti[]=
 };
 
 freematics_cfg_t node_cfg{
+  .enable_flags = (
+    ((ENABLE_OBD && 1) << 0)
+    | ((ENABLE_MEMS && 1) << 1)
+    | ((ENABLE_ORIENTATION && 1) << 2)
+    | ((ENABLE_OLED && 1) << 3)
+    | ((ENABLE_BUZZING_INIT && 1) << 4)
+    | ((ENABLE_OTA_UPDATE && 1) << 5)
+    | ((_NEED_SD && 1) << 6)
+    | ((_NEED_SPIFFS && 1) << 7)
+    | ((ENABLE_MULTILOG && 1) << 8)
+  | ((USE_ESP_IDF_LOG && 1) << 9)
+    ),
   .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
   .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
   .log_level_build = CORE_DEBUG_LEVEL,
@@ -119,18 +131,6 @@ freematics_cfg_t node_cfg{
   .storage = STORAGE,
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   .gnss = GNSS,
-  .enable_flags = (
-    ((ENABLE_OBD && 1) << 0)
-    | ((ENABLE_MEMS && 1) << 1)
-    | ((ENABLE_ORIENTATION && 1) << 2)
-    | ((ENABLE_OLED && 1) << 3)
-    | ((ENABLE_BUZZING_INIT && 1) << 4)
-    | ((ENABLE_OTA_UPDATE && 1) << 5)
-    | ((_NEED_SD && 1) << 6)
-    | ((_NEED_SPIFFS && 1) << 7)
-    | ((ENABLE_MULTILOG && 1) << 8)
-    | ((USE_ESP_IDF_LOG && 1) << 9)
-  ),
   .ota_update_url = OTA_UPDATE_URL,
   .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
   .net_dev = NET_DEVICE,
