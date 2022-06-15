@@ -13,7 +13,7 @@ git clone --sparse <repo-url>
 cd <repo-dir>
 git sparse-checkout set --cone \
     server\
-    libraries/{FreematicsPlus,httpd,TinyGPS,Utils}\
+    libraries/{FreematicsPlus,httpd,TinyGPS,Utils,NlohmannJSON}\
     firmware_v5/{telelogger,sandbox}
 ```
 
