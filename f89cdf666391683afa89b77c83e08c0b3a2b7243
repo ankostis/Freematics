@@ -1,2 +1,0 @@
-BUG: unguarded access of `obd` when ENABLE_OBD=0
-fixed on 15 Jun 2022 by ankostis.
