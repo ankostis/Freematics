@@ -67,6 +67,16 @@ struct freematics_cfg_t {
 };
 
 /**
+ * Idempotent transformation of freematics MACs --> device-ids, like `A0HNZRJU`.
+ *
+ * :param mac:
+ *    the mac-address, from `ESP.getEfuseMac()`
+ * :param devid:
+ *    a 12-char buffer (stored on :field:`node_cfg_t.devid`)
+ */
+void mac_to_device_id(uint64_t max, char *devid);
+
+/**
  * Sample output:
  *
  * ```

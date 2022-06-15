@@ -1338,28 +1338,6 @@ void standby()
 /*******************************************************************************
   Tasks to perform in idle/waiting time
 *******************************************************************************/
-void genDeviceID()
-{
-  char *buf = node_cfg.devid;
-    uint64_t seed = ESP.getEfuseMac() >> 8;
-    for (int i = 0; i < 8; i++, seed >>= 5) {
-      byte x = (byte)seed & 0x1f;
-      if (x >= 10) {
-        x = x - 10 + 'A';
-        switch (x) {
-          case 'B': x = 'W'; break;
-          case 'D': x = 'X'; break;
-          case 'I': x = 'Y'; break;
-          case 'O': x = 'Z'; break;
-        }
-      } else {
-        x += '0';
-      }
-      buf[i] = x;
-    }
-    buf[8] = 0;
-}
-
 #if CONFIG_MODE_TIMEOUT
 void configMode()
 {
@@ -1509,7 +1487,7 @@ void setup()
     digitalWrite(PIN_LED, HIGH);
 
    // generate unique device ID
-    genDeviceID();
+    mac_to_device_id(ESP.getEfuseMac(), node_cfg.devid);
 
 #if CONFIG_MODE_TIMEOUT
     configMode();

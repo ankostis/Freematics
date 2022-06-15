@@ -26,6 +26,35 @@
 #endif
 #include "NodeInfo.h"
 
+
+void mac_to_device_id(const uint64_t mac, char *devid) {
+  uint64_t seed = mac >> 8;
+  for (int i = 0; i < 8; i++, seed >>= 5) {
+    byte x = (byte)seed & 0x1f;
+    if (x >= 10) {
+      x = x - 10 + 'A';
+      switch (x) {
+        case 'B':
+          x = 'W';
+          break;
+        case 'D':
+          x = 'X';
+          break;
+        case 'I':
+          x = 'Y';
+          break;
+        case 'O':
+          x = 'Z';
+          break;
+      }
+    } else {
+      x += '0';
+    }
+    devid[i] = x;
+  }
+  devid[8] = 0;
+}
+
 void log_node_info(const freematics_cfg_t &node_cfg)
 {
     int PartitionSize = esp_ota_get_running_partition()->size;  // +395 from compiler report
