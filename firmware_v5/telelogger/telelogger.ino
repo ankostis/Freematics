@@ -1285,7 +1285,11 @@ void standby()
   do {
       if (ledMode == 0) digitalWrite(PIN_LED, HIGH);
     t = millis();
+#if ENABLE_OBD
     v = obd.getVoltage();
+#else  // ENABLE_OBD
+    v = THR_VOLTAGE;
+#endif  // ENABLE_OBD
 
     v_grad = (v - v_old)/(t - t_old)*1000;
     ESP_LOGI(
