@@ -29,6 +29,17 @@ To checkout fully and disable *sparseness*, type:
 git sparse-checkout disable
 ```
 
+## git notes
+
+This repo uses *git notes* to annotate past commits with any regressions discovered.
+Unfortunately [git's manual](https://git-scm.com/docs/git-notes) does not explain
+how to push & fetch them:
+
+```bash
+git push <remote> refs/notes/*
+git fetch <remote> refs/notes/*:refs/notes/*
+```
+
 
 --( original README follow )--
 
