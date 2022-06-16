@@ -420,7 +420,7 @@ bool processGPS(CBuffer* buffer)
   *p = 'Z';
   *(p + 1) = 0;
 
-  ESP_LOGI(TAG_PROC,
+  ESP_LOGD(TAG_PROC,
       "<GPS> lat: %.6f, lng: %.6f, v: %.1f km/h, heading: %i, sats: %i"
       ", t: %s, err: %i",
       gd->lat, gd->lng, kph, gd->heading, gd->sat, isoTime, gd->errors);

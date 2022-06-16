@@ -105,20 +105,22 @@ public:
                     buffers[n]->count, buffers[n]->offset);
         }
         if (slots) {
-          constexpr const uint RAM_SIZE_KiB = 320;
-          uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
-          ESP_LOGI(TAG_BUF,
-                   "PIDs: %u(%u b/PID)"
-                   ", slots: %u/%u(%u%%)"
-                   ", filled: %u/%u bytes (%u%%)"
-                   ", RAM: %u/%u KiB(%u%%)"
-                   ", state: %X",
-                   samples, samples ? bytes / samples : 0,
-                   slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
-                   bytes, BUFFER_SLOTS * BUFFER_LENGTH,
-                   100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
-                   ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
-                   state);
+            constexpr const uint RAM_SIZE_KiB = 320;
+            uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
+            ESP_LOG_LEVEL(
+                    (slots > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
+                    TAG_BUF,
+                    "PIDs: %u(%u b/PID)"
+                    ", slots: %u/%u(%u%%)"
+                    ", filled: %u/%u bytes (%u%%)"
+                    ", RAM: %u/%u KiB(%u%%)"
+                    ", state: %X",
+                    samples, samples ? bytes / samples : 0,
+                    slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
+                    bytes, BUFFER_SLOTS * BUFFER_LENGTH,
+                    100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
+                    ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
+                    state);
         }
     }
     CBuffer* buffers[BUFFER_SLOTS];
