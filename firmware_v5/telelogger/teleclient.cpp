@@ -23,7 +23,7 @@
 
 bool processCommand(char* data);
 
-extern freematics_cfg_t node_cfg;
+extern node_info_t node_info;
 extern int16_t rssi;
 extern GPS_DATA* gd;
 extern char isoTime[];
@@ -162,8 +162,8 @@ bool TeleClientUDP::verifyChecksum(char* data)
 
 bool TeleClientUDP::notify(byte event, const char* payload)
 {
-  char *devid = node_cfg.devid;
-  char *vin = node_cfg.vin;
+  char *devid = node_info.device_id;
+  char *vin = node_info.vin;
   char buf[48];
   CStorageRAM netbuf;
   netbuf.init(128);
@@ -352,7 +352,7 @@ bool TeleClientHTTP::notify(byte event, const char* payload)
 {
   char url[256];
   snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s",
-      SERVER_PATH, node_cfg.devid, (uint)event, (int)rssi, node_cfg.vin);
+      SERVER_PATH, node_info.device_id, (uint)event, (int)rssi, node_info.vin);
   if (event == EVENT_LOGOUT) login = false;
   return net.send(METHOD_GET, url, true) && net.receive();
 }
@@ -366,7 +366,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     }
   }
 
-  char *devid = node_cfg.devid;
+  char *devid = node_info.device_id;
   char url[256];
   bool success;
   int len;

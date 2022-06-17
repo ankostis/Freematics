@@ -17,17 +17,22 @@
 
 #pragma once
 
-struct freematics_cfg_t {
-  char devid[12]; // populated after boot
-  char vin[18]; // populated after boot
+#include <string>
+#include <json.hpp>
 
+struct node_info_t {
+  char device_id[12];
+  char vin[18];
+
+  //////////
+  // CONFIG
   /** NOTE: remember to increase `enable_flags` size if more flags added. */
   uint16_t enable_flags;
   int serial_autoconf_timeout;
   uint8_t log_level_run;
   uint8_t log_level_build;
   uint8_t log_sink;
-  const char* log_sink_fpath;
+  const char *log_sink_fpath;
   float log_sink_disk_usage_purge_prcnt;
   int32_t log_sink_sync_interval_ms;
   int nslots;
@@ -37,16 +42,16 @@ struct freematics_cfg_t {
   uint8_t storage;
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   uint8_t gnss;
-  const char* ota_update_url;
-  const char* ota_update_cert_pem;
+  const char *ota_url;
+  const char *ota_update_cert_pem;
   uint8_t net_dev;
-  const char* wifi_ssd;
-  const char* wifi_pwd;
-  const char* cell_apn;
-  const char* sim_card_pin;
+  const char *wifi_ssd;
+  const char *wifi_pwd;
+  const char *cell_apn;
+  const char *sim_card_pin;
   uint8_t srv_proto;
-  const char* srv_host;
-  const char* srv_path;
+  const char *srv_host;
+  const char *srv_path;
   uint16_t srv_port;
   uint32_t net_recv_timeout;
   uint32_t srv_sync_timeout;
@@ -67,36 +72,51 @@ struct freematics_cfg_t {
 };
 
 /**
- * Idempotent transformation of freematics MACs --> device-ids, like `A0HNZRJU`.
+ * Idempotent transformation of freematics MACs --> device-ids,
+ * like: 0xF4F78BC40A24 --> "A0HNZRJU".
  *
  * :param mac:
  *    the mac-address, from `ESP.getEfuseMac()`
- * :param devid:
- *    a 12-char buffer (stored on :field:`node_cfg_t.devid`)
+ * :param device_id:
+ *    a 12-char buffer (stored on :field:`node_info_t.device_id`)
  */
-void mac_to_device_id(uint64_t max, char *devid);
+void mac_to_device_id(uint64_t max, char *device_id);
 
 /**
- * Sample output:
+ * Produces a valid JSON string as output, like this:
  *
  * ```
- * device_id: ABCDFGZRJ
- * +--     board: ESP32-D0WDQ6-v1@160x2,
- * +--       mac: f4f78bc40a24,
- * +--     flash: 16MiB@40MHz,
- * +--  slow_rtc: 0@150KHz,
- * +-- esp32_sdk: v4.4-367-gc29343eb94,
- * +--   arduino: 2.0.3,
- * +--fw_version: v0.1.0-upstream202204-27-g5b707fd,
- * +--sketch_elf: 183ec6f-3f4000b0,
- * +--     build: Apr 13 2022 13:37:40 (user@host),
- * +--last_boot: 1,
- * +-- partition:  20.03%, sketch_size:  262528, partition_size: 1310720,
- * +--      heap:   6.84%,   heap_used:   25248,      heap_size:  369160
+ * {
+ *    "device_id": "A0HNZRJU",
+ *       "board": "ESP32-D0WDQ6-v1@160x2",
+ *         "mac": "0xF4F78BC40A24",
+ *       "flash": "4MiB@40MHz",
+ *    "slow_rtc": "0@150KHz",
+ *   "esp32_sdk": "v4.4.1-1-gb8050b365e",
+ *     "arduino": "2.0.3",
+ *  "fw_version": "jrc-v0.0.3-63-g5b615bb",
+ *  "sketch_elf": "ed59c3e-3f4000b0",
+ *  "build_date": "Jun 21 2022 12:02:57",
+ *    "build_by": "ankostis@kudos",
+ *   "last_boot": 1,
+ *     "partition_size": 1310720,
+ *        "sketch_size": 944880,
+ *      "partition_use": 72.09,
+ * "ota_partition_size": 1310720,
+ *        "heap": 333620,
+ *   "heap_used": 81300,
+ *    "heap_use": 24.37,
+ *       "psram": 4192139,
+ *  "psram_used": 0,
+ *   "psram_use": 0.00
+ * }
  * ```
  *
- * ATTENTION: rev1 devices (like the sample above),
- * [need the PSRAM workaround](https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1)
+ * Build as a string, to exploit `sprintf()` when constructing HW-strings.
  *
+ * ATTENTION: rev1 devices (like the sample above), need the PSRAM workaround
+ * (`-mfix-esp32-psram-cache-issue`) if `-DBOARD_HAS_PSRAM` build-flag enabled.
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1
  */
-void log_node_info(const freematics_cfg_t &node_cfg);
+std::string generate_node_infos();
+nlohmann::json node_info_to_json(const node_info_t &infos);

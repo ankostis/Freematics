@@ -15,12 +15,13 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
-#include <esp_log.h>
 #include <cstdio>
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <esp_log.h>
+#include <json.hpp>
 #include <FreematicsPlus.h>
 #include <Buzzer.h>
 #include "config.h"
@@ -106,7 +107,7 @@ DS_CAN_MSG obdDataMulti[]=
   {0}
 };
 
-freematics_cfg_t node_cfg{
+node_info_t node_info{
   .enable_flags = (
     ((ENABLE_OBD && 1) << 0)
     | ((ENABLE_MEMS && 1) << 1)
@@ -132,7 +133,7 @@ freematics_cfg_t node_cfg{
   .storage = STORAGE,
   /** NOTE: changes here, must convey to platformIO's monitor-filter. */
   .gnss = GNSS,
-  .ota_update_url = OTA_UPDATE_URL,
+  .ota_url = OTA_UPDATE_URL,
   .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
   .net_dev = NET_DEVICE,
   .wifi_ssd = (char*)WIFI_SSID,
@@ -610,7 +611,7 @@ void initialize()
 
   // re-try OBD if connection not established
 #if ENABLE_OBD
-  char *vin = node_cfg.vin;
+  char *vin = node_info.vin;
 
   if (state.check(STATE_OBD_READY)) {
     char buf[128];
@@ -642,7 +643,7 @@ void initialize()
 #if ENABLE_OLED
   delay(1000);  // This `delay()` forces #ifdef OLED.
   oled.clear();
-  oled.printf("DEVICE ID: %s\n", node_cfg.devid);
+  oled.printf("DEVICE ID: %s\n", node_info.device_id);
   oled.setCursor(0, 7);
   oled.print("Packets");
   oled.setCursor(80, 7);
@@ -664,12 +665,12 @@ void initialize()
 
 /**
  * :param ota_url:
- *    if null, read from `node_cfg`.
+ *    if null, read from `node_info`.
  */
 void do_firmware_upgrade(const char *ota_url = nullptr) {
   esp_http_client_config_t http_cfg = {
-      .url = ota_url? ota_url : node_cfg.ota_update_url,
-      .cert_pem = node_cfg.ota_update_cert_pem,
+      .url = ota_url? ota_url : node_info.ota_url,
+      .cert_pem = node_info.ota_update_cert_pem,
   };
   ESP_LOGI(TAG_PROC, "OTA update from %s...", http_cfg.url);
   esp_err_t ret = esp_https_ota(&http_cfg);
@@ -1191,7 +1192,7 @@ void telemetry(void* inst)
 
       buffer->state = BUFFER_STATE_LOCKED;
 #if SERVER_PROTOCOL == PROTOCOL_UDP
-      store.header(node_cfg.devid);
+      store.header(node_info.device_id);
 #endif
       store.timestamp(buffer->timestamp);
       buffer->serialize(store);
@@ -1410,10 +1411,10 @@ void setup_multilog() {
     static multilog::FileSink sd_sink{
             "SD",
             SD,
-            node_cfg.log_sink_fpath,
+            node_info.log_sink_fpath,
             FILE_APPEND,
-            node_cfg.log_sink_disk_usage_purge_prcnt,
-            node_cfg.log_sink_sync_interval_ms,
+            node_info.log_sink_disk_usage_purge_prcnt,
+            node_info.log_sink_sync_interval_ms,
     };
     multilog::log_sinks[1] = &sd_sink;
 #endif
@@ -1421,10 +1422,10 @@ void setup_multilog() {
     static multilog::FileSink spiffs_sink{
             "SPIFFS",
             SPIFFS,
-            node_cfg.log_sink_fpath,
+            node_info.log_sink_fpath,
             FILE_APPEND,
-            node_cfg.log_sink_disk_usage_purge_prcnt,
-            node_cfg.log_sink_sync_interval_ms,
+            node_info.log_sink_disk_usage_purge_prcnt,
+            node_info.log_sink_sync_interval_ms,
     };
     multilog::log_sinks[2] = &spiffs_sink;
 #endif
@@ -1450,7 +1451,7 @@ void setup()
 
     // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
     //
-    esp_log_level_set("*", (esp_log_level_t)node_cfg.log_level_run);
+    esp_log_level_set("*", (esp_log_level_t)node_info.log_level_run);
     // esp_log_level_set(TAG_BOOT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
     // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file
@@ -1490,7 +1491,8 @@ void setup()
     digitalWrite(PIN_LED, HIGH);
 
    // generate unique device ID
-    mac_to_device_id(ESP.getEfuseMac(), node_cfg.devid);
+    mac_to_device_id(ESP.getEfuseMac(), node_info.device_id);  // TODO: encapsulate
+    std::string hw_infos = generate_node_infos();
 
 #if CONFIG_MODE_TIMEOUT
     configMode();
@@ -1501,12 +1503,16 @@ void setup()
     pinMode(PIN_SENSOR2, INPUT);
 #endif
 
-    log_node_info(node_cfg);
+    ESP_LOGE(
+        TAG_INIT,
+        "%s\n%s",
+        hw_infos.c_str(),
+        node_info_to_json(node_info).dump(2).c_str());
     OLED_CLEAR();
     OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
         (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
-        node_cfg.devid);
+        node_info.device_id);
 
     if (sys.begin()) {
       ESP_LOGI(TAG_INIT, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);

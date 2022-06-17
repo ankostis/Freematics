@@ -26,13 +26,30 @@
 // // clean stuff up here
 // }
 
+#include <esp_log.h>
+#include <string>
+
+/**
+ *  NOTE: undef unity.h macros or else:
+ *    json.hpp:22020:44: note: in expansion of macro 'isnan'
+ *       if ((lhs.is_number_float() && std::isnan(lhs.m_value.number_float) && rhs.is_number())
+ *  unity_internals.h:217:18: error: expected unqualified-id before '(' token
+ */
+#undef isnan
+#undef isinf
+#include <json.hpp>
 #include <NodeInfo.h>
+
 
 void test_sys_info()
 {
-  freematics_cfg_t node_cfg{"TESTDEV", "TESTVIN"};
-  log_node_info(node_cfg);
+  std::string node_infos = generate_node_infos();
+  ESP_LOGE(TAG, "STR:\n%s", node_infos.c_str());
+
+  nlohmann::json node_infos_j = nlohmann::json::parse(node_infos);
+  ESP_LOGE(TAG, "JSON:\n%s", node_infos_j.dump(2).c_str());
 }
+
 
 #include <esp_log.h>
 #include <esp32-hal-log.h>
