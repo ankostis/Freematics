@@ -1,3 +1,37 @@
+/**
+ * Configuration macros for `src_dir` code (NOT libs).
+ *
+ * NOTE: Instead of putting secrets & per device/user settings here
+ * (and git-committing them!)
+ * prefer to store them in an out-of-git file `secrets.h`, like this:
+ *
+ * ```
+ * // git-ignored header-file for "sensitive" or per-device/user overrides.
+ *
+ * #undef ENABLE_MULTILOG
+ * #define ENABLE_MULTILOG    0
+ * #undef LOG_SINK
+ * #define LOG_SINK    (LOG_SINK_SERIAL| LOG_SINK_SD)
+
+ * #undef NET_DEVICE
+ *
+ * #define NET_DEVICE NET_XXX
+ *
+ * #undef WIFI_SSID
+ * #define WIFI_SSID "..."
+ * #undef WIFI_PASSWORD
+ * #define WIFI_PASSWORD "..."
+ *
+ * #undef CELL_APN
+ * #define CELL_APN "..."
+ * #undef SIM_CARD_PIN
+ * #define SIM_CARD_PIN "..."
+ *
+ * #undef SERVER_HOST
+ * #define SERVER_HOST "..."
+ * ```
+ **************************************/
+
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
@@ -261,29 +295,11 @@
 #define COOLING_DOWN_TEMP 80 /* celsius degrees */
 #define COOLING_DOWN_SLEEP_SEC 5 /* celsius degrees */
 
-/**************************************
- * Secrets & per-device overrides, like:
- * ```
- * // git-ignored header-file for "sensitive" or per-device overrides.
- *
- * #undef NET_DEVICE
- *
- * #define NET_DEVICE NET_XXX
- *
- * #undef WIFI_SSID
- * #define WIFI_SSID "..."
- * #undef WIFI_PASSWORD
- * #define WIFI_PASSWORD "..."
- *
- * #undef CELL_APN
- * #define CELL_APN "..."
- * #undef SIM_CARD_PIN
- * #define SIM_CARD_PIN "..."
- *
- * #undef SERVER_HOST
- * #define SERVER_HOST "..."
- * ```
- **************************************/
+////////////////////////////
+// NON-USER CONFIGS BELOW //
+////////////////////////////
+
+/** Include secrets & per device/user overrides */
 #if __has_include("secrets.h")
 #   include "secrets.h"
 #endif
