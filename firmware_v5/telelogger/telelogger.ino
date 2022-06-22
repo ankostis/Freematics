@@ -1433,6 +1433,9 @@ void setup_multilog() {
 }  // setup_multilog()
 #endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
 
+// Allow test-cases to call functions from here, and avoid clashing.
+// see: https://docs.platformio.org/en/latest/advanced/unit-testing/structure/shared-code.html#unit-testing-shared-code
+#ifndef PIO_UNIT_TESTING
 void setup()
 {
     buzzer.tone(1);  // 1hz ticks until `initialize()`
@@ -1575,3 +1578,4 @@ void loop()
 
   ESP_LOGD(TAG_INIT, "<loop> state: %X", state.m_state);
 }
+#endif // PIO_UNIT_TESTING

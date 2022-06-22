@@ -314,7 +314,7 @@ void test_SD() {
   }
 }
 
-void process() {
+void process_tests() {
     esp_log_level_set("*", ESP_LOG_VERBOSE);
 
     UNITY_BEGIN();
@@ -335,7 +335,7 @@ void setup() {
     // NOTE: freematics seems to support this.
     // delay(2000);
 
-    process();
+    process_tests();
 }
 
 void loop() {
@@ -348,7 +348,7 @@ void loop() {
 #else
 
 int main(int argc, char **argv) {
-    process();
+    process_tests();
     return 0;
 }
 
