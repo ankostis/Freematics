@@ -15,6 +15,9 @@
  * THE SOFTWARE.
  ******************************************************************************/
 
+#include "config.h"
+#include "NodeInfo.h"
+
 #include <Esp.h>
 #include <esp_app_format.h>
 #include <esp_log.h>
@@ -22,14 +25,13 @@
 #include <esp_system.h>
 #include <soc/rtc.h>
 
-#include <string>
 #include <cstring>
+#include <json.hpp>
+#include <string>
+
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #include "esp32/himem.h"
 #endif
-#include "NodeInfo.h"
-#include "json.hpp"
-
 
 void mac_to_device_id(const uint64_t mac, char *device_id) {
   uint64_t seed = mac >> 8;
@@ -237,3 +239,16 @@ nlohmann::json node_info_to_json(const node_info_t &infos) {
 
   return root;
 }
+
+#if HIDE_SECRETS_IN_LOGS
+void erase_sensitive_fields(nlohmann::json &infos) {
+  constexpr const char *mask = "***";
+  infos["wifi_pwd"] = mask;
+  infos["cell_apn"] = apn2log;
+  infos["sim_card_pin"] = mask;
+  infos["srv_host"] = host2log;
+  infos["srv_path"] = mask;
+  infos["srv_port"] = 0;
+  infos["ota_url"] = ota_url2log;
+}
+#endif // HIDE_SECRETS_IN_LOGS

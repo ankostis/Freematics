@@ -17,6 +17,7 @@
 
 #pragma once
 
+#include "config.h"
 #include <string>
 #include <json.hpp>
 
@@ -120,3 +121,6 @@ void mac_to_device_id(uint64_t max, char *device_id);
  */
 std::string generate_node_infos();
 nlohmann::json node_info_to_json(const node_info_t &infos);
+#if HIDE_SECRETS_IN_LOGS
+void erase_sensitive_fields(nlohmann::json &infos);
+#endif // HIDE_SECRETS_IN_LOGS

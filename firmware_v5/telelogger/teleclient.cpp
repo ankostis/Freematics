@@ -28,14 +28,6 @@ extern int16_t rssi;
 extern GPS_DATA* gd;
 extern char isoTime[];
 
-#if HIDE_SECRETS_IN_LOGS
-  constexpr const char* host2log = "***";
-  constexpr const int port2log = 0;
-#else
-  constexpr const char* host2log = SERVER_HOST;
-  constexpr const int port2log = SERVER_PORT;
-#endif
-
 CBuffer::CBuffer()
 {
   purge();
@@ -385,7 +377,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
       "TeleClientHTTP sending %i bytes to URL: %s",
       packetSize,
 #if HIDE_SECRETS_IN_LOGS
-      "***"
+      host2log
 #else
       url
 #endif

@@ -116,6 +116,22 @@
 #define LOG_SINK_DISK_USAGE_PURGE_RATIO     0.90f
 #define LOG_SINK_SYNC_INTERVAL_MS           3141
 
+/**
+ * Secrets hidden:
+ * - srv_XXX(URL fields): dump str-length
+ * - ota_url: dump str-length
+ * - wifi_pwd(s)
+ * - cell_apn: dump str-length
+ * - sim_card_pin
+ *
+ * WARNING: URLs are printed on errors (eg no network connection),
+ * so better disable logs completely for really mute firmware!
+ * TODO: pin-disabled certain error-logs, to avoid leaking sensitive secrets.
+ *
+ * See also `NodeInfo:erase_sensitive_fields()`
+ */
+#define HIDE_SECRETS_IN_LOGS 0
+
 /**************************************
 * OBD-II configurations
 **************************************/
@@ -173,9 +189,6 @@
 // WiFi AP settings
 #define WIFI_AP_SSID "TELELOGGER"
 #define WIFI_AP_PASSWORD "PASSWORD"
-
-// Currently, only server's URL * WiFi passwords considered secrets.
-#define HIDE_SECRETS_IN_LOGS 0
 
 // Attempts to open net-connection before reporting error.
 #define NET_CONNECT_RETRIES 5
@@ -308,5 +321,22 @@
         (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SD)))
 #define _NEED_SPIFFS    (ENABLE_SPIFFS || (STORAGE == STORAGE_SPIFFS) || \
         (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SPIFFS)))
+
+#if HIDE_SECRETS_IN_LOGS
+#define _DIGIT2C(n) ('0' + (n % 10))
+#define _SIZEOFSTR(s)     _DIGIT2C(sizeof(s) / 10), _DIGIT2C(sizeof(s))
+inline constexpr const char apn2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(CELL_APN), '>', '\0'};
+inline constexpr const char host2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(SERVER_HOST), '>', '\0'};
+inline constexpr const int port2log = 0;
+inline constexpr const char ota_url2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(OTA_UPDATE_URL), '>', '\0'};
+#else
+inline constexpr const char apn2log[] = CELL_APN;
+inline constexpr const char host2log[] = SERVER_HOST;
+inline constexpr const int port2log = SERVER_PORT;
+inline constexpr const char ota_url2log[] = OTA_UPDATE_URL;
+#endif
 
 #endif // CONFIG_H_INCLUDED

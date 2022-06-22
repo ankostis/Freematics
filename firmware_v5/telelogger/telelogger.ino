@@ -672,13 +672,14 @@ void do_firmware_upgrade(const char *ota_url = nullptr) {
       .url = ota_url? ota_url : node_info.ota_url,
       .cert_pem = node_info.ota_update_cert_pem,
   };
-  ESP_LOGI(TAG_PROC, "OTA update from %s...", http_cfg.url);
+  const char* url2log = (ota_url ? ota_url : ota_url2log);
+  ESP_LOGI(TAG_PROC, "OTA update from %s...", url2log);
   esp_err_t ret = esp_https_ota(&http_cfg);
   ESP_LOG_LEVEL(
       (ret == ESP_OK? ESP_LOG_INFO : ESP_LOG_ERROR),
       TAG_PROC,
       "OTA updated from %s OK.\n  Rebooting.",
-      http_cfg.url);
+      url2log);
   if (ret == ESP_OK) esp_restart();
 }
 #endif // ENABLE_OTA_UPDATE
@@ -1502,12 +1503,11 @@ void setup()
     pinMode(PIN_SENSOR1, INPUT);
     pinMode(PIN_SENSOR2, INPUT);
 #endif
-
-    ESP_LOGE(
-        TAG_INIT,
-        "%s\n%s",
-        hw_infos.c_str(),
-        node_info_to_json(node_info).dump(2).c_str());
+    nlohmann::json infos_j = node_info_to_json(node_info);
+#if HIDE_SECRETS_IN_LOGS
+    erase_sensitive_fields(infos_j);
+#endif // HIDE_SECRETS_IN_LOGS
+    ESP_LOGE(TAG_INIT, "%s\n%s", hw_infos.c_str(), infos_j.dump(2).c_str());
     OLED_CLEAR();
     OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",

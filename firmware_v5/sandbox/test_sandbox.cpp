@@ -43,11 +43,16 @@
 
 void test_sys_info()
 {
-  std::string node_infos = generate_node_infos();
-  ESP_LOGE(TAG, "STR:\n%s", node_infos.c_str());
+  std::string node_info = generate_node_infos();
+  ESP_LOGE(TAG, "STR:\n%s", node_info.c_str());
 
-  nlohmann::json node_infos_j = nlohmann::json::parse(node_infos);
-  ESP_LOGE(TAG, "JSON:\n%s", node_infos_j.dump(2).c_str());
+  nlohmann::json node_info_j = nlohmann::json::parse(node_info);
+  ESP_LOGE(TAG, "JSON:\n%s", node_info_j.dump(2).c_str());
+
+#if HIDE_SECRETS_IN_LOGS
+  erase_sensitive_fields(node_info_j);
+  ESP_LOGE(TAG, "JSON HIDDEN:\n%s", node_info_j.dump(2).c_str());
+#endif // HIDE_SECRETS_IN_LOGS
 }
 
 
