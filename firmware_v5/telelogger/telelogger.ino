@@ -701,8 +701,7 @@ String executeCommand(const char* cmd)
     }
   #endif
     teleClient.shutdown();
-    ESP.restart();
-    // never reach here
+    esp_restart();
 
 #if ENABLE_OTA_UPDATE
   } else if (!strcmp(cmd, "OTA") || !strncmp(cmd, "OTA ", 4)) {
@@ -1329,7 +1328,7 @@ void standby()
 #if ENABLE_MEMS
   mems->end();
 #endif
-  ESP.restart();
+  esp_restart();
 #endif
   state.clear(STATE_STANDBY);
   // this will wake up co-processor
@@ -1362,7 +1361,7 @@ void configMode()
       } while (millis() - t < CONFIG_MODE_TIMEOUT);
       ESP_LOGD(TAG, "#RESET#");
       delay(100);
-      ESP.restart();
+      esp_restart();
     }
   } while (millis() - t < CONFIG_MODE_TIMEOUT);
 }
