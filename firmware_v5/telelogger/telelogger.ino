@@ -212,9 +212,6 @@ String serialCommand;
 
 byte ledMode = 0;
 
-bool serverSetup(IPAddress& ip);  // TODO: drop unused code
-void serverProcess(int timeout);
-String executeCommand(const char* cmd);
 bool processCommand(char* data);
 void processMEMS(CBuffer* buffer);
 bool processGPS(CBuffer* buffer);
@@ -434,7 +431,6 @@ bool waitMotionGPS(int timeout)
   unsigned long t = millis();
   lastMotionTime = 0;
   do {
-      serverProcess(100);
     if (!processGPS(0)) continue;
     if (lastMotionTime) return true;
   } while (millis() - t < timeout);
@@ -855,7 +851,6 @@ bool waitMotion(long timeout)
   // unsigned long t = millis();
   if (state.check(STATE_MEMS_READY)) {
 
-    serverProcess(100);
     // calculate relative movement
     float motion = 0;
     float acc[3];
@@ -885,7 +880,6 @@ bool waitMotion(long timeout)
     }
   }
 #endif
-  serverProcess(timeout);
   return false;
 }
 

@@ -18,7 +18,6 @@
     <option name="Digital Input" const="LOG_EXT_SENSORS=1"/>
     <option name="Analog Input" const="LOG_EXT_SENSORS=2"/>
   </define>
-  <define name="WiFi AP &amp; HTTP Server" const="ENABLE_HTTPD" type="bool"/>
   <define name="Networking">
     <option name="WiFi" const="NET_DEVICE=NET_WIFI"/>
     <option name="WiFi Mesh" const="NET_DEVICE=NET_WIFI_MESH"/>

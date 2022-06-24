@@ -287,15 +287,6 @@
 // When enabled, significant states produce buzzing patterns,
 // as explained in `./README.md` file.
 #define ENABLE_BUZZING_INIT 1
-/**
- * Enable(1)/disable(0) http server for `dataserver.cpp`.
- * (httpd has been dropped from `telelogger.ino`).
- *
- * NOTE: MUST enable also some STORAGE_SD/SPIFFS, for having something to send,
- * or else compilation fails with:
- *      dataserver.cpp:243:9: error: 'root' was not declared in this scope
- */
-#define ENABLE_HTTPD 0
 // enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED 0
 #define CONFIG_MODE_TIMEOUT 0
