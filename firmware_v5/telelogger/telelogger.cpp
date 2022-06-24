@@ -184,7 +184,7 @@ uint16_t lastSizeKB = 0;
 #endif
 
 uint32_t lastCmdToken = 0;
-String serialCommand;
+std::string serialCommand;
 
 byte ledMode = 0;
 
@@ -656,10 +656,10 @@ void do_firmware_upgrade(const char *ota_url = nullptr) {
 }
 #endif // ENABLE_OTA_UPDATE
 
-String executeCommand(const char* cmd)
+std::string executeCommand(const char* cmd)
 {
   int cmd_len = strlen(cmd);
-  String result = "OK";
+  std::string result = "OK";
   ESP_LOGI(TAG_PROC, "cmd: %s", cmd);
   if (!strncmp(cmd, "LED ", 4) && cmd[4]) {
     ledMode = (byte)atoi(cmd + 4);
@@ -824,7 +824,7 @@ bool processCommand(char* data)
 
   if (token > lastCmdToken) {
     // new command
-    String result = executeCommand(cmd);
+    std::string result = executeCommand(cmd);
     // send command response
     char buf[256];
     snprintf(buf, sizeof(buf), "TK=%u,MSG=%s", token, result.c_str());
@@ -1040,7 +1040,7 @@ bool initNetwork()
     teleClient.net.begin(node_info.wifi_ssd, node_info.wifi_pwd);
     if (teleClient.net.setup()) {
       state.set(STATE_NET_READY);
-      String ip = teleClient.net.getIP();
+      std::string ip = teleClient.net.getIP();
       if (ip.length()) {
         state.set(STATE_NET_CONNECTED);
         ESP_LOGI(TAG_NET, "WiFi IP: %s", ip.c_str());
@@ -1071,7 +1071,7 @@ bool initNetwork()
   ESP_LOGI(TAG_NET, "IMEI: %s", teleClient.net.IMEI);
   if (state.check(STATE_NET_READY) && !state.check(STATE_NET_CONNECTED)) {
     if (teleClient.net.setup(node_info.cell_apn)) {
-      String op = teleClient.net.getOperatorName();
+      std::string op = teleClient.net.getOperatorName();
       if (op.length()) {
         ESP_LOGI(TAG_NET, "Operator: %s", op.c_str());
         OLED_PRINTLN(op);
@@ -1083,7 +1083,7 @@ bool initNetwork()
       }
 #endif
 
-      String ip = teleClient.net.getIP();
+      std::string ip = teleClient.net.getIP();
       if (ip.length()) {
         ESP_LOGI(TAG_NET, "IP: %s", ip.c_str());
         OLED_PRINTF("IP: %s\n",ip.c_str());
@@ -1578,7 +1578,7 @@ void loop()
     if (c == '\r' || c == '\n') {
       ESP_LOGV(TAG_PROC, "cmd(%s)...", serialCommand.c_str());
       if (serialCommand.length() > 0) {
-        String result = executeCommand(serialCommand.c_str());
+        std::string result = executeCommand(serialCommand.c_str());
 
         bool is_err = result == "ERROR" || result == "UNKNOWN CMD";
         ESP_LOG_LEVEL(

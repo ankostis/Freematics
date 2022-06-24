@@ -7,6 +7,9 @@
 #ifndef FREEMATICS_NETWORK
 #define FREEMATICS_NETWORK
 
+# include <string>
+# include <sstream>
+
 #include <Arduino.h>
 #include <WiFi.h>
 #include <WiFiUdp.h>
@@ -17,6 +20,7 @@
 #include "nvs_flash.h"
 
 #include "FreematicsBase.h"
+
 
 // ESP_IDF logging tags used
 inline constexpr const char TAG_WIFI[] = "WIFI";
@@ -57,9 +61,9 @@ class HTTPClient
 public:
     HTTP_STATES state() { return m_state; }
 protected:
-    String genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
+    std::string genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
     HTTP_STATES m_state = HTTP_DISCONNECTED;
-    String m_host;
+    std::string m_host;
 };
 
 class ClientWIFI
@@ -69,7 +73,7 @@ public:
     bool reconnect();
     void end();
     bool setup(unsigned int timeout = 5000);
-    String getIP();
+    std::string getIP();
     int getSignal() { return 0; }
     const char* deviceName() { return "WiFi"; }
     /**
@@ -93,7 +97,7 @@ public:
     void close();
     bool send(const char* data, unsigned int len);
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
-    String queryIP(const char* host);
+    std::string queryIP(const char* host);
 private:
     IPAddress udpIP;
     uint16_t udpPort;
@@ -118,12 +122,12 @@ public:
     bool begin(CFreematics* device);
     void end();
     bool setup(const char* apn, bool gps = false, unsigned int timeout = 60000);
-    String getIP();
+    std::string getIP();
     int getSignal();
-    String getOperatorName();
+    std::string getOperatorName();
     bool checkSIM(const char* pin = 0);
     bool getLocation(NET_LOCATION* loc);
-    String queryIP(const char* host);
+    std::string queryIP(const char* host);
     char* getBuffer() { return m_buffer; }
     const char* deviceName() { return "SIM800"; }
     const char* IMEI = "N/A";
@@ -152,7 +156,7 @@ public:
     char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
     void close();
 protected:
-    String m_host;
+    std::string m_host;
     uint16_t m_port;
 };
 
@@ -163,11 +167,11 @@ public:
     virtual void end();
     virtual bool setup(const char* apn, unsigned int timeout = 30000);
     virtual bool setGPS(bool on);
-    String getIP();
+    std::string getIP();
     int getSignal();
-    String getOperatorName();
+    std::string getOperatorName();
     bool checkSIM(const char* pin = 0);
-    String queryIP(const char* host);
+    std::string queryIP(const char* host);
     bool getLocation(GPS_DATA** pgd)
     {
         if (m_gps) {
@@ -200,7 +204,7 @@ public:
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
 protected:
     char* checkIncoming(int* pbytes);
-    String udpIP;
+    std::string udpIP;
     uint16_t udpPort = 0;
 };
 
@@ -230,7 +234,7 @@ public:
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
 protected:
     char* checkIncoming(int* pbytes);
-    String udpIP;
+    std::string udpIP;
     uint16_t udpPort = 0;
 };
 

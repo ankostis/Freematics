@@ -5,26 +5,29 @@
 * (C)2012-2019 Developed by Stanley Huang <stanley@freematics.com.au>
 *************************************************************************/
 
+#include <string>
+#include <sstream>
+
 #include <Arduino.h>
 #include "FreematicsBase.h"
 #include "FreematicsNetwork.h"
 
-String HTTPClient::genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
+std::string HTTPClient::genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
 {
-  String header;
   // generate a simplest HTTP header
-  header = method == METHOD_GET ? "GET " : "POST ";
-  header += path;
-  header += " HTTP/1.1\r\nConnection: ";
-  header += keepAlive ? "keep-alive" : "close";
-  header += "\r\nHost: ";
-  header += m_host;
+  std::stringstream header;
+  header << (method == METHOD_GET ? "GET " : "POST ");
+  header << path;
+  header << " HTTP/1.1\r\nConnection: ";
+  header << (keepAlive ? "keep-alive" : "close");
+  header << "\r\nHost: ";
+  header << m_host;
   if (method != METHOD_GET) {
-    header += "\r\nContent-length: ";
-    header += String(payloadSize);
+    header << "\r\nContent-length: ";
+    header << payloadSize;
   }
-  header += "\r\n\r\n";
-  return header;
+  header << "\r\n\r\n";
+  return header.str();
 }
 
 /*******************************************************************************
@@ -42,9 +45,9 @@ bool ClientWIFI::setup(unsigned int timeout)
   return false;
 }
 
-String ClientWIFI::getIP()
+std::string ClientWIFI::getIP()
 {
-  return WiFi.localIP().toString();
+  return std::string(WiFi.localIP().toString().c_str());
 }
 
 bool ClientWIFI::begin(const char* ssid, const char* password)
@@ -119,9 +122,9 @@ char* UDPClientWIFI::receive(int* pbytes, unsigned int timeout)
   return 0;
 }
 
-String UDPClientWIFI::queryIP(const char* host)
+std::string UDPClientWIFI::queryIP(const char* host)
 {
-  return udpIP.toString();
+  return std::string(udpIP.toString().c_str());
 }
 
 void UDPClientWIFI::close()
@@ -150,7 +153,7 @@ void HTTPClientWIFI::close()
 
 bool HTTPClientWIFI::send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
 {
-  String header = genHeader(method, path, keepAlive, payload, payloadSize);
+  std::string header = genHeader(method, path, keepAlive, payload, payloadSize);
   int len = header.length();
   if (client.write(header.c_str(), len) != len) {
     m_state = HTTP_DISCONNECTED;
@@ -239,7 +242,7 @@ bool ClientSIM800::setup(const char* apn, bool gps, unsigned int timeout)
   return success;
 }
 
-String ClientSIM800::getIP()
+std::string ClientSIM800::getIP()
 {
   for (uint32_t t = millis(); millis() - t < 60000; ) {
     if (sendCommand("AT+CIFSR\r", 3000, ".")) {
@@ -270,7 +273,7 @@ int ClientSIM800::getSignal()
   return 0;
 }
 
-String ClientSIM800::getOperatorName()
+std::string ClientSIM800::getOperatorName()
 {
   // display operator name
   if (sendCommand("AT+COPS?\r") == 1) {
@@ -294,7 +297,7 @@ bool ClientSIM800::checkSIM(const char* pin)
   return (sendCommand("AT+CPIN?\r") && strstr(m_buffer, "READY"));
 }
 
-String ClientSIM800::queryIP(const char* host)
+std::string ClientSIM800::queryIP(const char* host)
 {
   sprintf(m_buffer, "AT+CDNSGIP=\"%s\"\r", host);
   if (sendCommand(m_buffer, 10000)) {
@@ -594,7 +597,7 @@ bool ClientSIM5360::setGPS(bool on)
   }
 }
 
-String ClientSIM5360::getIP()
+std::string ClientSIM5360::getIP()
 {
   uint32_t t = millis();
   do {
@@ -628,7 +631,7 @@ int ClientSIM5360::getSignal()
   return 0;
 }
 
-String ClientSIM5360::getOperatorName()
+std::string ClientSIM5360::getOperatorName()
 {
   if (sendCommand("AT+COPS?\r")) {
       char *p = strstr(m_buffer, ",\"");
@@ -653,7 +656,7 @@ bool ClientSIM5360::checkSIM(const char* pin)
   return success;
 }
 
-String ClientSIM5360::queryIP(const char* host)
+std::string ClientSIM5360::queryIP(const char* host)
 {
   sprintf(m_buffer, "AT+CDNSGIP=\"%s\"\r", host);
   if (sendCommand(m_buffer, 10000)) {
@@ -825,7 +828,7 @@ void HTTPClientSIM5360::close()
 
 bool HTTPClientSIM5360::send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
 {
-  String header = genHeader(method, path, keepAlive, payload, payloadSize);
+  std::string header = genHeader(method, path, keepAlive, payload, payloadSize);
   int len = header.length();
   sprintf(m_buffer, "AT+CHTTPSSEND=%u\r", len + payloadSize);
   if (!sendCommand(m_buffer, 100, ">")) {
@@ -1072,7 +1075,7 @@ void HTTPClientSIM7600::close()
 
 bool HTTPClientSIM7600::send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
 {
-  String header = genHeader(method, path, keepAlive, payload, payloadSize);
+  std::string header = genHeader(method, path, keepAlive, payload, payloadSize);
   int len = header.length();
   sprintf(m_buffer, "AT+CHTTPSSEND=%u\r", len + payloadSize);
   if (!sendCommand(m_buffer, 100, ">")) {
