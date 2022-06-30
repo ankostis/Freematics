@@ -15,6 +15,7 @@
 * THE SOFTWARE.
 ******************************************************************************/
 
+#include <Arduino.h>
 #include <cstdio>
 #include <iostream>
 #include <fstream>
