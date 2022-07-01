@@ -11,42 +11,54 @@ since *platformio* does not preserve `espidf` framework behavior when
 
 **Image Infos**
 
-The infos extracted by `_collect_image_infos(env)` try to mimic ESP-IDF behavior,
+The infos extracted by `_collect_app_infos(env)` try to mimic ESP-IDF behavior,
 as listed below (in precedance order):
 
 
 - **project-name:**
-  - no patching if `CONFIG_APP_EXCLUDE_PROJECT_NAME_VAR` cppdefine,
-    see: https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-project-ver-from-config
-  - `PROJECT_NAME` cpp-define (mimics ESP-IDF)
+  - no patching if `custom_appinfos_patch_appname` custom option is truthy
+    (emulates a *negated* [`CONFIG_APP_EXCLUDE_PROJECT_NAME_VAR` cppdefine
+    from ESP_IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-exclude-project-name-var))
+    [default: true]
+  - `custom_project_name` custom option
+    (emulates `PROJECT_NAME` cppdefine from ESP-IDF)
   - git-relative dirs of project root(`${PROJECT_SRC_DIR}`)
     (deviates from ESP-IDF)
-  - last dir-name of `${PROJECT_SRC_DIR}` (deviates ESP-IDF)
+  - last dir-name of project root (`${PROJECT_SRC_DIR}`)
+    (deviates from ESP-IDF)
   - `"firmware"`
-  - appends `{user}@{host}` suffix if `CONFIG_APP_APPEND_USER_HOST_IN_PROJECT_NAME`
-    cppdefine defined (deviates!)
+  - appends `{user}@{host}` suffix into *project-name*  if `custom_appinfos_patch_builder`
+    custom option is truthy
+    [default: true]
 
 - **project-version:**
-  - no patching if `CONFIG_APP_EXCLUDE_PROJECT_VER_VAR` cppdefine,
-    see: https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-project-ver-from-config
-  - `PROJECT_VERSION` cpp-define (mimics ESP-IDF)
+  - no patching if `custom_appinfos_patch_appver` custom option is truthy
+    (emulates a *negated* [`CONFIG_APP_EXCLUDE_PROJECT_VER_VAR` cppdefine
+    from ESP_IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-exclude-project-ver-var))
+    [default: true]
+  - `custom_project_version` custom option
+    (emulates `PROJECT_VERSION` cppdefine from ESP-IDF)
   - `${PROJECT_PATH}/version.txt` file in project root
-  - git describe
-  - `"1"`
+  - git describe (mimics ESP-IDF)
+  - `"1"` (mimics ESP-IDF)
   - does not respect ESP-IDF's *Kconfigs*:
     - `CONFIG_APP_PROJECT_VER_FROM_CONFIG`
     - `CONFIG_APP_PROJECT_VER`
     - see: https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/system/system.html#app-version
 
 - **build date/time:**
-  - no patching if `CONFIG_APP_COMPILE_TIME_DATE` cppdefine,
-    see: https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-project-ver-from-config
-  - `BUILD_DATE/BUILD_TIME` cpp-defines (deviates ESP-IDF)
-  - Python's `datetime.now()` (taken *after* firmware has been build, at the time the image is processed.
-  - does not respect ESP-IDF's *Kconfigs*:
+  - no patching if `custom_appinfos_patch_timestamp` custom option is truthy
+    (emulates [the `CONFIG_APP_COMPILE_TIME_DATE` cppdefine
+    from ESP_IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-exclude-project-ver-var))
+    [default: true]
+  - `custom_build_date/custom_build_time` custom options
+    (deviates ESP-IDF);
+  - Python's `datetime.now()` (taken *after* firmware has been build,
+    at the time the image is *post-processed*)
+  - does not respect ESP-IDF's *Kconfigs*.
 
-- Boolean cppdefines are considered false if defined but
-  are matched,case-insensitively, in :data:`FALSE_VALUES` by :func:`_get_bool_var()`.
+- Boolean config-options are considered false if defined but
+  are matched,case-insensitively, in :data:`FALSE_VALUES` by :func:`_get_bool_option()`.
 - Patching-offsets were calculated from:
   https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/system/app_image_format.html#_CPPv414esp_app_desc_t
 - TODO: mimic more behavior from ESP-IDF (eg Kconfigs).
@@ -77,7 +89,7 @@ except NameError:
 GIT_RELATIVE_DIR_CMD = "git rev-parse --show-prefix".split()
 #: The shell-command to collect the output of `git describe`.
 GIT_DESCRIBE_CMD = "git describe --always --long --dirty".split()
-#: values for cppdefines translated case-insensitively as `False`.
+#: values for config-options translated case-insensitively as `False`.
 FALSE_VALUES = {*"false off no 0".split()}
 #: to convert names into bytes
 ENCODING = "utf-8"
@@ -96,46 +108,28 @@ FILE_HASHING_ALGO = hashlib.sha256
 FILE_HASH_LENGTH = 32
 
 #%%
-def _cpp_defines(env):
-    build_flags = env.ParseFlags(env["BUILD_FLAGS"]) or {}
-    cppdefines = build_flags.get("CPPDEFINES") or {}
-    if cppdefines:
-        cppdefines = dict(
-            # Support "unvalued" defines, like `-DFOO`.
-            (kv_or_k, None) if isinstance(kv_or_k, str) else kv_or_k
-            for kv_or_k in cppdefines
-        )
-
-    return cppdefines
+from platformio.compat import MISSING
 
 
-def _get_var(varname: str, cppdefines: dict, default=None):
+def _get_bool_option(env, option: str, default=MISSING) -> bool:
     """
+    Translates custom-options in `platform.ini` as booleans
+
     :param default:
-        applies only if `varname` is missing from `cppdefines`.
-    """
-    return cppdefines.get(varname, default)
-
-
-def _get_bool_var(varname: str, cppdefines: dict, default=None) -> bool:
-    """
-    :param default:
-        applies only if `varname` undefined (ie missing from `cppdefines`),
+        applies only if `option` undefined (ie missing from `platform.io`),
         translated through :data:`FALSE_VALUES`.
     :return:
-        - `True` if `varname` just defined (ie present but its value is `None`),
-        - `default` if undefined (ie `varname` missing),
-        - otherwise, the value for `varname`.
+        - if undefined (ie `option` missing): `default` if given, exception otherwise
+        - if `option` defined but without any value specified: `True`
+        - otherwise: the value for `option`.
 
-        Any value from above return `False` if in :data:`FALSE_VALUES`.
+        If option value (or `default`) matches any of :data:`FALSE_VALUES`
+        (case-insensitevly), `False` returned.
     """
-    if varname not in cppdefines:
-        res = default
-    else:
-        res = cppdefines[varname]
-        if res is None:
-            return True  # something like `-Dfoo`
-    return res.lower() not in FALSE_VALUES if isinstance(res, str) else res
+    value = env.GetProjectOption(option, default)
+    if value == "":  # something like `-Dfoo`
+        return True
+    return value.lower() not in FALSE_VALUES if isinstance(value, str) else value
 
 
 def _read_version_from_file(env) -> str:
@@ -144,10 +138,12 @@ def _read_version_from_file(env) -> str:
         with io.open(ver_fpath, "rt") as fd:
             return fd.read().strip()
     except Exception as ex:
-        sys.stderr.write(
-            f"could not read project-version from file '{ver_fpath}'"
-            f" due to {type(ex).__name__}: {ex}\n"
-        )
+        ## Logging source of each app-ingo
+        pass
+        # sys.stderr.write(
+        #     f"could not read project-version from file '{ver_fpath}'"
+        #     f" due to {type(ex).__name__}: {ex}\n"
+        # )
 
 
 def git_relative_dir() -> str:
@@ -167,30 +163,45 @@ def git_describe():
     try:
         return subprocess.check_output(GIT_DESCRIBE_CMD).strip().decode(ENCODING)
     except Exception as ex:
+        ## Logging source of each app-ingo
         pass
-        sys.stderr.write(
-            f"could not read project-version from `{GIT_DESCRIBE_CMD}`"
-            f" due to {type(ex).__name__}: {ex}\n"
-        )
+        # sys.stderr.write(
+        #     f"could not read project-version from `{GIT_DESCRIBE_CMD}`"
+        #     f" due to {type(ex).__name__}: {ex}\n"
+        # )
+
+
+def fallback_get(*getters: tuple[callable, str]):
+    for getter, label in getters:
+        value = getter()
+        if value is not None:
+            return value, label
 
 
 AppInfos = namedtuple("AppInfos", "name, version, date, time")
 
 
-def _collect_image_infos(env) -> AppInfos:
-    cppdefines = _cpp_defines(env)
-    my_get_var = functools.partial(_get_var, cppdefines=cppdefines)
-    my_get_bool_var = functools.partial(_get_bool_var, cppdefines=cppdefines)
+def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
+    bool_option = functools.partial(_get_bool_option, env)
     appname = version = date = time = None
+    appname_src = version_src = date_src = time_src = None
 
-    if not my_get_bool_var("CONFIG_APP_EXCLUDE_PROJECT_NAME_VAR"):
-        appname = (
-            my_get_var("PROJECT_NAME")
-            or git_relative_dir()
-            or env.Dir(env.get("PROJECT_SRC_DIR")).get_path_elements()[-1].name
-            or "firmware"
+    if bool_option("custom_appinfos_patch_appname", True):
+        appname, appname_src = fallback_get(
+            (
+                lambda: env.GetProjectOption("custom_project_name", None),
+                "custom_option",
+            ),
+            (lambda: git_relative_dir(), "git_relative_dir"),
+            (
+                lambda: env.Dir(env.get("PROJECT_SRC_DIR"))
+                .get_path_elements()[-1]
+                .name,
+                "project_dir",
+            ),
+            (lambda: "firmware", "fixed"),
         )
-        if my_get_bool_var("CONFIG_APP_APPEND_USER_HOST_IN_PROJECT_NAME"):
+        if bool_option("custom_appinfos_patch_builder", True):
             import getpass
             import socket
 
@@ -199,26 +210,38 @@ def _collect_image_infos(env) -> AppInfos:
             appname = f"{appname}({user}@{host})"
 
     ## TODO: parse var-value as False if off/false/no/0.
-    if not my_get_bool_var("CONFIG_APP_EXCLUDE_PROJECT_VER_VAR"):
-        version = (
-            my_get_var("PROJECT_VERSION")
-            or _read_version_from_file(env)
-            or git_describe()
+    if bool_option("custom_appinfos_patch_appver", True):
+        version, version_src = fallback_get(
+            (
+                lambda: env.GetProjectOption("custom_project_version", None),
+                "custom_option",
+            ),
+            (lambda: _read_version_from_file(env), "version_file"),
+            (lambda: git_describe(), "git_describe"),
             ## TODO: mimic ESP_IDF fallback, by reading "1" from Kconfig.
-            or "1"
+            (lambda: "1", "fixed"),
         )
 
     ## TODO: parse var-value as False if off/false/no/0.
-    if my_get_bool_var("CONFIG_APP_COMPILE_TIME_DATE", default=True):
-        date = my_get_var("BUILD_DATE")
-        time = my_get_var("BUILD_TIME")
-        now = datetime.now(datetime.utcnow().astimezone().tzinfo)
-        if not date:
-            date = now.strftime("%d %b %Y")
-        if not time:
-            time = now.strftime("%H:%M:%S%z")
+    if bool_option("custom_appinfos_patch_timestamp", True):
+        date = env.GetProjectOption("custom_build_date", None)
+        time = env.GetProjectOption("custom_build_time", None)
+        if not date or not time:
+            now = datetime.now(datetime.utcnow().astimezone().tzinfo)
+            if not date:
+                date = now.strftime("%d %b %Y")
+                date_src = "python"
+            else:
+                date_src = "custom_option"
+            if not time:
+                time = now.strftime("%H:%M:%S%z")
+                time_src = "python"
+            else:
+                time_src = "custom_option"
 
-    return AppInfos(appname, version, date, time)
+    return AppInfos(appname, version, date, time), AppInfos(
+        appname_src, version_src, date_src, time_src
+    )
 
 
 #%%
@@ -322,9 +345,7 @@ def hash_image(fd: typing.BinaryIO, patch=None):
             )
 
 
-Image = namedtuple(
-    "Image", "nsegments, is_hashed, checksum, hash, infos"
-)
+Image = namedtuple("Image", "nsegments, is_hashed, checksum, hash, infos")
 
 
 def load_and_verify_image(fd: typing.BinaryIO) -> Image:
@@ -362,37 +383,40 @@ def load_and_verify_image(fd: typing.BinaryIO) -> Image:
 
 
 def patch_bytestring(
-    fd: typing.BinaryIO, label: str, seek: int, length: int, data: str
+    fd: typing.BinaryIO, label: str, seek: int, length: int, data: str, source: str
 ):
     bdata = struct.pack(f"{length}sb", data.encode(ENCODING), 0)
-    print(f"  +--{label:10}({length + 1}bytes@0x{seek:08x}): {data}")
+    print(
+        f"  +--{label:10}({length + 1}bytes@0x{seek:08x} from {source:14}): |{data.strip()}|"
+    )
     fd.seek(seek)
     fd.write(bdata)
 
 
-AppInfos = namedtuple("AppInfos", "name, version, date, time")
-
-
-def patch_bytestring_with_infos(fd: typing.BinaryIO, img_infos: AppInfos) -> bool:
-    if any(img_infos):
-        if img_infos.version:
-            patch_bytestring(fd, "app_ver", 0x30, 30, img_infos.version)
-        if img_infos.name:
-            patch_bytestring(fd, "app_name", 0x50, 30, img_infos.name)
-        if img_infos.date or img_infos.time:
-            patch_bytestring(fd, "build_time", 0x70, 14, img_infos.time)
-            patch_bytestring(fd, "build_date", 0x80, 14, img_infos.date)
+def patch_bytestring_with_infos(
+    fd: typing.BinaryIO, app_infos: AppInfos, sources: AppInfos
+) -> bool:
+    if any(app_infos):
+        if app_infos.version:
+            patch_bytestring(
+                fd, "app_ver", 0x30, 30, app_infos.version, sources.version
+            )
+        if app_infos.name:
+            patch_bytestring(fd, "app_name", 0x50, 30, app_infos.name, sources.name)
+        if app_infos.date or app_infos.time:
+            patch_bytestring(fd, "build_time", 0x70, 14, app_infos.time, sources.time)
+            patch_bytestring(fd, "build_date", 0x80, 14, app_infos.date, sources.date)
 
         return True
     else:
         print("  +--no image-infos enabled to patch!")
 
 
-def patch_image_infos(img_fpath, img_infos: AppInfos):
+def patch_app_infos(img_fpath, app_infos: AppInfos, sources: AppInfos):
     print(f"Patching app-infos --> {img_fpath}:")
     with io.open(img_fpath, "r+b") as fd:
         img = load_and_verify_image(fd)
-        is_patched = patch_bytestring_with_infos(fd, img_infos)
+        is_patched = patch_bytestring_with_infos(fd, app_infos, sources)
         if is_patched:
             checksum_image(fd, img.nsegments, patch=True)
             if img.is_hashed:
@@ -403,8 +427,8 @@ def PatchAppInfos(source, target, env):
     img_fpath = source[0].path
     ## DEBUG: keep a copy of unpatched image.
     # shutil.copy(img_fpath, img_fpath + ".OK")
-    img_infos = _collect_image_infos(env)
-    patch_image_infos(img_fpath, img_infos)
+    app_infos, sources = _collect_app_infos(env)
+    patch_app_infos(img_fpath, app_infos, sources)
 
 
 patch_action = env.AddCustomTarget(
@@ -425,6 +449,7 @@ def DumpAppInfos(source, target, env):
         img = load_and_verify_image(fd)
 
     print(img.infos._asdict())
+
 
 env.Default(patch_action)
 
