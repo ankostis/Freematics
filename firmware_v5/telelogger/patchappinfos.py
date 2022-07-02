@@ -20,7 +20,7 @@ as listed below (in precedance order):
     (emulates a *negated* [`CONFIG_APP_EXCLUDE_PROJECT_NAME_VAR` cppdefine
     from ESP_IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-exclude-project-name-var))
     [default: true]
-  - `custom_project_name` custom option
+  - `custom_prog_name` custom option
     (emulates `PROJECT_NAME` cppdefine from ESP-IDF)
   - git-relative dirs of project root(`${PROJECT_SRC_DIR}`)
     (deviates from ESP-IDF)
@@ -36,7 +36,7 @@ as listed below (in precedance order):
     (emulates a *negated* [`CONFIG_APP_EXCLUDE_PROJECT_VER_VAR` cppdefine
     from ESP_IDF](https://docs.espressif.com/projects/esp-idf/en/v4.4.1/esp32/api-reference/kconfig.html#config-app-exclude-project-ver-var))
     [default: true]
-  - `custom_project_version` custom option
+  - `custom_prog_version` custom option
     (emulates `PROJECT_VERSION` cppdefine from ESP-IDF)
   - `${PROJECT_PATH}/version.txt` file in project root
   - git describe (mimics ESP-IDF)
@@ -77,18 +77,11 @@ from collections import namedtuple
 from pathlib import Path
 from datetime import datetime
 
-try:
-    Import("env")
-except NameError:
-    from unittest.mock import MagicMock
-
-    env = MagicMock()
+import progname
 
 
 #: Git command to show relative-dir of the current project, to use as project-name.
 GIT_RELATIVE_DIR_CMD = "git rev-parse --show-prefix".split()
-#: The shell-command to collect the output of `git describe`.
-GIT_DESCRIBE_CMD = "git describe --always --long --dirty".split()
 #: values for config-options translated case-insensitively as `False`.
 FALSE_VALUES = {*"false off no 0".split()}
 #: to convert names into bytes
@@ -132,20 +125,6 @@ def _get_bool_option(env, option: str, default=MISSING) -> bool:
     return value.lower() not in FALSE_VALUES if isinstance(value, str) else value
 
 
-def _read_version_from_file(env) -> str:
-    try:
-        ver_fpath = env.subst("${PROJECT_PATH}/version.txt")
-        with io.open(ver_fpath, "rt") as fd:
-            return fd.read().strip()
-    except Exception as ex:
-        ## Logging source of each app-ingo
-        pass
-        # sys.stderr.write(
-        #     f"could not read project-version from file '{ver_fpath}'"
-        #     f" due to {type(ex).__name__}: {ex}\n"
-        # )
-
-
 def git_relative_dir() -> str:
     try:
         return subprocess.check_output(
@@ -159,48 +138,38 @@ def git_relative_dir() -> str:
         #     f" due to {type(ex).__name__}: {ex}\n"
         # )
 
-def git_describe():
-    try:
-        return subprocess.check_output(GIT_DESCRIBE_CMD).strip().decode(ENCODING)
-    except Exception as ex:
-        ## Logging source of each app-ingo
-        pass
-        # sys.stderr.write(
-        #     f"could not read project-version from `{GIT_DESCRIBE_CMD}`"
-        #     f" due to {type(ex).__name__}: {ex}\n"
-        # )
 
 
-def fallback_get(*getters: tuple[callable, str]):
-    for getter, label in getters:
-        value = getter()
-        if value is not None:
-            return value, label
+def get_project_name(env) -> tuple[str, str]:
+    """
+    :return: 2-tuple of (project, source-label)
+
+    Note, didn't reuse :func:`get_program_name()` bc app-infos can accomodate
+    relative git-path of project-root as `appname`.
+    """
+    return progname.fallback_get(
+        (
+            lambda: env.GetProjectOption(progname.PROG_NAME_OPTION, None),
+            "custom_option",
+        ),
+        (lambda: git_relative_dir(), "git_relative_dir"),
+        (
+            lambda: env.Dir(env.get("PROJECT_SRC_DIR")).get_path_elements()[-1].name,
+            "project_dir",
+        ),
+    )
 
 
-AppInfos = namedtuple("AppInfos", "name, version, date, time")
+AppInfos = namedtuple("AppInfos", "appname, appver, date, time")
 
 
 def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
     bool_option = functools.partial(_get_bool_option, env)
-    appname = version = date = time = None
-    appname_src = version_src = date_src = time_src = None
+    appname = appver = date = time = None
+    appname_src = appver_src = date_src = time_src = None
 
     if bool_option("custom_appinfos_patch_appname", True):
-        appname, appname_src = fallback_get(
-            (
-                lambda: env.GetProjectOption("custom_project_name", None),
-                "custom_option",
-            ),
-            (lambda: git_relative_dir(), "git_relative_dir"),
-            (
-                lambda: env.Dir(env.get("PROJECT_SRC_DIR"))
-                .get_path_elements()[-1]
-                .name,
-                "project_dir",
-            ),
-            (lambda: "firmware", "fixed"),
-        )
+        appname, appname_src = get_project_name(env)
         if bool_option("custom_appinfos_patch_builder", True):
             import getpass
             import socket
@@ -211,16 +180,7 @@ def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
 
     ## TODO: parse var-value as False if off/false/no/0.
     if bool_option("custom_appinfos_patch_appver", True):
-        version, version_src = fallback_get(
-            (
-                lambda: env.GetProjectOption("custom_project_version", None),
-                "custom_option",
-            ),
-            (lambda: _read_version_from_file(env), "version_file"),
-            (lambda: git_describe(), "git_describe"),
-            ## TODO: mimic ESP_IDF fallback, by reading "1" from Kconfig.
-            (lambda: "1", "fixed"),
-        )
+        appver, appver_src = progname.get_program_ver(env)
 
     ## TODO: parse var-value as False if off/false/no/0.
     if bool_option("custom_appinfos_patch_timestamp", True):
@@ -239,8 +199,8 @@ def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
             else:
                 time_src = "custom_option"
 
-    return AppInfos(appname, version, date, time), AppInfos(
-        appname_src, version_src, date_src, time_src
+    return AppInfos(appname, appver, date, time), AppInfos(
+        appname_src, appver_src, date_src, time_src
     )
 
 
@@ -375,8 +335,8 @@ def load_and_verify_image(fd: typing.BinaryIO) -> Image:
         hash = hash_image(fd)
 
     fd.seek(ESP_APP_DESC_OFFSET)
-    (version, name, time, date) = struct.unpack("32s 32s 16s 16s", fd.read(96))
-    return Image(nsegments, is_hashed, chk, hash, AppInfos(name, version, date, time))
+    (appver, name, time, date) = struct.unpack("32s 32s 16s 16s", fd.read(96))
+    return Image(nsegments, is_hashed, chk, hash, AppInfos(name, appver, date, time))
 
 
 #%%
@@ -397,12 +357,12 @@ def patch_bytestring_with_infos(
     fd: typing.BinaryIO, app_infos: AppInfos, sources: AppInfos
 ) -> bool:
     if any(app_infos):
-        if app_infos.version:
+        if app_infos.appver:
+            patch_bytestring(fd, "app_ver", 0x30, 30, app_infos.appver, sources.appver)
+        if app_infos.appname:
             patch_bytestring(
-                fd, "app_ver", 0x30, 30, app_infos.version, sources.version
+                fd, "app_name", 0x50, 30, app_infos.appname, sources.appname
             )
-        if app_infos.name:
-            patch_bytestring(fd, "app_name", 0x50, 30, app_infos.name, sources.name)
         if app_infos.date or app_infos.time:
             patch_bytestring(fd, "build_time", 0x70, 14, app_infos.time, sources.time)
             patch_bytestring(fd, "build_date", 0x80, 14, app_infos.date, sources.date)
@@ -431,34 +391,39 @@ def PatchAppInfos(source, target, env):
     patch_app_infos(img_fpath, app_infos, sources)
 
 
-patch_action = env.AddCustomTarget(
-    "patchappinfos",
-    "$BUILD_DIR/${PROGNAME}.bin",
-    PatchAppInfos,
-    title="Engarve image with app-infos",
-    description="Patch `${PROGNAME}.bin` with project name/version & build timestamp",
-    always_build=True,
-)
-env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", patch_action)
-env.Depends(target = "upload", dependency=patch_action)
+def install_patch_app_infos(env):
+    patch_action = env.AddCustomTarget(
+        "patchappinfos",
+        "$BUILD_DIR/${PROGNAME}.bin",
+        PatchAppInfos,
+        title="Engarve image with app-infos",
+        description="Patch `${PROGNAME}.bin` with project name/version & build timestamp",
+        always_build=True,
+    )
+    env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", patch_action)
+    env.Depends(target = "upload", dependency=patch_action)
+
+    def DumpAppInfos(source, target, env):
+        img_fpath = source[0].path
+        with io.open(img_fpath, "rb") as fd:
+            img = load_and_verify_image(fd)
+
+        print(img.infos._asdict())
+
+    env.Default(patch_action)
+
+    ## TODO: make DumpAppInfos a new CLI
+    patch_action = env.AddCustomTarget(
+        "appinfos",
+        "$BUILD_DIR/${PROGNAME}.bin",
+        DumpAppInfos,
+        title="Dump app-infos in image",
+        description="Dump project name/version & build timestamp engraved in `${PROGNAME}.bin`",
+        always_build=True,
+    )
 
 
-def DumpAppInfos(source, target, env):
-    img_fpath = source[0].path
-    with io.open(img_fpath, "rb") as fd:
-        img = load_and_verify_image(fd)
+if __name__ == "SCons.Script":
+    Import("env")
 
-    print(img.infos._asdict())
-
-
-env.Default(patch_action)
-
-## TODO: make DumpAppInfos a new CLI
-patch_action = env.AddCustomTarget(
-    "appinfos",
-    "$BUILD_DIR/${PROGNAME}.bin",
-    DumpAppInfos,
-    title="Dump app-infos in image",
-    description="Dump project name/version & build timestamp engraved in `${PROGNAME}.bin`",
-    always_build=True,
-)
+    install_patch_app_infos(env)

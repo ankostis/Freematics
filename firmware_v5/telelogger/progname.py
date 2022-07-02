@@ -20,9 +20,6 @@ import io
 import subprocess
 
 
-Import("env")
-
-
 #: The custom-option that when defined, modifies the program-version.
 PROG_NAME_OPTION = "custom_prog_name"
 #: The custom-option that when defined, modifies the program-version.
@@ -111,4 +108,7 @@ def rename_progname(env):
     env.Replace(PROGNAME=progname)
 
 
-rename_progname(env)
+if __name__ == "SCons.Script":
+    Import("env")
+
+    rename_progname(env)
