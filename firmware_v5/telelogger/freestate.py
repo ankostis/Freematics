@@ -7,7 +7,7 @@ SYNTAX:
 
 EXAMPLE:
     ./freestate.py 0x23c
-    STATE:  0x23c --> 0000_0010_0011_1100
+    FREESTATE:  0x23c --> 0000_0010_0011_1100
     0(   0x4): GPS_READY
     1(   0x8): MEMS_READY
     2(  0x10): NET_READY
@@ -36,24 +36,24 @@ flags = {
 
 def state_flag_n_names(state: int):
     for i in range(16):
-        flag = (1 << i)
+        flag = 1 << i
         if state & flag:
-            yield flag, flags.get(flag, '-')
+            yield flag, flags.get(flag, "-")
 
 
 try:
     from platformio.commands.device import DeviceMonitorFilter
     import re
 
-    state_re = re.compile("(?i)(?<=state: )([0-9a-f]+)")
+    state_re = re.compile(r'(?:state: "?(?:0x)?)([0-9a-fA-F]+)\b')
 
     def expand_state(match):
-        hex_state = match.group(1)
-        state = int(hex_state, 16)
+        matched_state = match.group(1)
+        state = int(matched_state, 16)
         names = "|".join(t[1] for t in state_flag_n_names(state))
-        return f"(0x{hex_state}: {names})"
+        return f"state: ({state:#x}: {names})"
 
-    class Freematics(DeviceMonitorFilter):
+    class FreematicsStateMonFilter(DeviceMonitorFilter):
         NAME = "freestate"
 
         def __init__(self, *args, **kwargs):
@@ -67,10 +67,11 @@ except ImportError:
     pass
 
 
-def main(hex_state: str):
-    state = int(hex_state, 16)
+def main(str_num: str):
+    is_hex = str_num.strip().startswith("0x") or (set(str_num) & set("abcdef"))
+    state = int(str_num, (16 if is_hex else 10))
 
-    print(f"STATE: {state:#6x} --> {state:019_b}")
+    print(f"FREESTATE: {state}/{state:#x} --> {state:019_b}")
     for i, (flag, name) in enumerate(state_flag_n_names(state)):
         print(f"{i}({flag:#6x}): {name}")
 

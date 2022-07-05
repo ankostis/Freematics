@@ -138,6 +138,7 @@ node_info_t node_info{
     | ((_NEED_SPIFFS && 1) << 7)
     | ((ENABLE_MULTILOG && 1) << 8)
   | ((USE_ESP_IDF_LOG && 1) << 9)
+  | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
     ),
   .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
   .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
