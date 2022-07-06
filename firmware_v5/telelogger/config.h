@@ -128,7 +128,7 @@
  * so better disable logs completely for really mute firmware!
  * TODO: pin-disabled certain error-logs, to avoid leaking sensitive secrets.
  *
- * See also `NodeInfo:erase_sensitive_fields()`
+ * See also `NodeInfo:hide_sensitive_node_infos()`
  */
 #define HIDE_SECRETS_IN_LOGS 0
 

@@ -40,18 +40,29 @@
 #include <json.hpp>
 #include <NodeInfo.h>
 
+std::string _jdump(const nlohmann::ordered_json &j) {
+  /**
+   * Without it, bad UTF-8 strings not sanitized while building JSON
+   * crash later on `json.dump()`,
+   * see https://github.com/nlohmann/json/issues/1198
+   */
+  constexpr const auto bad_utf8_is_ok = nlohmann::detail::error_handler_t::replace;
+  return j.dump(2, ' ', false,  bad_utf8_is_ok);
+}
+void test_sys_info() {
+  nlohmann::ordered_json fixed_info_j = _hw_info_as_json();
+  ESP_LOGE(TAG, "HW:\n%s", _jdump(fixed_info_j).c_str());
 
-void test_sys_info()
-{
-  std::string node_info = generate_node_infos();
-  ESP_LOGE(TAG, "STR:\n%s", node_info.c_str());
+  node_info_t node_info{};
+  nlohmann::ordered_json status_j = node_status_to_json(node_info);
+  ESP_LOGE(TAG, "STATUS:\n%s", _jdump(status_j).c_str());
 
-  nlohmann::json node_info_j = nlohmann::json::parse(node_info);
-  ESP_LOGE(TAG, "JSON:\n%s", node_info_j.dump(2).c_str());
+  const auto info_j = node_info_to_json(node_info);
+  ESP_LOGE(TAG, "JSON:\n%s", _jdump(info_j).c_str());
 
 #if HIDE_SECRETS_IN_LOGS
-  erase_sensitive_fields(node_info_j);
-  ESP_LOGE(TAG, "JSON HIDDEN:\n%s", node_info_j.dump(2).c_str());
+  hide_sensitive_node_infos(info_j);
+  ESP_LOGE(TAG, "JSON HIDDEN:\n%s", _jdump(info_j).c_str());
 #endif // HIDE_SECRETS_IN_LOGS
 }
 

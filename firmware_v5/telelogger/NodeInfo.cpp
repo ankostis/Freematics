@@ -17,21 +17,28 @@
 
 #include "config.h"
 #include "NodeInfo.h"
+#include <hexbin.h>
 
 #include <Esp.h>
 #include <esp_app_format.h>
 #include <esp_log.h>
 #include <esp_ota_ops.h>
 #include <esp_system.h>
+#include <esp_heap_caps.h>
+#include <bootloader_common.h>
 #include <soc/rtc.h>
 
 #include <cstring>
+#include <iomanip>
 #include <json.hpp>
-#include <string>
+#include <sstream>
+#include <tuple>
+#include <vector>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #include "esp32/himem.h"
 #endif
+
 
 void mac_to_device_id(const uint64_t mac, char *device_id) {
   uint64_t seed = mac >> 8;
@@ -61,108 +68,157 @@ void mac_to_device_id(const uint64_t mac, char *device_id) {
   device_id[8] = 0;
 }
 
-std::string generate_node_infos() {
-  char devid[12];
 
-  uint64_t mac = ESP.getEfuseMac();
-  mac_to_device_id(mac, devid);
-  uint32_t PartitionSize = esp_ota_get_running_partition()->size; // +395 from build report
-  uint32_t SketchSize = ESP.getSketchSize();
+const PartInfos collect_ota_partition_records() {
+  esp_partition_iterator_t it = esp_partition_find(
+      ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, nullptr);
+  PartInfos precs;
+  while (it) {
+    const esp_partition_t *part{};
+    if ((part = esp_partition_get(it))) {
+      esp_ota_img_states_t state{};
+      if (esp_ota_get_state_partition(part, &state) == ESP_OK) {
+        esp_app_desc_t desc{};
+        // Err ignored, check magic instead.
+        esp_ota_get_partition_description(part, &desc);
+        precs.push_back(PartRec(part, desc, state));
+      }
+    }
+    it = esp_partition_next(it);
+  }
+  esp_partition_iterator_release(it);
 
-  uint32_t HeapSize = ESP.getHeapSize();
-  uint32_t HeapFree = ESP.getFreeHeap();
-  uint32_t HeapUsed = HeapSize - HeapFree;
+  return precs;
+}  // collect_ota_partition_records()
 
-#if BOARD_HAS_PSRAM
-  uint32_t PsramSize = ESP.getPsramSize();
-  uint32_t PsramFree = ESP.getFreePsram();
-  uint32_t PsramUsed =  PsramSize - PsramFree ;
-#if BOARD_HAS_PSRAM_HIGH
-  size_t PsramHighSize = esp_himem_get_phys_size();
-  size_t PsramHighFree = esp_himem_get_free_size();
-  size_t PsramHighUsed = PsramHighSize - PsramHighFree;
-#endif
-#endif
-  char buf[1024];
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wformat"
-  sprintf(buf,
-      "{"
-      "\n   \"device_id\": \"%s\""
-      ",\n      \"board\": \"%s-v%i@%ix%i\""
-      ",\n        \"mac\": \"0x%llX\""
-      ",\n      \"flash\": \"%iMiB@%iMHz\""
-      ",\n   \"slow_rtc\": \"%i@%iKHz\""
-      ",\n  \"esp32_sdk\": \"%s\""
-      ",\n    \"arduino\": \"%i.%i.%i\""
-      ",\n \"fw_version\": \"%s\""
-      ",\n \"sketch_elf\": \"%.7s-%lx\""  // sha256 is 32-bytes (not just 4)
-      ",\n \"build_date\": \"%s\""
-      ",\n   \"build_by\": \"%s@%s\""
-      ",\n  \"last_boot\": %i"
-      ",\n    \"partition_size\": %u"
-      ",\n       \"sketch_size\": %u"
-      ",\n     \"partition_use\": %.2f"
-      ",\n\"ota_partition_size\": %u"
-      ",\n       \"heap\": %u"
-      ",\n  \"heap_used\": %u"
-      ",\n   \"heap_use\": %.2f"
-#if BOARD_HAS_PSRAM
-      ",\n      \"psram\": %u"
-      ",\n \"psram_used\": %u"
-      ",\n  \"psram_use\": %.2f"
-#   if BOARD_HAS_PSRAM_HIGH
-      ",\n     \"psramh\": %u"
-      ",\n\"psramh_used\": %u"
-      ",\n \"psramh_use\": %.2f"
-#   endif
-#endif
-      "\n}"
-      , devid
-      , ESP.getChipModel()
-      , ESP.getChipRevision()
-      , ESP.getCpuFreqMHz()
-      , ESP.getChipCores()
-      , ESP.getEfuseMac()
-      , ESP.getFlashChipSize() >> 20
-      , ESP.getFlashChipSpeed() / 1000000
-      , rtc_clk_slow_freq_get()
-      , rtc_clk_slow_freq_get_hz() / 1000
-      , IDF_VER
-      , ESP_ARDUINO_VERSION_MAJOR
-      , ESP_ARDUINO_VERSION_MINOR
-      , ESP_ARDUINO_VERSION_PATCH
-      , GIT_DESCRIBE
-      , ESP.getSketchMD5().c_str()
-      , esp_ota_get_app_description()->app_elf_sha256
-      , __DATE__ " " __TIME__
-      , BUILD_USERNAME
-      , BUILD_HOSTNAME
-      , esp_reset_reason()
-      , PartitionSize
-      , SketchSize
-      , (100.0 * SketchSize / PartitionSize)
-      // NOTE: `ESP.getFreeSketchSpace()` brings next (OTA) partition's size
-      // (see espressif/arduino-esp32#3501
-      , ESP.getFreeSketchSpace()
-      , HeapSize
-      , HeapUsed
-      , (100.0 * HeapUsed / HeapSize)
-#if BOARD_HAS_PSRAM
-      , PsramSize  // not exactly 4MiB reported
-      , PsramUsed
-      , (100.0 * PsramUsed / PsramSize)
-#   if BOARD_HAS_PSRAM_HIGH
-      , PsramHighSize
-      , PsramHighUsed
-      , (100.0 * PsramHighUsed / PsramHighSize)
-#   endif  // BOARD_HAS_PSRAM_HIGH
-#endif  // BOARD_HAS_PSRAM
-  );
-#pragma GCC diagnostic pop
+static int ota_partition_index(const esp_partition_t *part, const PartInfos &precs) {
+  if (part) {
+    int i = 0;
+    for (const auto &prec : precs) {
+      if (part->address == std::get<0>(prec)->address) return i;
+      i++;
+    }
+  }
+  return -1;
+}
+
+
+nlohmann::ordered_json _partition_record_to_json(const PartRec &prec) {
+    const esp_partition_t *part = std::get<0>(prec);
+    const esp_app_desc_t desc = std::get<1>(prec);
+    const esp_ota_img_states_t state = std::get<2>(prec);
+
+    std::stringstream ss_ota_addr;
+    ss_ota_addr << part->label << ':' << "0x" << std::hex << part->address;
+    ss_ota_addr << ':' << part->size;
+
+    std::stringstream ss_ota_state;
+    ss_ota_state << "0x" << std::hex << state;
+
+    std::stringstream ss_app{};
+    std::stringstream ss_date{};
+    std::stringstream ss_sha256{};
+    if (desc.magic_word == ESP_APP_DESC_MAGIC_WORD) {
+
+      // Possibly non-UTF8 app-name/ver from bad partitions,
+      // json will crash on `dump()` unless `dump(error_handler=ignore/replace)`
+      // (see https://json.nlohmann.me/api/basic_json/error_handler_t/)
+      //
+      ss_app << desc.project_name << ':' << desc.version;
+      ss_date << desc.date << ", " << desc.time;
+
+      if (part->type == PART_TYPE_APP) {
+        // Adapted from `esp_ota_get_app_elf_sha256()`, to avoid sha256-recalc
+        // and read it from the (already validated) end of the partition image.
+        //
+        esp_image_metadata_t part_meta;
+        const esp_partition_pos_t part_pos{part->address, part->size};
+        if (
+          esp_image_get_metadata(&part_pos, &part_meta) == ESP_OK &&
+          part_meta.image.hash_appended
+        )
+          ncat_hex(ss_sha256, part_meta.image_digest, 4);
+      }  // endif invalid `esp_app_desc_t` struct
+    }
+
+
+    return {
+      {"part", ss_ota_addr.str()},
+      {"ota_state", ss_ota_state.str()},
+      {"app_desc", ss_app.str()},
+      {"build_date", ss_date.str()},
+      {"part_sha256", ss_sha256.str()},
+    };
+
+}  // _partition_record_to_json()
+
+
+/**
+ * - Private but non-static, to be testable.
+ *
+ * ATTENTION: rev1 devices (like the sample above), need the PSRAM workaround
+ * (`-mfix-esp32-psram-cache-issue`) if `-DBOARD_HAS_PSRAM` build-flag enabled.
+ * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1
+ */
+nlohmann::ordered_json _hw_info_as_json() {
+  std::stringstream ss_mac;
+  uint8_t mac_buf[8]{};
+  esp_efuse_mac_get_default(mac_buf);
+  cat_hex(ss_mac, mac_buf);
+
+  return {
+      {"board", std::string{ESP.getChipModel()} + "-v" +
+                    std::to_string(ESP.getChipRevision())},
+      {"cpu", std::to_string(ESP.getChipCores()) + "x" +
+                  std::to_string(ESP.getCpuFreqMHz()) + "MHz"},
+      {"mac", ss_mac.str()},
+      {"flash", std::to_string(ESP.getFlashChipSize() >> 20) + "MiB@" +
+                    std::to_string(ESP.getFlashChipSpeed() / 1000000) + "MHz"},
+      {"slow_rtc", std::to_string(rtc_clk_slow_freq_get()) + "@" +
+                       std::to_string(rtc_clk_slow_freq_get_hz() / 1000) +
+                       "KHz"},
+  };
+}  // _hw_info_as_json()
+
+nlohmann::ordered_json _fw_info_as_json(const macroflags_t macroflags,
+                                        const PartInfos precs) {
+  const esp_partition_t *run_part = esp_ota_get_running_partition();
+  const esp_partition_t *boot_part = esp_ota_get_boot_partition();
+  const esp_partition_t *upd_part = esp_ota_get_next_update_partition(run_part);
+
+  std::stringstream ss_parts_used;
+  // "ota_parts": "x%i, R%i, B%i, U%i"
+  ss_parts_used << "x" << (int)esp_ota_get_app_partition_count()
+                << ", R" << ota_partition_index(run_part, precs)
+                << ", B" << ota_partition_index(boot_part, precs)
+                << ", U" << ota_partition_index(upd_part, precs);
+
+  std::stringstream ss_arduino_ver;
+  ss_arduino_ver << ESP_ARDUINO_VERSION_MAJOR << "."
+                 << ESP_ARDUINO_VERSION_MINOR << "."
+                 << ESP_ARDUINO_VERSION_PATCH;
+
+  std::stringstream ss_macroflags;
+  ss_macroflags << "0x" << std::hex << macroflags;
+
+  auto partitions = nlohmann::ordered_json::array();
+  for (const auto &prec : precs){
+    partitions.push_back(_partition_record_to_json(prec));
+  }
+
+  return {
+      {"macroflags", ss_macroflags.str()},
+      {"esp32_ver", IDF_VER},
+      {"arduino_ver", ss_arduino_ver.str()},
+      {"ota_parts_used", ss_parts_used.str()},
+      {"partitions", partitions},
+  };
+}  // _fw_info_as_json()
+
 
 #if BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE
+void validate_psram_can_indeed_write() {
   ESP_LOGI(TAG, "Writing PSRAM to validate it...");
   uint32_t *ptr = (uint32_t *)ps_malloc(PsramSize);
   if (!ptr) {
@@ -187,68 +243,154 @@ std::string generate_node_infos() {
     ESP_LOGI(TAG, "OK @%iKB/s", PsramSize / (millis() - t));
   }
   free(ptr);
+}  // validate_psram_can_indeed_write()
 #endif  // BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE
 
-  return std::string{buf};
-}
 
-nlohmann::json node_info_to_json(const node_info_t &infos) {
-  nlohmann::json root;
+nlohmann::ordered_json node_status_to_json(const node_info_t &infos) {
+  // TODO: root["boot_count"] = boot_count
+  const uint32_t SketchSize = ESP.getSketchSize();
+  const uint32_t HeapFree = esp_get_minimum_free_heap_size();
+  const uint32_t HeapUsed = infos.heap_size - HeapFree;
+  multi_heap_info_t heap_info;
+  heap_caps_get_info(&heap_info, MALLOC_CAP_DEFAULT);
 
-  root["device_id"] = infos.device_id;
-  root["vin"] = infos.vin;
-  root["enable_flags"] = infos.enable_flags;
-  root["serial_autoconf_timeout"] = infos.serial_autoconf_timeout;
-  root["log_level_run"] = infos.log_level_run;
-  root["log_level_build"] = infos.log_level_build;
-  root["log_sink"] = infos.log_sink;
-  root["log_sink_fpath"] = infos.log_sink_fpath;
-  root["log_sink_disk_usage_purge_prcnt"] = infos.log_sink_disk_usage_purge_prcnt;
-  root["log_sink_sync_interval_ms"] = infos.log_sink_sync_interval_ms;
-  root["nslots"] = infos.nslots;
-  root["slot_len"] = infos.slot_len;
-  root["serialize_len"] = infos.serialize_len;
-  root["storage"] = infos.storage;
-  root["gnss"] = infos.gnss;
-  root["ota_url"] = infos.ota_url;
-  root["ota_update_cert_pem_len"] = std::strlen(infos.ota_update_cert_pem);
-  root["net_dev"] = infos.net_dev;
-  root["wifi_ssd"] = infos.wifi_ssd;
-  root["wifi_pwd"] = infos.wifi_pwd;
-  root["cell_apn"] = infos.cell_apn;
-  root["sim_card_pin"] = infos.sim_card_pin;
-  root["srv_proto"] = infos.srv_proto;
-  root["srv_host"] = infos.srv_host;
-  root["srv_path"] = infos.srv_path;
-  root["srv_port"] = infos.srv_port;
-  root["net_recv_timeout"] = infos.net_recv_timeout;
-  root["srv_sync_timeout"] = infos.srv_sync_timeout;
-  root["net_retries"] = infos.net_retries;
-  root["net_udp_reconnect_delay"] = infos.net_udp_reconnect_delay;
-  // root["stationary_timeout_vals"] = infos.stationary_timeout_vals;
-  root["obfcm_interval"] = infos.obfcm_interval;
-  root["obd_max_errors"] = infos.obd_max_errors;
-  root["ping_back_interval"] = infos.ping_back_interval;
-  root["wakeup_reset"] = infos.wakeup_reset;
-  root["wakeup_motion_thr"] = infos.wakeup_motion_thr;
-  root["wakeup_jumpstart_thr"] = infos.wakeup_jumpstart_thr;
-  root["cool_temp"] = infos.cool_temp;
-  root["cool_delay"] = infos.cool_delay;
-  root["pin_sensor1"] = infos.pin_sensor1;
-  root["pin_sensor2"] = infos.pin_sensor2;
+#if BOARD_HAS_PSRAM
+    const uint32_t psram_free = ESP.getFreePsram();
+    const uint32_t psram_used = infos.psram_size - psram_free;
+#if BOARD_HAS_PSRAM_HIGH
+  const size_t psramh_free = esp_himem_get_free_size();
+  const size_t psramh_used = infos.psramh_size - psramh_free;
+#endif
+#endif
 
-  return root;
+  return {
+  {"last_boot_reason", esp_reset_reason()},
+
+  {"part_size", infos.partition_size},
+  {"sketch_size", SketchSize},
+  {"part_use", (100.0 * SketchSize / infos.partition_size)},
+
+  {"heap_size", infos.heap_size},
+  {"heap_max_used", HeapUsed},
+  {"heap_max_use", (100.0 * HeapUsed / infos.heap_size)},
+  {"heap_free_min", HeapFree},
+  {"esp_get_free_heap_size", esp_get_free_heap_size()},
+  {"esp_get_free_internal_heap_size", esp_get_free_internal_heap_size()},
+  {"esp_get_minimum_free_heap_size", esp_get_minimum_free_heap_size()},
+  {"ESP_getHeapSize", ESP.getHeapSize()},
+  {"ESP_getFreeHeap", ESP.getFreeHeap()},
+  {"ESP_getMinFreeHeap", ESP.getMinFreeHeap()},
+  {"ESP_getMaxAllocHeap", ESP.getMaxAllocHeap()},
+
+  {"def_total_allocated_bytes", heap_info.total_allocated_bytes},
+  {"def_total_free_bytes", heap_info.total_free_bytes},
+  {"def_minimum_free_bytes", heap_info.minimum_free_bytes},
+  {"def_largest_free_block", heap_info.largest_free_block},
+
+#if BOARD_HAS_PSRAM
+    {"psram", psram_size},
+    {"psram_used", psram_used},
+    {"psram_use", (100.0 * psram_used / psram_size)},
+
+#if BOARD_HAS_PSRAM_HIGH
+  {"psramh", psramh_size},
+  {"psramh_used", psramh_used},
+  {"psramh_use", (100.0 * psramh_used / psramh_size)},
+#endif
+#endif
+  };
+}  // node_status_to_json()
+
+
+nlohmann::ordered_json node_info_to_json(const node_info_t &info) {
+  nlohmann::ordered_json cfg{
+      {"serial_autoconf_timeout", info.serial_autoconf_timeout},
+      {"log_level_run", info.log_level_run},
+      {"log_level_build", info.log_level_build},
+      {"log_sink", info.log_sink},
+      {"log_sink_fpath", info.log_sink_fpath},
+      {"log_sink_disk_usage_purge_prcnt", info.log_sink_disk_usage_purge_prcnt},
+      {"log_sink_sync_interval_ms", info.log_sink_sync_interval_ms},
+      {"nslots", info.nslots},
+      {"slot_len", info.slot_len},
+      {"serialize_len", info.serialize_len},
+      {"storage", info.storage},
+      {"gnss", info.gnss},
+      {"ota_url", info.ota_url},
+      {"ota_update_cert_pem_len", std::strlen(info.ota_update_cert_pem)},
+      {"net_dev", info.net_dev},
+      {"wifi_ssd", info.wifi_ssd},
+      {"wifi_pwd", info.wifi_pwd},
+      {"cell_apn", info.cell_apn},
+      {"sim_card_pin", info.sim_card_pin},
+      {"srv_proto", info.srv_proto},
+      {"srv_host", info.srv_host},
+      {"srv_path", info.srv_path},
+      {"srv_port", info.srv_port},
+      {"net_recv_timeout", info.net_recv_timeout},
+      {"srv_sync_timeout", info.srv_sync_timeout},
+      {"net_retries", info.net_retries},
+      {"net_udp_reconnect_delay", info.net_udp_reconnect_delay},
+      {"stationary_timeout_vals", info.stationary_timeout_vals},
+      {"data_interval_vals", info.data_interval_vals},
+      {"obfcm_interval", info.obfcm_interval},
+      {"obd_max_errors", info.obd_max_errors},
+      {"ping_back_interval", info.ping_back_interval},
+      {"wakeup_reset", info.wakeup_reset},
+      {"wakeup_motion_thr", info.wakeup_motion_thr},
+      {"wakeup_jumpstart_thr", info.wakeup_jumpstart_thr},
+      {"cool_temp", info.cool_temp},
+      {"cool_delay", info.cool_delay},
+      {"pin_sensor1", info.pin_sensor1},
+      {"pin_sensor2", info.pin_sensor2},
+  };
+
+  const PartInfos precs = collect_ota_partition_records();
+  const auto fw_j = _fw_info_as_json(info.macroflags, precs);
+
+  //// Place firmware name/version & build-date
+  //   at the top of the JSON.
+  //
+  const auto my_part = esp_ota_get_running_partition();
+  const int pi = ota_partition_index(my_part, precs);
+  std::string app_desc;
+  std::string build_date;
+  if (pi >= 0) {
+    const auto part_j = fw_j["partitions"].at(pi);
+    app_desc = part_j.value("app_desc", "");
+    build_date = part_j.value("build_date", "");
+  }
+
+  return {
+        {"device_id", info.device_id},
+        {"vin", info.vin},
+        {"app_desc", app_desc},
+        {"build_date", build_date},
+        {"vin", info.vin},
+        {"node_hw", _hw_info_as_json()},
+        {"node_fw", fw_j},
+        {"node_state", node_status_to_json(info)},
+        {"config", cfg},
+    };
 }
 
 #if HIDE_SECRETS_IN_LOGS
-void erase_sensitive_fields(nlohmann::json &infos) {
+void hide_sensitive_node_infos(nlohmann::ordered_json &infos) {
   constexpr const char *mask = "***";
-  infos["wifi_pwd"] = mask;
-  infos["cell_apn"] = apn2log;
-  infos["sim_card_pin"] = mask;
-  infos["srv_host"] = host2log;
-  infos["srv_path"] = mask;
-  infos["srv_port"] = 0;
-  infos["ota_url"] = ota_url2log;
-}
+  infos.update(
+      {
+          {"config",
+           {
+               {"wifi_pwd", mask},
+               {"cell_apn", apn2log},
+               {"sim_card_pin", mask},
+               {"srv_host", host2log},
+               {"srv_path", mask},
+               {"srv_port", 0},
+               {"ota_url", ota_url2log},
+           }},
+      },
+      /* (recursively) merge_objects */ true);
+}  // hide_sensitive_node_infos()
 #endif // HIDE_SECRETS_IN_LOGS

@@ -108,8 +108,26 @@ DS_CAN_MSG obdDataMulti[]=
   {0}
 };
 
+/**
+ * Without it, bad UTF-8 strings not sanitized while building JSON
+ * crash later on `json.dump()`,
+ * see https://github.com/nlohmann/json/issues/1198
+ */
+constexpr const auto json_dump_handler = nlohmann::detail::error_handler_t::replace;
+nlohmann::ordered_json node_info_j;
+// TODO: move node-info init into NodeInfo.cpp.
 node_info_t node_info{
-  .enable_flags = (
+  .partition_size = esp_ota_get_running_partition()->size,
+  .heap_size = esp_get_free_heap_size(),
+#if BOARD_HAS_PSRAM
+    .psram_size = ESP.getPsramSize(),
+#if BOARD_HAS_PSRAM_HIGH
+    .psramh_size = esp_himem_get_phys_size(),
+#endif // BOARD_HAS_PSRAM_HIGH
+#endif // BOARD_HAS_PSRAM
+
+  /** ATTENTION: increase `macroflags` size if more flags added. */
+  .macroflags = (
     ((ENABLE_OBD && 1) << 0)
     | ((ENABLE_MEMS && 1) << 1)
     | ((ENABLE_ORIENTATION && 1) << 2)
@@ -698,6 +716,13 @@ String executeCommand(const char* cmd)
   #endif
     teleClient.shutdown();
     esp_restart();
+
+  } else if (!strcmp(cmd, "INFO")) {
+    node_info_j = node_info_to_json(node_info);
+#if HIDE_SECRETS_IN_LOGS
+    hide_sensitive_node_infos(node_info_j);
+#endif // HIDE_SECRETS_IN_LOGS
+    result = node_info_j.dump(2, ' ', false, json_dump_handler).c_str();
 
 #if ENABLE_OTA_UPDATE
   } else if (!strcmp(cmd, "OTA") || !strncmp(cmd, "OTA ", 4)) {
@@ -1477,23 +1502,22 @@ void setup()
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
-   // generate unique device ID
-    mac_to_device_id(ESP.getEfuseMac(), node_info.device_id);  // TODO: encapsulate
-    std::string hw_infos = generate_node_infos();
-
 #if CONFIG_MODE_TIMEOUT
     configMode();
 #endif
 
-#if LOG_EXT_SENSORS
-    pinMode(PIN_SENSOR1, INPUT);
-    pinMode(PIN_SENSOR2, INPUT);
-#endif
-    nlohmann::json infos_j = node_info_to_json(node_info);
+    // generate unique device ID; TODO: encapsulate
+    mac_to_device_id(ESP.getEfuseMac(), node_info.device_id);
+
+    node_info_j = node_info_to_json(node_info);
 #if HIDE_SECRETS_IN_LOGS
-    erase_sensitive_fields(infos_j);
+    hide_sensitive_node_infos(node_info_j);
 #endif // HIDE_SECRETS_IN_LOGS
-    ESP_LOGE(TAG_INIT, "%s\n%s", hw_infos.c_str(), infos_j.dump(2).c_str());
+    ESP_LOGE(
+      TAG_INIT,
+      "NODE_INFO:\n%s",
+      node_info_j.dump(2, ' ', false, json_dump_handler).c_str()
+    );
     OLED_CLEAR();
     OLED_PRINTF(
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
@@ -1503,6 +1527,11 @@ void setup()
     if (sys.begin()) {
       ESP_LOGI(TAG_INIT, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
     }
+
+#if LOG_EXT_SENSORS
+    pinMode(PIN_SENSOR1, INPUT);
+    pinMode(PIN_SENSOR2, INPUT);
+#endif
 
 #if ENABLE_OBD
     obd.begin(sys.link);
