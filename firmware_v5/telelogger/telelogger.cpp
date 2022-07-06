@@ -743,6 +743,19 @@ String executeCommand(const char* cmd)
 
     if (!strncmp(subcmd, "SYNC ", 5) && subcmd[5]) {
       syncInterval = atoi(subcmd + 5);
+
+#if ENABLE_OTA_UPDATE
+    } else if (!strncmp(subcmd, "OTABOOT ", 8) && strlen(subcmd) == 9) {
+      const int partnum = subcmd[8] - '0';
+      auto part_recs = collect_ota_partition_records();
+      if (partnum >= 0 && partnum < part_recs.size()) {
+        auto part = std::get<0>(part_recs[partnum]);
+        if (esp_ota_set_boot_partition(part) == ESP_OK) result = "ERROR";
+      } else {
+        result = "ERROR";
+      }
+#endif  // ENABLE_OTA_UPDATE
+
     } else {
       result = "ERROR";
     }
