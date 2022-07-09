@@ -115,72 +115,7 @@ DS_CAN_MSG obdDataMulti[]=
  */
 constexpr const auto json_dump_handler = nlohmann::detail::error_handler_t::replace;
 nlohmann::ordered_json node_info_j;
-// TODO: move node-info init into NodeInfo.cpp.
-node_info_t node_info{
-  .partition_size = esp_ota_get_running_partition()->size,
-  .heap_size = esp_get_free_heap_size(),
-#if BOARD_HAS_PSRAM
-    .psram_size = ESP.getPsramSize(),
-#if BOARD_HAS_PSRAM_HIGH
-    .psramh_size = esp_himem_get_phys_size(),
-#endif // BOARD_HAS_PSRAM_HIGH
-#endif // BOARD_HAS_PSRAM
-
-  /** ATTENTION: increase `macroflags` size if more flags added. */
-  .macroflags = (
-    ((ENABLE_OBD && 1) << 0)
-    | ((ENABLE_MEMS && 1) << 1)
-    | ((ENABLE_ORIENTATION && 1) << 2)
-    | ((ENABLE_OLED && 1) << 3)
-    | ((ENABLE_BUZZING_INIT && 1) << 4)
-    | ((ENABLE_OTA_UPDATE && 1) << 5)
-    | ((_NEED_SD && 1) << 6)
-    | ((_NEED_SPIFFS && 1) << 7)
-    | ((ENABLE_MULTILOG && 1) << 8)
-  | ((USE_ESP_IDF_LOG && 1) << 9)
-  | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
-    ),
-  .serial_autoconf_timeout = CONFIG_MODE_TIMEOUT,
-  .log_level_run = RUNTIME_ALL_TAGS_LOG_LEVEL,
-  .log_level_build = CORE_DEBUG_LEVEL,
-  .log_sink = LOG_SINK,
-  .log_sink_fpath = LOG_SINK_FPATH,
-  .log_sink_disk_usage_purge_prcnt = LOG_SINK_DISK_USAGE_PURGE_RATIO,
-  .log_sink_sync_interval_ms = LOG_SINK_SYNC_INTERVAL_MS,
-  .nslots = BUFFER_SLOTS,
-  .slot_len = BUFFER_LENGTH,
-  .serialize_len = SERIALIZE_BUFFER_SIZE,
-  .storage = STORAGE,
-  /** NOTE: changes here, must convey to platformIO's monitor-filter. */
-  .gnss = GNSS,
-  .ota_url = OTA_UPDATE_URL,
-  .ota_update_cert_pem = OTA_UPDATE_CERT_PEM,
-  .net_dev = NET_DEVICE,
-  .wifi_ssd = (char*)WIFI_SSID,
-  .wifi_pwd = (char*)WIFI_PASSWORD,
-  .cell_apn = (char*)CELL_APN,
-  .sim_card_pin = (char*)SIM_CARD_PIN,
-  .srv_proto = SERVER_PROTOCOL,
-  .srv_host = (char*)SERVER_HOST,
-  .srv_path = (char*)SERVER_PATH,
-  .srv_port = SERVER_PORT,
-  .net_recv_timeout = DATA_RECEIVING_TIMEOUT,
-  .srv_sync_timeout = SERVER_SYNC_INTERVAL,
-  .net_retries = NET_CONNECT_RETRIES,
-  .net_udp_reconnect_delay = UDP_CONNECT_RETRY_DELAY_MS,
-  .stationary_timeout_vals = STATIONARY_TIME_TABLE,
-  .data_interval_vals = DATA_INTERVAL_TABLE,
-  .obfcm_interval = OBFCM_INTERVAL_MS,
-  .obd_max_errors = MAX_OBD_ERRORS,
-  .ping_back_interval = PING_BACK_INTERVAL,
-  .wakeup_reset = RESET_AFTER_WAKEUP,
-  .wakeup_motion_thr = MOTION_THRESHOLD,
-  .wakeup_jumpstart_thr = THR_VOLTAGE,
-  .cool_temp = COOLING_DOWN_TEMP,
-  .cool_delay = COOLING_DOWN_SLEEP_SEC,
-  .pin_sensor1 = PIN_SENSOR1,
-  .pin_sensor2 = PIN_SENSOR2,
-};
+node_info_t node_info;
 
 typedef struct {
   byte pid;
@@ -719,7 +654,7 @@ String executeCommand(const char* cmd)
     esp_restart();
 
   } else if (!strcmp(cmd, "INFO")) {
-    node_info_j = node_info_to_json(node_info);
+    node_info_j = node_info.to_json();
 #if HIDE_SECRETS_IN_LOGS
     hide_sensitive_node_infos(node_info_j);
 #endif // HIDE_SECRETS_IN_LOGS
@@ -1218,7 +1153,7 @@ void telemetry(void* inst)
 
       buffer->state = BUFFER_STATE_LOCKED;
 #if SERVER_PROTOCOL == PROTOCOL_UDP
-      store.header(node_info.device_id);
+      store.header(node_info.device_id.c_str());
 #endif
       store.timestamp(buffer->timestamp);
       buffer->serialize(store);
@@ -1520,10 +1455,7 @@ void setup()
     configMode();
 #endif
 
-    // generate unique device ID; TODO: encapsulate
-    mac_to_device_id(ESP.getEfuseMac(), node_info.device_id);
-
-    node_info_j = node_info_to_json(node_info);
+    node_info_j = node_info.to_json();
 #if HIDE_SECRETS_IN_LOGS
     hide_sensitive_node_infos(node_info_j);
 #endif // HIDE_SECRETS_IN_LOGS

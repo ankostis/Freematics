@@ -154,8 +154,8 @@ bool TeleClientUDP::verifyChecksum(char* data)
 
 bool TeleClientUDP::notify(byte event, const char* payload)
 {
-  char *devid = node_info.device_id;
-  char *vin = node_info.vin;
+  const char *devid = node_info.device_id.c_str();
+  const char *vin = node_info.vin;
   char buf[48];
   CStorageRAM netbuf;
   netbuf.init(128);
@@ -343,8 +343,9 @@ void TeleClientUDP::shutdown()
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
   char url[256];
-  snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s",
-      SERVER_PATH, node_info.device_id, (uint)event, (int)rssi, node_info.vin);
+  snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", SERVER_PATH,
+           node_info.device_id.c_str(), (uint)event, (int)rssi,
+           (const char *)node_info.vin);
   if (event == EVENT_LOGOUT) login = false;
   return net.send(METHOD_GET, url, true) && net.receive();
 }
@@ -358,7 +359,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     }
   }
 
-  char *devid = node_info.device_id;
+  const char *devid = node_info.device_id.c_str();
   char url[256];
   bool success;
   int len;

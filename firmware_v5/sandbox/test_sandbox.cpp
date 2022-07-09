@@ -50,14 +50,14 @@ std::string _jdump(const nlohmann::ordered_json &j) {
   return j.dump(2, ' ', false,  bad_utf8_is_ok);
 }
 void test_sys_info() {
-  nlohmann::ordered_json fixed_info_j = _hw_info_as_json();
+  node_info_t node_info;
+  const auto fixed_info_j = node_info.hw_info_to_json();
   ESP_LOGE(TAG, "HW:\n%s", _jdump(fixed_info_j).c_str());
 
-  node_info_t node_info{};
-  nlohmann::ordered_json status_j = node_status_to_json(node_info);
+  const auto status_j = node_info.node_state_to_json();
   ESP_LOGE(TAG, "STATUS:\n%s", _jdump(status_j).c_str());
 
-  const auto info_j = node_info_to_json(node_info);
+  const auto info_j = node_info.to_json();
   ESP_LOGE(TAG, "JSON:\n%s", _jdump(info_j).c_str());
 
 #if HIDE_SECRETS_IN_LOGS
