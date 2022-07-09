@@ -19,6 +19,8 @@ See https://docs.platformio.org/en/stable/scripting/examples/custom_program_name
 import io
 import subprocess
 
+from typing import Tuple
+
 
 #: The custom-option that when defined, modifies the program-version.
 PROG_NAME_OPTION = "custom_prog_name"
@@ -30,14 +32,14 @@ PROG_VERSION_FPATH = "${PROJECT_PATH}/version.txt"
 GIT_DESCRIBE_CMD = "git describe --always --long --dirty".split()
 
 
-def fallback_get(*getters: tuple[callable, str]):
+def fallback_get(*getters: Tuple[callable, str]):
     for getter, label in getters:
         value = getter()
         if value is not None:
             return value, label
 
 
-def get_program_name(env) -> tuple[str, str]:
+def get_program_name(env) -> Tuple[str, str]:
     """
     :return: 2-tuple of (project, source-label)
     """
@@ -81,7 +83,7 @@ def git_describe() -> str:
         # )
 
 
-def get_program_ver(env) -> tuple[str, str]:
+def get_program_ver(env) -> Tuple[str, str]:
     """
     :return: 2-tuple of (project_version, source-label)
     """

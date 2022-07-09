@@ -76,6 +76,7 @@ import typing
 from collections import namedtuple
 from pathlib import Path
 from datetime import datetime
+from typing import BinaryIO, Iterator, Tuple
 
 import progname
 
@@ -127,9 +128,11 @@ def _get_bool_option(env, option: str, default=MISSING) -> bool:
 
 def git_relative_dir() -> str:
     try:
-        return subprocess.check_output(
-            GIT_RELATIVE_DIR_CMD, universal_newlines=True
-        ).strip().strip("/")
+        return (
+            subprocess.check_output(GIT_RELATIVE_DIR_CMD, universal_newlines=True)
+            .strip()
+            .strip("/")
+        )
     except Exception as ex:
         ## Logging source of each app-ingo
         pass
@@ -139,8 +142,7 @@ def git_relative_dir() -> str:
         # )
 
 
-
-def get_project_name(env) -> tuple[str, str]:
+def get_project_name(env) -> Tuple[str, str]:
     """
     :return: 2-tuple of (project, source-label)
 
@@ -163,7 +165,7 @@ def get_project_name(env) -> tuple[str, str]:
 AppInfos = namedtuple("AppInfos", "appname, appver, date, time")
 
 
-def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
+def _collect_app_infos(env) -> Tuple[AppInfos, AppInfos]:
     bool_option = functools.partial(_get_bool_option, env)
     appname = appver = date = time = None
     appname_src = appver_src = date_src = time_src = None
@@ -208,8 +210,8 @@ def _collect_app_infos(env) -> tuple[AppInfos, AppInfos]:
 
 
 def chunks(
-    fd: typing.BinaryIO, length=None, *, chunk_size=io.DEFAULT_BUFFER_SIZE
-) -> typing.Iterator[bytes]:
+    fd: BinaryIO, length=None, *, chunk_size=io.DEFAULT_BUFFER_SIZE
+) -> Iterator[bytes]:
     """
     :param length:
         the total number of bytes to consume;  if `None`, exhaust stream,
@@ -232,7 +234,7 @@ def chunks(
 
 
 def digest_stream(
-    fd: typing.BinaryIO, digester_factory, length, chunk_size=io.DEFAULT_BUFFER_SIZE
+    fd: BinaryIO, digester_factory, length, chunk_size=io.DEFAULT_BUFFER_SIZE
 ) -> bytes:
     """
     :param length:
@@ -264,7 +266,7 @@ def align_file_position(f, size):
     f.seek(align, 1)
 
 
-def checksum_image(fd: typing.BinaryIO, nsegments: int, patch=None) -> int:
+def checksum_image(fd: BinaryIO, nsegments: int, patch=None) -> int:
     fd.seek(FIRST_SEGMENT_OFFSET)
     state = ESP_CHECKSUM_MAGIC
     for i in range(nsegments):
@@ -285,7 +287,7 @@ def checksum_image(fd: typing.BinaryIO, nsegments: int, patch=None) -> int:
     return state
 
 
-def hash_image(fd: typing.BinaryIO, patch=None):
+def hash_image(fd: BinaryIO, patch=None):
     fd.seek(0)
     hash = digest_stream(fd, FILE_HASHING_ALGO, -FILE_HASH_LENGTH)
     assert len(hash) == FILE_HASH_LENGTH, (hash, FILE_HASH_LENGTH)
@@ -308,7 +310,7 @@ def hash_image(fd: typing.BinaryIO, patch=None):
 Image = namedtuple("Image", "nsegments, is_hashed, checksum, hash, infos")
 
 
-def load_and_verify_image(fd: typing.BinaryIO) -> Image:
+def load_and_verify_image(fd: BinaryIO) -> Image:
     """Trimmed down from *esptool.py* and reading the specs."""
     fd.seek(0x00)
     (header_magic, nsegments, is_hashed) = struct.unpack("BB21xB", fd.read(24))
@@ -343,7 +345,7 @@ def load_and_verify_image(fd: typing.BinaryIO) -> Image:
 
 
 def patch_bytestring(
-    fd: typing.BinaryIO, label: str, seek: int, length: int, data: str, source: str
+    fd: BinaryIO, label: str, seek: int, length: int, data: str, source: str
 ):
     bdata = struct.pack(f"{length}sb", data.encode(ENCODING), 0)
     print(
@@ -354,7 +356,7 @@ def patch_bytestring(
 
 
 def patch_bytestring_with_infos(
-    fd: typing.BinaryIO, app_infos: AppInfos, sources: AppInfos
+    fd: BinaryIO, app_infos: AppInfos, sources: AppInfos
 ) -> bool:
     if any(app_infos):
         if app_infos.appver:
@@ -401,7 +403,7 @@ def install_patch_app_infos(env):
         always_build=True,
     )
     env.AddPostAction("$BUILD_DIR/${PROGNAME}.bin", patch_action)
-    env.Depends(target = "upload", dependency=patch_action)
+    env.Depends(target="upload", dependency=patch_action)
 
     def DumpAppInfos(source, target, env):
         img_fpath = source[0].path
