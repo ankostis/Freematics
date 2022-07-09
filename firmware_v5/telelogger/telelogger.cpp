@@ -684,7 +684,7 @@ String executeCommand(const char* cmd)
       const int partnum = subcmd[8] - '0';
       auto part_recs = collect_ota_partition_records();
       if (partnum >= 0 && partnum < part_recs.size()) {
-        auto part = std::get<0>(part_recs[partnum]);
+        auto part = part_recs[partnum].part;
         if (esp_ota_set_boot_partition(part) == ESP_OK) result = "ERROR";
       } else {
         result = "ERROR";

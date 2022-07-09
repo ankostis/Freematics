@@ -32,7 +32,6 @@
 #include <iomanip>
 #include <json.hpp>
 #include <sstream>
-#include <tuple>
 #include <vector>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
@@ -153,7 +152,7 @@ const PartInfos collect_ota_partition_records() {
         esp_app_desc_t desc{};
         // Err ignored, check magic instead.
         esp_ota_get_partition_description(part, &desc);
-        precs.push_back(PartRec(part, desc, state));
+        precs.push_back(PartRec{part, desc, state});
       }
     }
     it = esp_partition_next(it);
@@ -168,7 +167,7 @@ static int ota_partition_index(const esp_partition_t *part, const PartInfos &pre
   if (part) {
     int i = 0;
     for (const auto &prec : precs) {
-      if (part->address == std::get<0>(prec)->address) return i;
+      if (part->address == prec.part->address) return i;
       i++;
     }
   }
@@ -177,9 +176,9 @@ static int ota_partition_index(const esp_partition_t *part, const PartInfos &pre
 
 
 nlohmann::ordered_json _partition_record_to_json(const PartRec &prec) {
-    const esp_partition_t *part = std::get<0>(prec);
-    const esp_app_desc_t desc = std::get<1>(prec);
-    const esp_ota_img_states_t state = std::get<2>(prec);
+    const esp_partition_t *part = prec.part;
+    const esp_app_desc_t desc = prec.desc;
+    const esp_ota_img_states_t state = prec.state;
 
     std::stringstream ss_ota_addr;
     ss_ota_addr << part->label << ':' << "0x" << std::hex << part->address;

@@ -34,7 +34,6 @@
 #include <iomanip>
 #include <json.hpp>
 #include <sstream>
-#include <tuple>
 #include <vector>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
@@ -52,9 +51,13 @@
  */
 std::string mac_to_device_id(uint64_t max);
 
-// TODO: replace `PartRec` tuple with struct.
-using PartRec = std::tuple<const esp_partition_t *, const esp_app_desc_t, const esp_ota_img_states_t>;
+struct PartRec {
+  const esp_partition_t * part;
+  const esp_app_desc_t desc;
+  const esp_ota_img_states_t state;
+};
 using PartInfos = std::vector<PartRec>;
+// using Json = nlohmann::ordered_json;
 
 typedef uint16_t macroflags_t;
 struct node_info_t {
