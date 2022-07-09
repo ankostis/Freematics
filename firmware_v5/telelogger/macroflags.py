@@ -16,23 +16,26 @@ EXAMPLE:
 ## TODO: extract common script for this and `freestate.py`.
 import sys
 
+FLAG_NBYTES = 2
 flags = {
-    0x001: "ENABLE_OBD",
-    0x002: "ENABLE_MEMS",
-    0x004: "ENABLE_ORIENTATION",
-    0x008: "ENABLE_OLED",
-    0x010: "ENABLE_BUZZING_INIT",
-    0x020: "ENABLE_OTA_UPDATE",
-    0x040: "_NEED_SD",
-    0x080: "_NEED_SPIFFS",
-    0x100: "ENABLE_MULTILOG",
-    0x200: "USE_ESP_IDF_LOG",
-    0x400: "HIDE_SECRETS_IN_LOGS",
+    0x0001: "ENABLE_OBD",
+    0x0002: "ENABLE_MEMS",
+    0x0004: "ENABLE_ORIENTATION",
+    0x0008: "ENABLE_OLED",
+    0x0010: "ENABLE_BUZZING_INIT",
+    0x0020: "ENABLE_OTA_UPDATE",
+    0x0040: "_NEED_SD",
+    0x0080: "_NEED_SPIFFS",
+    0x0100: "ENABLE_MULTILOG",
+    0x0200: "USE_ESP_IDF_LOG",
+    0x0400: "HIDE_SECRETS_IN_LOGS",
+    0x0800: "BOARD_HAS_PSRAM",
+    0x1000: "BOARD_HAS_PSRAM_HIGH",
 }
 
 
 def state_flag_n_names(state: int):
-    for i in range(16):
+    for i in range(FLAG_NBYTES * 8):
         flag = 1 << i
         if state & flag:
             yield flag, flags.get(flag, "-")

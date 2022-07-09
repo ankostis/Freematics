@@ -89,6 +89,8 @@ node_info_t::node_info_t():
     | ((ENABLE_MULTILOG && 1) << 8)
     | ((USE_ESP_IDF_LOG && 1) << 9)
     | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
+    | ((BOARD_HAS_PSRAM && 1) << 11)
+    | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
   ),
   partition_size(esp_ota_get_running_partition()->size),
   sketch_size(ESP.getSketchSize()),

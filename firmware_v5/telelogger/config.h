@@ -330,4 +330,11 @@ inline constexpr const int port2log = SERVER_PORT;
 inline constexpr const char ota_url2log[] = OTA_UPDATE_URL;
 #endif
 
+#ifndef BOARD_HAS_PSRAM
+#define BOARD_HAS_PSRAM 0
+#endif
+#ifndef BOARD_HAS_PSRAM_HIGH
+#define BOARD_HAS_PSRAM_HIGH 0
+#endif
+
 #endif // CONFIG_H_INCLUDED
