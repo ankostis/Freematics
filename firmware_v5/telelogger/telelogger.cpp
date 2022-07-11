@@ -1131,7 +1131,7 @@ void telemetry(void* inst)
 
     if (!state.check(STATE_NET_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
-        buzzer.tone(1, 0.2);  // 0.5Hz ta-tick while waiting to reconnect.
+        buzzer.tone(1, 0.2);  // 1Hz ta-tick while waiting to reconnect.
         teleClient.shutdown();
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
         delay(10000);
@@ -1400,7 +1400,7 @@ void setup_multilog() {
 #ifndef PIO_UNIT_TESTING
 void setup()
 {
-    buzzer.tone(1);  // 1hz ticks until `initialize()`
+    buzzer.tone(1);  // 2hz ticks until `initialize()`
     delay(500);
 
 #if ENABLE_OLED
