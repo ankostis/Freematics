@@ -278,10 +278,6 @@ const PartInfos collect_ota_partition_records();
 //
 nlohmann::ordered_json _partition_record_to_json(const PartRec &prec);
 
-#if HIDE_SECRETS_IN_LOGS
-void hide_sensitive_node_infos(nlohmann::ordered_json &infos);
-#endif // HIDE_SECRETS_IN_LOGS
-
 // TODO: prog should allow to be re-told when to check PSRAM writable.
 #if BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE
 void validate_psram_can_indeed_write();

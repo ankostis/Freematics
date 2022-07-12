@@ -655,9 +655,6 @@ String executeCommand(const char* cmd)
 
   } else if (!strcmp(cmd, "INFO")) {
     node_info_j = node_info.to_json();
-#if HIDE_SECRETS_IN_LOGS
-    hide_sensitive_node_infos(node_info_j);
-#endif // HIDE_SECRETS_IN_LOGS
     result = node_info_j.dump(2, ' ', false, json_dump_handler).c_str();
 
 #if ENABLE_OTA_UPDATE
@@ -1445,9 +1442,6 @@ void setup()
 #endif
 
     node_info_j = node_info.to_json();
-#if HIDE_SECRETS_IN_LOGS
-    hide_sensitive_node_infos(node_info_j);
-#endif // HIDE_SECRETS_IN_LOGS
     ESP_LOGE(
       TAG_SETUP,
       "NODE_INFO:\n%s",

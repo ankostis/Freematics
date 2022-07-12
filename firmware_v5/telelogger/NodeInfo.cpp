@@ -272,6 +272,24 @@ nlohmann::ordered_json node_info_t::node_state_to_json() const {
 }  // node_state_to_json()
 
 
+#if HIDE_SECRETS_IN_LOGS
+static void _hide_sensitive_configs(nlohmann::ordered_json &cfg) {
+  constexpr const char *mask = "***";
+  cfg.update(
+      {
+          {"wifi_pwd", mask},
+          {"cell_apn", apn2log},
+          {"sim_card_pin", mask},
+          {"srv_host", host2log},
+          {"srv_path", mask},
+          {"srv_port", 0},
+          {"ota_url", ota_url2log},
+      },
+      /* (recursively) merge_objects? */ false);
+}  // _hide_sensitive_configs()
+#endif  // HIDE_SECRETS_IN_LOGS
+
+
 nlohmann::ordered_json node_info_t::to_json() const {
   nlohmann::ordered_json cfg{
       {"serial_autoconf_timeout", serial_autoconf_timeout},
@@ -315,6 +333,10 @@ nlohmann::ordered_json node_info_t::to_json() const {
       {"pin_sensor2", pin_sensor2},
   };
 
+#if HIDE_SECRETS_IN_LOGS
+  _hide_sensitive_configs(cfg);
+#endif // HIDE_SECRETS_IN_LOGS
+
   const PartInfos precs = collect_ota_partition_records();
   const auto fw_j = fw_info_to_json(precs);
 
@@ -342,26 +364,6 @@ nlohmann::ordered_json node_info_t::to_json() const {
         {"config", cfg},
     };
 }
-
-#if HIDE_SECRETS_IN_LOGS
-void hide_sensitive_node_infos(nlohmann::ordered_json &infos) {
-  constexpr const char *mask = "***";
-  infos.update(
-      {
-          {"config",
-           {
-               {"wifi_pwd", mask},
-               {"cell_apn", apn2log},
-               {"sim_card_pin", mask},
-               {"srv_host", host2log},
-               {"srv_path", mask},
-               {"srv_port", 0},
-               {"ota_url", ota_url2log},
-           }},
-      },
-      /* (recursively) merge_objects */ true);
-}  // hide_sensitive_node_infos()
-#endif // HIDE_SECRETS_IN_LOGS
 
 
 #if BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE

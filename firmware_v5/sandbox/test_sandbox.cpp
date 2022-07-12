@@ -59,11 +59,6 @@ void test_sys_info() {
 
   const auto info_j = node_info.to_json();
   ESP_LOGE(TAG, "JSON:\n%s", _jdump(info_j).c_str());
-
-#if HIDE_SECRETS_IN_LOGS
-  hide_sensitive_node_infos(info_j);
-  ESP_LOGE(TAG, "JSON HIDDEN:\n%s", _jdump(info_j).c_str());
-#endif // HIDE_SECRETS_IN_LOGS
 }
 
 
