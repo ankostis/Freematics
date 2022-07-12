@@ -57,16 +57,16 @@ struct PartRec {
   const esp_app_desc_t desc;
   const esp_ota_img_states_t state;
 };
-using PartInfos = std::vector<PartRec>;
-// using Json = nlohmann::ordered_json;
+typedef std::vector<PartRec> PartInfos;
+typedef nlohmann::ordered_json Json;
 
 typedef std::map<std::string, esp_log_level_t> LogLevels;
 
 typedef uint16_t macroflags_t;
 struct node_info_t {
-  nlohmann::ordered_json hw_info_to_json() const;
-  nlohmann::ordered_json fw_info_to_json(const PartInfos precs) const;
-  nlohmann::ordered_json node_state_to_json() const;
+  Json hw_info_to_json() const;
+  Json fw_info_to_json(const PartInfos precs) const;
+  Json node_state_to_json() const;
 
   /**
    * Produces a valid JSON string as output, like this:
@@ -179,7 +179,7 @@ struct node_info_t {
    * }
    * ```
    */
-  nlohmann::ordered_json to_json() const;
+  Json to_json() const;
 
   //////////
   // HARDWARE
@@ -276,7 +276,7 @@ const PartInfos collect_ota_partition_records();
 //////
 // Private but non-static, to be testable.
 //
-nlohmann::ordered_json _partition_record_to_json(const PartRec &prec);
+Json _partition_record_to_json(const PartRec &prec);
 
 // TODO: prog should allow to be re-told when to check PSRAM writable.
 #if BOARD_HAS_PSRAM && PSRAM_VALIDATE_CAN_WRITE

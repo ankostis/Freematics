@@ -40,7 +40,7 @@
 #include <json.hpp>
 #include <NodeInfo.h>
 
-std::string _jdump(const nlohmann::ordered_json &j) {
+std::string _jdump(const Json &j) {
   /**
    * Without it, bad UTF-8 strings not sanitized while building JSON
    * crash later on `json.dump()`,

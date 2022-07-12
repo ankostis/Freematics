@@ -114,7 +114,7 @@ DS_CAN_MSG obdDataMulti[]=
  * see https://github.com/nlohmann/json/issues/1198
  */
 constexpr const auto json_dump_handler = nlohmann::detail::error_handler_t::replace;
-nlohmann::ordered_json node_info_j;
+Json node_info_j;
 node_info_t node_info;
 
 typedef struct {

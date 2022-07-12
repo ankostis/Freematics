@@ -105,7 +105,7 @@ static int ota_partition_index(const esp_partition_t *part, const PartInfos &pre
 }
 
 
-nlohmann::ordered_json _partition_record_to_json(const PartRec &prec) {
+Json _partition_record_to_json(const PartRec &prec) {
     const esp_partition_t *part = prec.part;
     const esp_app_desc_t desc = prec.desc;
     const esp_ota_img_states_t state = prec.state;
@@ -124,7 +124,7 @@ nlohmann::ordered_json _partition_record_to_json(const PartRec &prec) {
 
       // Possibly non-UTF8 app-name/ver from bad partitions,
       // json will crash on `dump()` unless `dump(error_handler=ignore/replace)`
-      // (see https://json.nlohmann.me/api/basic_json/error_handler_t/)
+      // (see https://json.Json.me/api/basic_json/error_handler_t/)
       //
       ss_app << desc.project_name << ':' << desc.version;
       ss_date << desc.date << ", " << desc.time;
@@ -162,7 +162,7 @@ nlohmann::ordered_json _partition_record_to_json(const PartRec &prec) {
  * (`-mfix-esp32-psram-cache-issue`) if `-DBOARD_HAS_PSRAM` build-flag enabled.
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-guides/external-ram.html#esp32-rev-v1
  */
-nlohmann::ordered_json node_info_t::hw_info_to_json() const {
+Json node_info_t::hw_info_to_json() const {
   std::stringstream ss_mac;
   ncat_hex(ss_mac, (const uint8_t *)(&mac), 6);
 
@@ -180,7 +180,7 @@ nlohmann::ordered_json node_info_t::hw_info_to_json() const {
   };
 }  // hw_info_to_json()
 
-nlohmann::ordered_json node_info_t::fw_info_to_json(const PartInfos precs) const {
+Json node_info_t::fw_info_to_json(const PartInfos precs) const {
   const esp_partition_t *run_part = esp_ota_get_running_partition();
   const esp_partition_t *boot_part = esp_ota_get_boot_partition();
   const esp_partition_t *upd_part = esp_ota_get_next_update_partition(run_part);
@@ -200,7 +200,7 @@ nlohmann::ordered_json node_info_t::fw_info_to_json(const PartInfos precs) const
   std::stringstream ss_macroflags;
   ss_macroflags << "0x" << std::hex << macroflags;
 
-  auto partitions = nlohmann::ordered_json::array();
+  auto partitions = Json::array();
   for (const auto &prec : precs){
     partitions.push_back(_partition_record_to_json(prec));
   }
@@ -214,7 +214,7 @@ nlohmann::ordered_json node_info_t::fw_info_to_json(const PartInfos precs) const
   };
 }  // fw_info_to_json()
 
-nlohmann::ordered_json node_info_t::node_state_to_json() const {
+Json node_info_t::node_state_to_json() const {
   // TODO: root["boot_count"] = boot_count
   const uint32_t heap_size = ESP.getHeapSize();
   const uint32_t MinHeapFree = esp_get_minimum_free_heap_size();
@@ -273,7 +273,7 @@ nlohmann::ordered_json node_info_t::node_state_to_json() const {
 
 
 #if HIDE_SECRETS_IN_LOGS
-static void _hide_sensitive_configs(nlohmann::ordered_json &cfg) {
+static void _hide_sensitive_configs(Json &cfg) {
   constexpr const char *mask = "***";
   cfg.update(
       {
@@ -290,8 +290,8 @@ static void _hide_sensitive_configs(nlohmann::ordered_json &cfg) {
 #endif  // HIDE_SECRETS_IN_LOGS
 
 
-nlohmann::ordered_json node_info_t::to_json() const {
-  nlohmann::ordered_json cfg{
+Json node_info_t::to_json() const {
+  Json cfg{
       {"serial_autoconf_timeout", serial_autoconf_timeout},
       {"log_level_build", log_level_build},
       {"log_levels", log_levels},
