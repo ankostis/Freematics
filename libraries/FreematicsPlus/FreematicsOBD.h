@@ -10,6 +10,9 @@
 
 #include "utility/OBD.h"
 
+// ESP_IDF logging tags used
+inline constexpr const char TAG_OBD[] = "OBD";
+
 #define OBD_TIMEOUT_SHORT 1000 /* ms */
 #define OBD_TIMEOUT_LONG 10000 /* ms */
 

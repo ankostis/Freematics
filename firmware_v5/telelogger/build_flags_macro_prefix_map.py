@@ -28,6 +28,7 @@ def produce_build_flags():
         platformio_dir / "packages",
         arduino_dir,
         arduino_dir / "cores" / "esp32",
+        arduino_dir / "libraries" / "WiFi" / "src",
     ]
     argv_dirs = [pathlib.Path(a).resolve() for a in sys.argv[1:]]
 

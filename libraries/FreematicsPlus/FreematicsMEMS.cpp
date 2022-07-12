@@ -1102,7 +1102,7 @@ ICM_20948_Status_e	ICM_20948::intEnableRawDataReady   ( bool enable ){
     status = ICM_20948_int_enable( &_device, &en, &en );    // write phase w/ readback
     if( status != ICM_20948_Stat_Ok ){ return status; }
     if( en.RAW_DATA_0_RDY_EN != enable ){
-        ESP_LOGW(TAG, "mismatch error %i", status);
+        ESP_LOGW(TAG_MEMS, "mismatch error %i", status);
         status = ICM_20948_Stat_Err;
         return status;
     }

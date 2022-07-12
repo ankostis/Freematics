@@ -47,7 +47,7 @@
 #endif
 
 // ESP_IDF logging tags of this file
-inline constexpr const char TAG_BOOT[] = "BOOT";
+inline constexpr const char TAG_SETUP[] = "SETUP";
 inline constexpr const char TAG_INIT[] = "INIT";
 inline constexpr const char TAG_TELE[] = "TELE";
 inline constexpr const char TAG_PROC[] = "PROC";
@@ -242,7 +242,7 @@ State state;
 
 void printTimeoutStats()
 {
-  ESP_LOGI(TAG, "Timeouts: OBD: %i, network: %i", timeoutsOBD, timeoutsNet);
+  ESP_LOGI(TAG_NET, "Timeouts: OBD: %i, network: %i", timeoutsOBD, timeoutsNet);
 }
 
 #if LOG_EXT_SENSORS
@@ -487,7 +487,7 @@ void printTime()
     char buf[64];
     sprintf(buf, "%04u-%02u-%02u %02u:%02u:%02u",
       1900 + btm->tm_year, btm->tm_mon + 1, btm->tm_mday, btm->tm_hour, btm->tm_min, btm->tm_sec);
-    ESP_LOGI(TAG, "UTC: %s", buf);
+    ESP_LOGI(TAG_INIT, "UTC: %s", buf);
   }
 }
 
@@ -1298,7 +1298,7 @@ void standby()
 }
 
 /*******************************************************************************
-  Tasks to perform in idle/waiting time
+  SETUP (after boot)
 *******************************************************************************/
 #if CONFIG_MODE_TIMEOUT
 void configMode()
@@ -1308,7 +1308,7 @@ void configMode()
   do {
     if (Serial.available()) {
       // enter config mode
-      ESP_LOGI(TAG, "#CONFIG MODE#");
+      ESP_LOGI(TAG_SETUP, "#CONFIG MODE#");
       Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX, PIN_LINK_UART_TX);
       do {
         if (Serial.available()) {
@@ -1320,7 +1320,7 @@ void configMode()
           t = millis();
         }
       } while (millis() - t < CONFIG_MODE_TIMEOUT);
-      ESP_LOGD(TAG, "#RESET#");
+      ESP_LOGD(TAG_SETUP, "#RESET#");
       delay(100);
       esp_restart();
     }
@@ -1335,11 +1335,11 @@ bool setup_SD()
         uint64_t total = SD.totalBytes();
         uint64_t used = SD.usedBytes();
         float used_ratio = 100.0 * used / total;
-        ESP_LOGI(TAG, "SD: %u MB total, %u MB used (%%%.2f)",
+        ESP_LOGI(TAG_SETUP, "SD: %u MB total, %u MB used (%%%.2f)",
                  (uint)(total >> 20), (uint)(used >> 20), used_ratio);
         return true;
     } else {
-        ESP_LOGE(TAG, "No SD card");
+        ESP_LOGE(TAG_SETUP, "No SD card");
         return false;
     }
 }
@@ -1352,11 +1352,12 @@ bool setup_SPIFFS()
         uint64_t total = SPIFFS.totalBytes();
         uint64_t used = SPIFFS.usedBytes();
         float used_ratio = 100.0 * used / total;
-        ESP_LOGI(TAG, "SPIFFS: %llu bytes total, %llu bytes used (%%%.2f)",
-                total, used, used_ratio);
+        ESP_LOGI(TAG_SETUP,
+                 "SPIFFS: %llu bytes total, %llu bytes used (%%%.2f)", total,
+                 used, used_ratio);
         return true;
     } else {
-        ESP_LOGE(TAG, "No SPIFFS");
+        ESP_LOGE(TAG_SETUP, "No SPIFFS");
         return false;
     }
 }
@@ -1443,7 +1444,7 @@ void setup()
 #if USE_ESP_IDF_LOG
     setup_multilog();
 #else
-    ESP_LOGW(TAG_INIT, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
+    ESP_LOGW(TAG_SETUP, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
 #endif  // USE_ESP_IDF_LOG
 #endif  // ENABLE_MULTILOG
 
@@ -1460,7 +1461,7 @@ void setup()
     hide_sensitive_node_infos(node_info_j);
 #endif // HIDE_SECRETS_IN_LOGS
     ESP_LOGE(
-      TAG_INIT,
+      TAG_SETUP,
       "NODE_INFO:\n%s",
       node_info_j.dump(2, ' ', false, json_dump_handler).c_str()
     );
@@ -1471,7 +1472,7 @@ void setup()
         node_info.device_id);
 
     if (sys.begin()) {
-      ESP_LOGI(TAG_INIT, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
+      ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
     }
 
 #if LOG_EXT_SENSORS
@@ -1489,7 +1490,7 @@ void setup()
     if (mems) {
       state.set(STATE_MEMS_READY);
     }
-    ESP_LOGI(TAG_INIT, "MEMS: %s", mems? mems->name() : "NO");
+    ESP_LOGI(TAG_SETUP, "MEMS: %s", mems? mems->name() : "NO");
   }  // !STATE_MEMS_READY
 #endif
 
@@ -1497,7 +1498,7 @@ void setup()
     // initialize network and maintain connection
     subtask.create(telemetry, "telemetry", 2, 8192);
 
-    ESP_LOGI(TAG_INIT, "<SETUP> completed");
+    ESP_LOGI(TAG_SETUP, "<SETUP> completed");
     digitalWrite(PIN_LED, LOW);
 
     // initialize components
