@@ -61,7 +61,6 @@ using PartInfos = std::vector<PartRec>;
 
 typedef uint16_t macroflags_t;
 struct node_info_t {
-  node_info_t();
   nlohmann::ordered_json hw_info_to_json() const;
   nlohmann::ordered_json fw_info_to_json(const PartInfos precs) const;
   nlohmann::ordered_json node_state_to_json() const;
@@ -181,76 +180,93 @@ struct node_info_t {
 
   //////////
   // HARDWARE
-  const uint64_t mac;
-  const std::string device_id;
+  const uint64_t mac{ESP.getEfuseMac()};
+  const std::string device_id{mac_to_device_id(mac)};
 
   //////////
   // FIRMWARE
-  const macroflags_t macroflags;
-  const uint32_t partition_size;
-  const uint32_t sketch_size;
-  const float partition_use;
-  const uint32_t boot_heap_size;
+  /**
+   * ATTENTION: increase `macroflags` size if more macroflags added.
+   * NOTE: teach platformIO's monitor-filter about new macroflags.
+   */
+  const macroflags_t macroflags{
+    ((ENABLE_OBD && 1) << 0)
+    | ((ENABLE_MEMS && 1) << 1)
+    | ((ENABLE_ORIENTATION && 1) << 2)
+    | ((ENABLE_OLED && 1) << 3)
+    | ((ENABLE_BUZZING_INIT && 1) << 4)
+    | ((ENABLE_OTA_UPDATE && 1) << 5)
+    | ((_NEED_SD && 1) << 6)
+    | ((_NEED_SPIFFS && 1) << 7)
+    | ((ENABLE_MULTILOG && 1) << 8)
+    | ((USE_ESP_IDF_LOG && 1) << 9)
+    | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
+    | ((BOARD_HAS_PSRAM && 1) << 11)
+    | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
+  };
+  const uint32_t partition_size{esp_ota_get_running_partition()->size};
+  const uint32_t sketch_size{ESP.getSketchSize()};
+  const float partition_use{(float) 100.0 * sketch_size / partition_size};
+  const uint32_t boot_heap_size{ESP.getHeapSize()};
 
   //////////
   // STATUS
-  char vin[18];
-  int last_boot;
-  uint32_t heap_used;
-  float heap_use;
+  char vin[18]{};
+  int last_boot{};
+  uint32_t heap_used{};
+  float heap_use{};
 #if BOARD_HAS_PSRAM
-  uint32_t psram_used;
-  float psram_use;
+  uint32_t psram_used{};
+  float psram_use{};
 #if BOARD_HAS_PSRAM_HIGH
-  uint32_t psramh_used;
-  float psramh_use;
+  uint32_t psramh_used{};
+  float psramh_use{};
 #endif
 #endif
 
   //////////
   // CONFIG
   /** NOTE: remember to update also `macroflags.py` monitor-filter. */
-  int serial_autoconf_timeout;
-  uint8_t log_level_run;
-  uint8_t log_level_build;
-  uint8_t log_sink;
-  const char *log_sink_fpath;
-  float log_sink_disk_usage_purge_prcnt;
-  int32_t log_sink_sync_interval_ms;
-  int nslots;
-  int slot_len;
-  int serialize_len;
-  /** Bit for enable/disable decided on compile-time.  */
-  uint8_t storage;
-  /** NOTE: changes here, must convey to platformIO's monitor-filter. */
-  uint8_t gnss;
-  const char *ota_url;
-  const char *ota_update_cert_pem;
-  uint8_t net_dev;
-  const char *wifi_ssd;
-  const char *wifi_pwd;
-  const char *cell_apn;
-  const char *sim_card_pin;
-  uint8_t srv_proto;
-  const char *srv_host;
-  const char *srv_path;
-  uint16_t srv_port;
-  uint32_t net_recv_timeout;
-  uint32_t srv_sync_timeout;
-  uint8_t net_retries;
-  uint16_t net_udp_reconnect_delay;
-  uint16_t stationary_timeout_vals[3];
-  uint16_t data_interval_vals[3];
-  uint32_t obfcm_interval;
-  uint8_t obd_max_errors;
-  uint16_t ping_back_interval;
-  uint8_t wakeup_reset;
-  float wakeup_motion_thr;
-  float wakeup_jumpstart_thr;
-  float cool_temp;
-  uint16_t cool_delay;
-  uint8_t pin_sensor1;
-  uint8_t pin_sensor2;
+  int serial_autoconf_timeout{CONFIG_MODE_TIMEOUT};
+  uint8_t log_level_run{RUNTIME_ALL_TAGS_LOG_LEVEL};
+  uint8_t log_level_build{CORE_DEBUG_LEVEL};
+  uint8_t log_sink{LOG_SINK};
+  const char *log_sink_fpath{LOG_SINK_FPATH};
+  float log_sink_disk_usage_purge_prcnt{LOG_SINK_DISK_USAGE_PURGE_RATIO};
+  int32_t log_sink_sync_interval_ms{LOG_SINK_SYNC_INTERVAL_MS};
+  int nslots{BUFFER_SLOTS};
+  int slot_len{BUFFER_LENGTH};
+  int serialize_len{SERIALIZE_BUFFER_SIZE};
+  /** Bit for enable/disable decided GLOBALon compile-time.  */
+  uint8_t storage{STORAGE};
+  uint8_t gnss{GNSS};
+  const char *ota_url{OTA_UPDATE_URL};
+  const char *ota_update_cert_pem{OTA_UPDATE_CERT_PEM};
+  uint8_t net_dev{NET_DEVICE};
+  const char *wifi_ssd{WIFI_SSID};
+  const char *wifi_pwd{WIFI_PASSWORD};
+  const char *cell_apn{CELL_APN};
+  const char *sim_card_pin{SIM_CARD_PIN};
+  uint8_t srv_proto{SERVER_PROTOCOL};
+  const char *srv_host{SERVER_HOST};
+  const char *srv_path{SERVER_PATH};
+  uint16_t srv_port{SERVER_PORT};
+  uint32_t net_recv_timeout{DATA_RECEIVING_TIMEOUT};
+  uint32_t srv_sync_timeout{SERVER_SYNC_INTERVAL};
+  uint8_t net_retries{NET_CONNECT_RETRIES};
+  uint16_t net_udp_reconnect_delay{UDP_CONNECT_RETRY_DELAY_MS};
+  uint16_t stationary_timeout_vals[3]STATIONARY_TIME_TABLE;
+  uint16_t data_interval_vals[3]DATA_INTERVAL_TABLE;
+  uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
+  uint8_t obd_max_errors{MAX_OBD_ERRORS};
+  uint16_t ping_back_interval{PING_BACK_INTERVAL};
+  uint8_t wakeup_reset{RESET_AFTER_WAKEUP};
+  float wakeup_motion_thr{MOTION_THRESHOLD};
+  float wakeup_jumpstart_thr{THR_VOLTAGE};
+  float cool_temp{COOLING_DOWN_TEMP};
+  uint16_t cool_delay{COOLING_DOWN_SLEEP_SEC};
+  uint8_t pin_sensor1{PIN_SENSOR1};
+  uint8_t pin_sensor2{PIN_SENSOR2};
 };
 
 const PartInfos collect_ota_partition_records();
