@@ -1329,6 +1329,15 @@ void configMode()
 void apply_runtime_log_levels(const LogLevels &levels) {
     for (auto iter = std::cbegin(levels); iter != std::cend(levels); ++iter)
       esp_log_level_set(iter->first.c_str(), iter->second);
+
+#if HIDE_SECRETS_IN_LOGS
+    // SIM code logs reveal CELL_APN, SIM_CARD_PIN & server DN & IP!!
+    esp_log_level_t gsm_level = esp_log_level_get(TAG_GSM);
+    if (gsm_level >= ESP_LOG_DEBUG) esp_log_level_set(TAG_GSM, ESP_LOG_INFO);
+    ESP_LOGI(TAG_SETUP,
+             "Lower '%s' log-level to conceal secrets, from %i --> %i",
+             TAG_GSM, gsm_level, esp_log_level_get(TAG_GSM));
+#endif  // HIDE_SECRETS_IN_LOGS
 }
 
 
