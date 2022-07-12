@@ -14,6 +14,120 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  ******************************************************************************/
+  /**
+   * Node infos is a JSON string as output
+   * (optionally with sensitive infos hidden) like this:
+   *
+   * ```JSON
+   * {
+   *   "device_id": "A0HNZRJU",
+   *   "vin": "",
+   *   "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-10-gc9bea54-dirty",
+   *   "build_date": "12 Jul 2022, 21:25:57+0300",
+   *   "node_hw": {
+   *     "board": "ESP32-D0WDQ6-v1",
+   *     "cpu": "2x160MHz",
+   *     "mac": "240ac48bf7f4",
+   *     "flash": "4MiB@40MHz",
+   *     "slow_rtc": "0@150KHz"
+   *   },
+   *   "node_fw": {
+   *     "macroflags": (733 --> 0x733: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|ENABLE_MULTILOG|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
+   *     "esp32_ver": "v4.4.1-472-gc9140caf8c",
+   *     "arduino_ver": "2.0.4",
+   *     "ota_parts_used": "x2, R0, B0, U1",
+   *     "partitions": [
+   *       {
+   *         "part": "app0:0x10000:160000",
+   *         "ota_state": "0xffffffff",
+   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-10-gc9bea54-dirty",
+   *         "build_date": "12 Jul 2022, 21:25:57+0300",
+   *         "part_sha256": "766697db"
+   *       },
+   *       {
+   *         "part": "app1:0x170000:160000",
+   *         "ota_state": "0xffffffff",
+   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-10-gc9bea54-dirty",
+   *         "build_date": "12 Jul 2022, 21:01:37+0300",
+   *         "part_sha256": "ac02da04"
+   *       }
+   *     ]
+   *   },
+   *   "node_state": {
+   *     "last_boot_reason": 1,
+   *     "partition_size": 1441792,
+   *     "sketch_size": 914160,
+   *     "partition_use": 63.4044303894043,
+   *     "heap_size": 188200,
+   *     "heap_max_used": 2848,
+   *     "heap_max_use": 1.5132837407013815,
+   *     "heap_free_min": 185352,
+   *     "esp_get_free_heap_size": 190024,
+   *     "esp_get_free_internal_heap_size": 189860,
+   *     "esp_get_minimum_free_heap_size": 184400,
+   *     "ESP_getHeapSize": 337196,
+   *     "ESP_getFreeHeap": 251796,
+   *     "ESP_getMinFreeHeap": 246292,
+   *     "ESP_getMaxAllocHeap": 110580,
+   *     "def_total_allocated_bytes": 84404,
+   *     "def_total_free_bytes": 191068,
+   *     "def_minimum_free_bytes": 185352,
+   *     "def_largest_free_block": 110580
+   *   },
+   *   "config": {
+   *     "serial_autoconf_timeout": 0,
+   *     "log_level_build": 5,
+   *     "log_levels": {
+   *       "*": 5
+   *     },
+   *     "log_sink": 1,
+   *     "log_sink_fpath": "/logs.txt",
+   *     "log_sink_disk_usage_purge_prcnt": 0.8999999761581421,
+   *     "log_sink_sync_interval_ms": 3141,
+   *     "nslots": 256,
+   *     "slot_len": 180,
+   *     "serialize_len": 1024,
+   *     "storage": 0,
+   *     "gnss": 1,
+   *     "ota_url": "<len: 37>",
+   *     "ota_update_cert_pem_len": 3749,
+   *     "net_dev": 4,
+   *     "wifi_ssd": "GreatWifi",
+   *     "wifi_pwd": "***",
+   *     "cell_apn": "<len: 19>",
+   *     "sim_card_pin": "***",
+   *     "srv_proto": 1,
+   *     "srv_host": "<len: 22>",
+   *     "srv_path": "***",
+   *     "srv_port": 0,
+   *     "net_recv_timeout": 5000,
+   *     "srv_sync_timeout": 120,
+   *     "net_retries": 5,
+   *     "net_udp_reconnect_delay": 3000,
+   *     "stationary_timeout_vals": [
+   *       20,
+   *       40,
+   *       60
+   *     ],
+   *     "data_interval_vals": [
+   *       1000,
+   *       2000,
+   *       5000
+   *     ],
+   *     "obfcm_interval": 120000,
+   *     "obd_max_errors": 3,
+   *     "ping_back_interval": 900,
+   *     "wakeup_reset": 0,
+   *     "wakeup_motion_thr": 0.4000000059604645,
+   *     "wakeup_jumpstart_thr": 13.600000381469727,
+   *     "cool_temp": 80.0,
+   *     "cool_delay": 5,
+   *     "pin_sensor1": 34,
+   *     "pin_sensor2": 26
+   *   }
+   * }
+   * ```
+   */
 
 #pragma once
 
@@ -70,116 +184,9 @@ struct node_info_t {
   Json node_state_to_json() const;
 
   /**
-   * Produces a valid JSON string as output, like this:
-   *
-   * ```
-   * {
-   *   "device_id": "A0HNZRJU",
-   *   "vin": "",
-   *   "app_desc": "jrcmatic(user@host):jrc-v0.0.3-83-gae610e9-dirty",
-   *   "build_date": "06 Jul 2022, 15:22:57+0300",
-   *   "node_hw": {
-   *     "board": "ESP32-D0WDQ6-v1",
-   *     "cpu": "2x160MHz",
-   *     "mac": "240ac48bf7f40000",
-   *     "flash": "4MiB@40MHz",
-   *     "slow_rtc": "0@150KHz"
-   *   },
-   *   "node_fw": {
-   *     "macroflags": (233 --> 0x233: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|USE_ESP_IDF_LOG),
-   *     "esp32_ver": "v4.4.1-1-gb8050b365e",
-   *     "arduino_ver": "2.0.4",
-   *     "ota_parts_used": "x2, R0, B0, U1",
-   *     "partitions": [
-   *       {
-   *         "part": "app0:0x10000:160000",
-   *         "ota_state": "0xffffffff",
-   *         "app_desc": "jrcmatic(user@host):jrc-v0.0.3-83-gae610e9-dirty",
-   *         "build_date": "06 Jul 2022, 15:22:57+0300",
-   *         "part_sha256": "278d86c2"
-   *       },
-   *       {
-   *         "part": "app1:0x170000:160000",
-   *         "ota_state": "0xffffffff",
-   *         "app_desc": "",
-   *         "build_date": "",
-   *         "part_sha256": ""
-   *       }
-   *     ]
-   *   },
-   *   "node_state": {
-   *     "last_boot_reason": 1,
-   *     "part_size": 1441792,
-   *     "sketch_size": 883760,
-   *     "part_use": 61.29594282670455,
-   *     "heap_size": 120652,
-   *     "heap_max_used": 4294899556,
-   *     "heap_max_use": 3559741.7000961443,
-   *     "heap_free_min": 188392,
-   *     "esp_get_free_heap_size": 192816,
-   *     "esp_get_free_internal_heap_size": 192668,
-   *     "esp_get_minimum_free_heap_size": 187328,
-   *     "ESP_getHeapSize": 339596,
-   *     "ESP_getFreeHeap": 254600,
-   *     "ESP_getMinFreeHeap": 249224,
-   *     "ESP_getMaxAllocHeap": 110580,
-   *     "def_total_allocated_bytes": 84012,
-   *     "def_total_free_bytes": 193752,
-   *     "def_minimum_free_bytes": 188392,
-   *     "def_largest_free_block": 110580
-   *   },
-   *   "config": {
-   *     "serial_autoconf_timeout": 0,
-   *     "log_level_run": 3,
-   *     "log_level_build": 3,
-   *     "log_sink": 1,
-   *     "log_sink_fpath": "/logs.txt",
-   *     "log_sink_disk_usage_purge_prcnt": 0.8999999761581421,
-   *     "log_sink_sync_interval_ms": 3141,
-   *     "nslots": 256,
-   *     "slot_len": 180,
-   *     "serialize_len": 1024,
-   *     "storage": 0,
-   *     "gnss": 1,
-   *     "ota_url": "https://some.host.com/and/path",
-   *     "ota_update_cert_pem_len": 1234,
-   *     "net_dev": 4,
-   *     "wifi_ssd": "***",
-   *     "wifi_pwd": "***",
-   *     "cell_apn": "***",
-   *     "sim_card_pin": "",
-   *     "srv_proto": 1,
-   *     "srv_host": "some.host.com",
-   *     "srv_path": "/hub/api",
-   *     "srv_port": 8081,
-   *     "net_recv_timeout": 5000,
-   *     "srv_sync_timeout": 120,
-   *     "net_retries": 5,
-   *     "net_udp_reconnect_delay": 3000,
-   *     "stationary_timeout_vals": [
-   *       20,
-   *       40,
-   *       60
-   *     ],
-   *     "data_interval_vals": [
-   *       1000,
-   *       2000,
-   *       5000
-   *     ],
-   *     "obfcm_interval": 120000,
-   *     "obd_max_errors": 3,
-   *     "ping_back_interval": 900,
-   *     "wakeup_reset": 0,
-   *     "wakeup_motion_thr": 0.4000000059604645,
-   *     "wakeup_jumpstart_thr": 13.600000381469727,
-   *     "cool_temp": 80.0,
-   *     "cool_delay": 5,
-   *     "pin_sensor1": 34,
-   *     "pin_sensor2": 26
-   *   }
-   * }
-   * ```
+   * Produces a valid JSON string as output, like the pone on file header.
    */
+
   Json to_json() const;
 
   //////////
