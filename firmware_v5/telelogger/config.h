@@ -203,8 +203,8 @@
 // expected maximum server sync signal interval
 #define SERVER_SYNC_INTERVAL 120 /* seconds, 0 to disable */
 // data interval settings
-#define STATIONARY_TIME_TABLE {20, 40, 60} /* seconds */
-#define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
+#define STATIONARY_TIME_TABLE   20, 40, 60 /* seconds */
+#define DATA_INTERVAL_TABLE     1000, 2000, 5000 /* ms */
 #define PING_BACK_INTERVAL 900 /* seconds */
 
 // How often to send PIDs form the on-board fuel-consumption monitoring device.

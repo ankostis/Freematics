@@ -255,8 +255,8 @@ struct node_info_t {
   uint32_t srv_sync_timeout{SERVER_SYNC_INTERVAL};
   uint8_t net_retries{NET_CONNECT_RETRIES};
   uint16_t net_udp_reconnect_delay{UDP_CONNECT_RETRY_DELAY_MS};
-  uint16_t stationary_timeout_vals[3]STATIONARY_TIME_TABLE;
-  uint16_t data_interval_vals[3]DATA_INTERVAL_TABLE;
+  uint16_t stationary_timeout_vals[3]{STATIONARY_TIME_TABLE};
+  uint16_t data_interval_vals[3]{DATA_INTERVAL_TABLE};
   uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
   uint16_t ping_back_interval{PING_BACK_INTERVAL};

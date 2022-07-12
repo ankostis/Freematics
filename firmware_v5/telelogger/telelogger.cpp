@@ -967,8 +967,8 @@ void process()
 
 #if ENABLE_OBD || ENABLE_MEMS
   // motion adaptive data interval control
-  const uint16_t stationaryTime[] = STATIONARY_TIME_TABLE;
-  const int dataIntervals[] = DATA_INTERVAL_TABLE;
+  const uint16_t stationaryTime[] = {STATIONARY_TIME_TABLE};
+  const int dataIntervals[] = {DATA_INTERVAL_TABLE};
   unsigned int motionless = (millis() - lastMotionTime) / 1000;
   bool stationary = true;
   for (byte i = 0; i < sizeof(stationaryTime) / sizeof(stationaryTime[0]); i++) {
