@@ -58,7 +58,7 @@ try:
 
         def __init__(self, *args, **kwargs):
             super().__init__(*args, **kwargs)
-            print("f{NAME} filter is loacpded.")
+            print(f"Monitor-filter {self.NAME} is loaded.")
 
         def rx(self, text):
             return state_re.sub(expand_state, text)
