@@ -275,8 +275,8 @@ nlohmann::ordered_json node_info_t::node_state_to_json() const {
 nlohmann::ordered_json node_info_t::to_json() const {
   nlohmann::ordered_json cfg{
       {"serial_autoconf_timeout", serial_autoconf_timeout},
-      {"log_level_run", log_level_run},
       {"log_level_build", log_level_build},
+      {"log_levels", log_levels},
       {"log_sink", log_sink},
       {"log_sink_fpath", log_sink_fpath},
       {"log_sink_disk_usage_purge_prcnt", log_sink_disk_usage_purge_prcnt},

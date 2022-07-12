@@ -1328,6 +1328,13 @@ void configMode()
 }
 #endif
 
+
+void apply_runtime_log_levels(const LogLevels &levels) {
+    for (auto iter = std::cbegin(levels); iter != std::cend(levels); ++iter)
+      esp_log_level_set(iter->first.c_str(), iter->second);
+}
+
+
 #if _NEED_SD
 bool setup_SD()
 {
@@ -1412,26 +1419,7 @@ void setup()
     Serial.begin(115200);
 
     // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
-    //
-    esp_log_level_set("*", (esp_log_level_t)node_info.log_level_run);
-    // esp_log_level_set(TAG_BOOT, ESP_LOG_WARN);     // logs in this file
-    // esp_log_level_set(TAG_INIT, ESP_LOG_WARN);     // logs in this file
-    // esp_log_level_set(TAG_TELE, ESP_LOG_WARN);     // logs in this file
-    // esp_log_level_set(TAG_PROC, ESP_LOG_WARN);     // logs in this file
-    // esp_log_level_set(TAG_MULTILOG, ESP_LOG_WARN);
-    // esp_log_level_set(TAG_LINK, ESP_LOG_WARN);     // OBD(& GNSS?) (soft?)UART
-    // esp_log_level_set(TAG_GSM, ESP_LOG_WARN);      // GSM UART
-    // esp_log_level_set(TAG_GNSS, ESP_LOG_WARN);     // GNSS (if not through LINK)
-    // esp_log_level_set(TAG_SPI, ESP_LOG_WARN);      // MEMs(& LINK?) SPI
-    // esp_log_level_set(TAG_BUF, ESP_LOG_WARN);      // BufMan & Buffers @ teleclient.h
-    // esp_log_level_set(TAG_NET, ESP_LOG_WARN);      // TeleClientXXX & netInit()
-    // esp_log_level_set(TAG_MOTION, ESP_LOG_WARN);   // MEMs check-motion
-    // esp_log_level_set(TAG_WIFI, ESP_LOG_WARN);     // FreematcisNetwork
-    // esp_log_level_set(TAG_SIM800, ESP_LOG_WARN);   // FreematcisNetwork
-    // esp_log_level_set(TAG_SIM5360, ESP_LOG_WARN);  // FreematcisNetwork
-    // esp_log_level_set(TAG_SIM7600, ESP_LOG_WARN);  // FreematcisNetwork
-    // esp_log_level_set(TAG_SIM7070, ESP_LOG_WARN);  // FreematcisNetwork
-    // esp_log_level_set(TAG_HTTP, ESP_LOG_WARN);     // FreematcisNetwork
+    apply_runtime_log_levels(node_info.log_levels);
 
 #if _NEED_SD
     setup_SD();

@@ -99,7 +99,39 @@
  * Logging (see also `platformio.ini`)
  **************************************/
 // Works only when ESP_IDF logging-lib selected in `platformio.ini`.
-#define RUNTIME_ALL_TAGS_LOG_LEVEL CORE_DEBUG_LEVEL
+#define RUNTIME_LOG_LEVELS \
+    {"*", (esp_log_level_t)CORE_DEBUG_LEVEL},
+
+    /** logs in `telelogger.cpp` */
+    // {"SETUP", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"INIT", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"TELE", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"PROC", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs about BufMan & Buffers in `teleclient.h` */
+    // {"BUF", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"NET", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in `FreematicsPlus.cpp` */
+    // {"FreematicsPlus.cpp", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"LINK", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"GSM", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"GNSS", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"SPI", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in `libraries/FreematicsPlus/FreematicsNetwork.cpp` */
+    // {"WIFI", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"SIM800", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"SIM5360", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"SIM7600", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"SIM7070", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    // {"NetHTTP", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in `libraries/FreematicsPlus/FreematicsOBD.cpp` */
+    // {"OBD", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in `libraries/FreematicsPlus/FreematicsMEMS.cpp` */
+    // {"MEMS", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in `libraries/Util/multilog.xxx` */
+    // {"MULTILOG", (esp_log_level_t)CORE_DEBUG_LEVEL),
+    /** logs in arduino-libs */
+    // {"WiFiGeneric.cpp", (esp_log_level_t)CORE_DEBUG_LEVEL),
+
 
 /**
  * Whether to enabled multiple log destinations (sinks).

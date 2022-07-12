@@ -33,6 +33,7 @@
 #include <cstring>
 #include <iomanip>
 #include <json.hpp>
+#include <map>
 #include <sstream>
 #include <vector>
 
@@ -58,6 +59,8 @@ struct PartRec {
 };
 using PartInfos = std::vector<PartRec>;
 // using Json = nlohmann::ordered_json;
+
+typedef std::map<std::string, esp_log_level_t> LogLevels;
 
 typedef uint16_t macroflags_t;
 struct node_info_t {
@@ -228,8 +231,8 @@ struct node_info_t {
   // CONFIG
   /** NOTE: remember to update also `macroflags.py` monitor-filter. */
   int serial_autoconf_timeout{CONFIG_MODE_TIMEOUT};
-  uint8_t log_level_run{RUNTIME_ALL_TAGS_LOG_LEVEL};
   uint8_t log_level_build{CORE_DEBUG_LEVEL};
+  LogLevels log_levels{RUNTIME_LOG_LEVELS};
   uint8_t log_sink{LOG_SINK};
   const char *log_sink_fpath{LOG_SINK_FPATH};
   float log_sink_disk_usage_purge_prcnt{LOG_SINK_DISK_USAGE_PURGE_RATIO};
