@@ -41,6 +41,17 @@
 #include "esp32/himem.h"
 #endif
 
+typedef nlohmann::ordered_json Json;
+typedef std::map<std::string, esp_log_level_t> LogLevels;
+typedef uint16_t macroflags_t;
+struct PartRec {
+  const esp_partition_t * part;
+  const esp_app_desc_t desc;
+  const esp_ota_img_states_t state;
+};
+typedef std::vector<PartRec> PartInfos;
+
+
 /**
  * Idempotent transformation of freematics MACs --> device-ids,
  * like: 0xF4F78BC40A24 --> "A0HNZRJU".
@@ -52,17 +63,7 @@
  */
 std::string mac_to_device_id(uint64_t max);
 
-struct PartRec {
-  const esp_partition_t * part;
-  const esp_app_desc_t desc;
-  const esp_ota_img_states_t state;
-};
-typedef std::vector<PartRec> PartInfos;
-typedef nlohmann::ordered_json Json;
 
-typedef std::map<std::string, esp_log_level_t> LogLevels;
-
-typedef uint16_t macroflags_t;
 struct node_info_t {
   Json hw_info_to_json() const;
   Json fw_info_to_json(const PartInfos precs) const;
