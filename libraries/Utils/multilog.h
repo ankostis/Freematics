@@ -12,7 +12,7 @@
 namespace multilog {
 
 constexpr const int MULTILOG_INITIAL_SPRINTF_BUFLEN = 256;
-constexpr const char TAG_MULTILOG[] = "ENABLE_MULTILOG";
+inline constexpr const char TAG_MULTILOG[] = "MULTILOG";
 
 struct Sink {
  public:

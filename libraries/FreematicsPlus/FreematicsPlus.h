@@ -20,10 +20,10 @@
 #include "FreematicsOBD.h"
 
 // ESP_IDF logging tags used
-constexpr const char TAG_LINK[] = "LINK";  // UART linking with STM32 --> OBD
-constexpr const char TAG_GSM[] = "GSM";  // UART linking with both GSM & GNSS
-constexpr const char TAG_GNSS[] = "GNSS";
-constexpr const char TAG_SPI[] = "SPI";
+inline constexpr const char TAG_LINK[] = "LINK";  // UART with STM32 --> OBD
+inline constexpr const char TAG_GSM[] = "GSM";  // UART with both GSM & GNSS
+inline constexpr const char TAG_GNSS[] = "GNSS";
+inline constexpr const char TAG_SPI[] = "SPI";
 
 #define PIN_LED 4
 #define PIN_SD_CS 5

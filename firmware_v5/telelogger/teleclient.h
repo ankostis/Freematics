@@ -21,8 +21,8 @@
 #define ELEMENT_FLOATX3 3
 
 // ESP_IDF logging tag used
-constexpr const char TAG_BUF[] = "BUF";
-constexpr const char TAG_NET[] = "NET";
+inline constexpr const char TAG_BUF[] = "BUF";
+inline constexpr const char TAG_NET[] = "NET";
 
 class CBuffer
 {

@@ -47,10 +47,10 @@
 #endif
 
 // ESP_IDF logging tags of this file
-constexpr const char TAG_BOOT[] = "BOOT";
-constexpr const char TAG_INIT[] = "INIT";
-constexpr const char TAG_TELE[] = "TELE";
-constexpr const char TAG_PROC[] = "PROC";
+inline constexpr const char TAG_BOOT[] = "BOOT";
+inline constexpr const char TAG_INIT[] = "INIT";
+inline constexpr const char TAG_TELE[] = "TELE";
+inline constexpr const char TAG_PROC[] = "PROC";
 
 /**
  * NOTE: changes here, must convey to platformIO's monitor-filter.
