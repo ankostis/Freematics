@@ -191,7 +191,7 @@ bool TeleClientUDP::notify(byte event, const char* payload)
       if ((data = net.receive())) break;
       // no reply yet
       delay(100);
-    } while (millis() - t < DATA_RECEIVING_TIMEOUT);
+    } while (millis() - t < node_info.net_recv_timeout_ms);
     if (!data) {
       ESP_LOGW(TAG_NET, "RECV timeout for event(%i)", event);
       continue;
@@ -238,12 +238,12 @@ bool TeleClientUDP::connect()
   byte event = login ? EVENT_RECONNECT : EVENT_LOGIN;
   bool success = false;
   // connect to telematics server
-  for (byte attempts = 0; attempts < NET_CONNECT_RETRIES; attempts++) {
+  for (byte attempts = 0; attempts < node_info.net_retries; attempts++) {
     ESP_LOGD(TAG_NET, "Connecting to %s:%i...", host2log, port2log);
-    if (!net.open(SERVER_HOST, SERVER_PORT)) {
+    if (!net.open(node_info.srv_host, node_info.srv_port)) {
       ESP_LOGW(TAG_NET, "Fail no-%i to connect to %s:%i, wait %isec...",
-          attempts, host2log, port2log, UDP_CONNECT_RETRY_DELAY_MS);
-      delay(UDP_CONNECT_RETRY_DELAY_MS);
+               attempts, host2log, port2log, node_info.net_udp_reconnect_delay_ms);
+      delay(node_info.net_udp_reconnect_delay_ms);
       continue;
     }
     // log in or reconnect to Freematics Hub
@@ -274,7 +274,7 @@ bool TeleClientUDP::ping()
 {
   bool success = false;
   for (byte n = 0; n < 2 && !success; n++) {
-    success = net.open(SERVER_HOST, SERVER_PORT);
+    success = net.open(node_info.srv_host, node_info.srv_port);
     if (success) success = notify(EVENT_PING);
   }
   if (success) lastSyncTime = millis();
@@ -343,7 +343,7 @@ void TeleClientUDP::shutdown()
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
   char url[256];
-  snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", SERVER_PATH,
+  snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", node_info.srv_path,
            node_info.device_id.c_str(), (uint)event, (int)rssi,
            (const char *)node_info.vin);
   if (event == EVENT_LOGOUT) login = false;
@@ -363,17 +363,18 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   char url[256];
   bool success;
   int len;
+  auto srv_path = node_info.srv_path;
 #if SERVER_METHOD == PROTOCOL_METHOD_GET
   if (gd && gd->ts) {
     len = snprintf(url, sizeof(url), "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
-      SERVER_PATH, devid, isoTime,
+      srv_path, devid, isoTime,
       gd->lat, gd->lng, (int)gd->alt, gd->speed, (int)gd->heading);
   } else {
-    len = snprintf(url, sizeof(url), "%s/push?id=%s", SERVER_PATH, devid);
+    len = snprintf(url, sizeof(url), "%s/push?id=%s", srv_path, devid);
   }
   success = net.send(METHOD_GET, url, true);
 #else
-  len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
+  len = snprintf(url, sizeof(url), "%s/post/%s", srv_path, devid);
   ESP_LOGD(TAG_NET,
       "TeleClientHTTP sending %i bytes to URL: %s",
       packetSize,
@@ -422,8 +423,9 @@ bool TeleClientHTTP::connect()
 
   // connect to HTTP server
   bool success = false;
-  for (byte attempts = 0; !success && attempts < NET_CONNECT_RETRIES; attempts++) {
-    success = net.open(SERVER_HOST, SERVER_PORT);
+  for (byte attempts = 0; !success && attempts < node_info.net_retries;
+       attempts++) {
+    success = net.open(node_info.srv_host, node_info.srv_port);
     // TODO: pick up http-connect fixes from upstream(202204).
   }
   if (!success) {

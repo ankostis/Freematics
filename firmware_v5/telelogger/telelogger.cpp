@@ -154,7 +154,6 @@ uint32_t timeoutsNet = 0;
 uint32_t lastStatsTime = 0;
 uint32_t lastObfcmTime = 0;
 
-int32_t syncInterval = SERVER_SYNC_INTERVAL * 1000;
 int32_t dataInterval = 1000;
 
 #if STORAGE
@@ -248,7 +247,7 @@ void printTimeoutStats()
 #if LOG_EXT_SENSORS
 void processExtInputs(CBuffer* buffer)
 {
-  int pins[] = {PIN_SENSOR1, PIN_SENSOR2};
+  int pins[] = {node_info.pin_sensor1, node_info.pin_sensor2};
   int pids[] = {PID_EXT_SENSOR1, PID_EXT_SENSOR2};
 #if LOG_EXT_SENSORS == LOG_EXT_SENSORS_DIGITAL
   for (int i = 0; i < 2; i++) {
@@ -440,7 +439,7 @@ void processMEMS(CBuffer* buffer)
       for (byte i = 0; i < 3; i++) {
         motion += value[i] * value[i];
       }
-      if (motion >= MOTION_THRESHOLD * MOTION_THRESHOLD) {
+      if (motion >= node_info.wakeup_motion_thr * node_info.wakeup_motion_thr) {
         lastMotionTime = millis();
         ESP_LOGD(TAG_PROC, "Motion: %.4f", motion);
       }
@@ -674,7 +673,7 @@ String executeCommand(const char* cmd)
     const char* subcmd = cmd + 4;
 
     if (!strncmp(subcmd, "SYNC ", 5) && subcmd[5]) {
-      syncInterval = atoi(subcmd + 5);
+      node_info.srv_sync_timeout_ms = atoi(subcmd + 5);
 
 #if ENABLE_OTA_UPDATE
     } else if (!strncmp(subcmd, "OTABOOT ", 8) && strlen(subcmd) == 9) {
@@ -836,7 +835,7 @@ bool waitMotion(long timeout)
       motion += m * m;
     }
     // check movement
-    if (motion >= MOTION_THRESHOLD * MOTION_THRESHOLD) {
+    if (motion >= node_info.wakeup_motion_thr * node_info.wakeup_motion_thr) {
       //lastMotionTime = millis();
       return true;
     } else {
@@ -897,13 +896,13 @@ void process()
       state.clear(STATE_SEND_ITID1C);
     }
 
-    if (millis() - lastObfcmTime > OBFCM_INTERVAL_MS) {
-      ESP_LOGD(
-        TAG_PROC, "Elapsed %.2fsec since last OBFCM.", (float)OBFCM_INTERVAL_MS / 1000);
+    if (millis() - lastObfcmTime > node_info.obfcm_interval) {
+      ESP_LOGD(TAG_PROC, "Elapsed %.2fsec since last OBFCM.",
+               (float)node_info.obfcm_interval / 1000);
       state.set(STATE_GET_OBFCM);
     }
 
-    if (obd.errors >= MAX_OBD_ERRORS) {
+    if (obd.errors >= node_info.obd_max_errors) {
       if (!obd.init()) {
         ESP_LOGE(TAG_PROC, "OBD OFF!");
         state.clear(STATE_OBD_READY | STATE_WORKING);
@@ -993,8 +992,8 @@ bool initNetwork()
 #if NET_DEVICE == NET_WIFI
   OLED_PRINT("Connecting WiFi...");
   for (byte attempts = 0; attempts < 3; attempts++) {
-    ESP_LOGI(TAG_NET, "Joining WiFi: %s", WIFI_SSID);
-    teleClient.net.begin(WIFI_SSID, WIFI_PASSWORD);
+    ESP_LOGI(TAG_NET, "Joining WiFi: %s", node_info.wifi_ssd);
+    teleClient.net.begin(node_info.wifi_ssd, node_info.wifi_pwd);
     if (teleClient.net.setup()) {
       state.set(STATE_NET_READY);
       String ip = teleClient.net.getIP();
@@ -1021,13 +1020,13 @@ bool initNetwork()
 #if NET_DEVICE >= SIM800
     OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
   ESP_LOGI(TAG_NET, "CELL: %s", teleClient.net.deviceName());
-  if (!teleClient.net.checkSIM(SIM_CARD_PIN)) {
+  if (!teleClient.net.checkSIM(node_info.sim_card_pin)) {
     ESP_LOGE(TAG_NET, "NO SIM CARD");
     return false;
   }
   ESP_LOGI(TAG_NET, "IMEI: %s", teleClient.net.IMEI);
   if (state.check(STATE_NET_READY) && !state.check(STATE_NET_CONNECTED)) {
-    if (teleClient.net.setup(CELL_APN)) {
+    if (teleClient.net.setup(node_info.cell_apn)) {
       String op = teleClient.net.getOperatorName();
       if (op.length()) {
         ESP_LOGI(TAG_NET, "Operator: %s", op.c_str());
@@ -1102,7 +1101,7 @@ void telemetry(void* inst)
       uint32_t t = millis();
       do {
         delay(1000);
-      } while (state.check(STATE_STANDBY) && millis() - t < 1000L * PING_BACK_INTERVAL);
+      } while (state.check(STATE_STANDBY) && millis() - t < 1000L * node_info.ping_back_interval_sec);
       if (state.check(STATE_STANDBY)) {
         // start ping
 #if GNSS == GNSS_STANDALONE
@@ -1183,7 +1182,8 @@ void telemetry(void* inst)
       store.purge();
 
       teleClient.inbound();
-      if (syncInterval > 10000 && millis() - teleClient.lastSyncTime > syncInterval) {
+      if (node_info.srv_sync_timeout_ms > 0 &&
+          millis() - teleClient.lastSyncTime > node_info.srv_sync_timeout_ms) {
         ESP_LOGW(TAG_TELE, "Unstable connection");
         connErrors++;
         timeoutsNet++;
@@ -1198,10 +1198,10 @@ void telemetry(void* inst)
         }
       }
 
-      if (deviceTemp >= COOLING_DOWN_TEMP) {
+      if (deviceTemp >= node_info.cool_temp) {
         // device too hot, cool down by pause transmission
         ESP_LOGE(TAG_TELE, "Overheat %.2f!  Purging cached samples.", deviceTemp);
-        delay(COOLING_DOWN_SLEEP_SEC * 1000);
+        delay(node_info.cool_delay_sec * 1000);
         bufman.purge();
       }
 
@@ -1241,13 +1241,14 @@ void standby()
 
   calibrateMEMS();
 
+  const auto jumpstart_thr = node_info.wakeup_jumpstart_thr;
   do {
       if (ledMode == 0) digitalWrite(PIN_LED, HIGH);
     t = millis();
 #if ENABLE_OBD
     v = obd.getVoltage();
 #else  // ENABLE_OBD
-    v = THR_VOLTAGE;
+    v = jumpstart_thr;
 #endif  // ENABLE_OBD
 
     v_grad = (v - v_old)/(t - t_old)*1000;
@@ -1272,22 +1273,23 @@ void standby()
     delay(880);
     t_old = t;
     v_old = v;
-  } while (!((v > THR_VOLTAGE) && (v_grad > THR_GRAD)));
+  } while (!((v > jumpstart_thr) && (v_grad > THR_GRAD)));
 #elif ENABLE_OBD
   do {
     delay(1000);
-  } while (obd.getVoltage() < THR_VOLTAGE);
+  } while (obd.getVoltage() < jumpstart_thr);
 #else
   delay(5000);
 #endif
   ESP_LOGI(TAG_PROC, "Wakeup!");
 
-#if RESET_AFTER_WAKEUP
+  if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
   mems->end();
 #endif
   esp_restart();
-#endif
+  }
+
   state.clear(STATE_STANDBY);
   // this will wake up co-processor
   sys.resetLink();
@@ -1467,8 +1469,8 @@ void setup()
     }
 
 #if LOG_EXT_SENSORS
-    pinMode(PIN_SENSOR1, INPUT);
-    pinMode(PIN_SENSOR2, INPUT);
+    pinMode(node_info.pin_sensor1, INPUT);
+    pinMode(node_info.pin_sensor2, INPUT);
 #endif
 
 #if ENABLE_OBD
@@ -1533,7 +1535,7 @@ void loop()
     }
   }
 
-  digitalWrite(PIN_SENSOR2, digitalRead(PIN_SENSOR1));
+  digitalWrite(node_info.pin_sensor2, digitalRead(node_info.pin_sensor1));
 
   ESP_LOGD(TAG_INIT, "<loop> state: %X", state.m_state);
 }

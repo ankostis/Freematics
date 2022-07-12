@@ -231,16 +231,16 @@
 // maximum consecutive communication errors before resetting network
 #define MAX_CONN_ERRORS_RECONNECT   3
 // data receiving timeout
-#define DATA_RECEIVING_TIMEOUT  5000 /* ms */
+#define DATA_RECEIVING_TIMEOUT_MS   5000 /* ms */
 // expected maximum server sync signal interval
-#define SERVER_SYNC_INTERVAL    120 /* seconds, 0 to disable */
+#define SERVER_SYNC_INTERVAL_SEC    120 /* 0 to disable */
 // data interval settings
-#define STATIONARY_TIME_TABLE   20, 40, 60 /* seconds */
-#define DATA_INTERVAL_TABLE     1000, 2000, 5000 /* ms */
-#define PING_BACK_INTERVAL      900 /* seconds */
+#define STATIONARY_TIME_TABLE       20, 40, 60 /* seconds */
+#define DATA_INTERVAL_TABLE         1000, 2000, 5000 /* ms */
+#define PING_BACK_INTERVAL_SEC      900
 
 // How often to send PIDs form the on-board fuel-consumption monitoring device.
-#define OBFCM_INTERVAL_MS       120000
+#define OBFCM_INTERVAL_MS           120000
 
 /**************************************
 * Data storage configurations
@@ -272,7 +272,7 @@
 * Standby/wakeup
 **************************************/
 // reset device after waking up
-#define RESET_AFTER_WAKEUP      0
+#define REBOOT_ON_WAKEUP        0
  /* moving vehicle motion threshold in G */
 #define MOTION_THRESHOLD        0.4f
 // engine jumpstart voltage for waking up (when ENABLE_MEMS)

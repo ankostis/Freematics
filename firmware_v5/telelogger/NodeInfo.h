@@ -22,8 +22,8 @@
    * {
    *   "device_id": "A0HNZRJU",
    *   "vin": "",
-   *   "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-10-gc9bea54-dirty",
-   *   "build_date": "12 Jul 2022, 21:25:57+0300",
+   *   "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-20-ga822865-dirty",
+   *   "build_date": "13 Jul 2022, 10:20:24+0300",
    *   "node_hw": {
    *     "board": "ESP32-D0WDQ6-v1",
    *     "cpu": "2x160MHz",
@@ -33,16 +33,16 @@
    *   },
    *   "node_fw": {
    *     "macroflags": (733 --> 0x733: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|ENABLE_MULTILOG|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
-   *     "esp32_ver": "v4.4.1-472-gc9140caf8c",
    *     "arduino_ver": "2.0.4",
+   *     "esp32_ver": "v4.4.1-472-gc9140caf8c",
    *     "ota_parts_used": "x2, R0, B0, U1",
    *     "partitions": [
    *       {
    *         "part": "app0:0x10000:160000",
    *         "ota_state": "0xffffffff",
-   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-10-gc9bea54-dirty",
-   *         "build_date": "12 Jul 2022, 21:25:57+0300",
-   *         "part_sha256": "766697db"
+   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-20-ga822865-dirty",
+   *         "build_date": "13 Jul 2022, 10:20:24+0300",
+   *         "part_sha256": "77d43861"
    *       },
    *       {
    *         "part": "app1:0x170000:160000",
@@ -51,59 +51,13 @@
    *         "build_date": "12 Jul 2022, 21:01:37+0300",
    *         "part_sha256": "ac02da04"
    *       }
-   *     ]
-   *   },
-   *   "node_state": {
-   *     "last_boot_reason": 1,
-   *     "partition_size": 1441792,
-   *     "sketch_size": 914160,
-   *     "partition_use": 63.4044303894043,
-   *     "heap_size": 188200,
-   *     "heap_max_used": 2848,
-   *     "heap_max_use": 1.5132837407013815,
-   *     "heap_free_min": 185352,
-   *     "esp_get_free_heap_size": 190024,
-   *     "esp_get_free_internal_heap_size": 189860,
-   *     "esp_get_minimum_free_heap_size": 184400,
-   *     "ESP_getHeapSize": 337196,
-   *     "ESP_getFreeHeap": 251796,
-   *     "ESP_getMinFreeHeap": 246292,
-   *     "ESP_getMaxAllocHeap": 110580,
-   *     "def_total_allocated_bytes": 84404,
-   *     "def_total_free_bytes": 191068,
-   *     "def_minimum_free_bytes": 185352,
-   *     "def_largest_free_block": 110580
-   *   },
-   *   "config": {
-   *     "serial_autoconf_timeout": 0,
-   *     "log_level_build": 5,
-   *     "log_levels": {
-   *       "*": 5
-   *     },
-   *     "log_sink": 1,
-   *     "log_sink_fpath": "/logs.txt",
-   *     "log_sink_disk_usage_purge_prcnt": 0.8999999761581421,
-   *     "log_sink_sync_interval_ms": 3141,
+   *     ],
+   *     "log_level_build": 4,
    *     "nslots": 256,
    *     "slot_len": 180,
-   *     "serialize_len": 1024,
    *     "storage": 0,
    *     "gnss": 1,
-   *     "ota_url": "<len: 37>",
-   *     "ota_update_cert_pem_len": 3749,
-   *     "net_dev": 4,
-   *     "wifi_ssd": "GreatWifi",
-   *     "wifi_pwd": "***",
-   *     "cell_apn": "<len: 19>",
-   *     "sim_card_pin": "***",
    *     "srv_proto": 1,
-   *     "srv_host": "<len: 22>",
-   *     "srv_path": "***",
-   *     "srv_port": 0,
-   *     "net_recv_timeout": 5000,
-   *     "srv_sync_timeout": 120,
-   *     "net_retries": 5,
-   *     "net_udp_reconnect_delay": 3000,
    *     "stationary_timeout_vals": [
    *       20,
    *       40,
@@ -113,15 +67,60 @@
    *       1000,
    *       2000,
    *       5000
-   *     ],
+   *     ]
+   *   },
+   *   "node_state": {
+   *     "last_boot_reason": 1,
+   *     "partition_size": 1441792,
+   *     "sketch_size": 1246496,
+   *     "partition_max_use": 86.45463562011719,
+   *     "boot_heap_size": 154176,
+   *     "heap_size": 303684,
+   *     "heap_max_used": 136008,
+   *     "heap_max_use": 44.78602758130162,
+   *     "heap_free_min": 167676,
+   *     "esp_get_free_heap_size": 172256,
+   *     "esp_get_free_internal_heap_size": 172092,
+   *     "ESP_getFreeHeap": 218124,
+   *     "ESP_getMinFreeHeap": 212604,
+   *     "ESP_getMaxAllocHeap": 110580,
+   *     "def_total_allocated": 84084,
+   *     "def_total_free": 173452,
+   *     "def_minimum_free": 167676,
+   *     "def_largest_free_block": 110580
+   *   },
+   *   "config": {
+   *     "serial_autoconf_timeout": 1,
+   *     "log_levels": {
+   *       "*": 4
+   *     },
+   *     "log_sink": 1,
+   *     "log_sink_fpath": "/logs.txt",
+   *     "log_sink_disk_usage_purge_prcnt": 0.8999999761581421,
+   *     "log_sink_sync_interval_ms": 3141,
+   *     "serialize_len": 1024,
+   *     "ota_url": "<len: 37>",
+   *     "ota_update_cert_pem_len": 3749,
+   *     "net_dev": 4,
+   *     "wifi_ssd": "GreatWifi",
+   *     "wifi_pwd": "***",
+   *     "cell_apn": "<len: 19>",
+   *     "sim_card_pin": "***",
+   *     "srv_host": "<len: 22>",
+   *     "srv_path": "***",
+   *     "srv_port": 0,
+   *     "net_recv_timeout_ms": 5000,
+   *     "srv_sync_timeout_ms": 120000,
+   *     "net_retries": 5,
+   *     "net_udp_reconnect_delay_ms": 3000,
    *     "obfcm_interval": 120000,
    *     "obd_max_errors": 3,
-   *     "ping_back_interval": 900,
-   *     "wakeup_reset": 0,
+   *     "ping_back_interval_sec": 900,
+   *     "reboot_on_wakeup": 0,
    *     "wakeup_motion_thr": 0.4000000059604645,
    *     "wakeup_jumpstart_thr": 13.600000381469727,
    *     "cool_temp": 80.0,
-   *     "cool_delay": 5,
+   *     "cool_delay_sec": 5,
    *     "pin_sensor1": 34,
    *     "pin_sensor2": 26
    *   }
@@ -198,7 +197,7 @@ struct node_info_t {
   // FIRMWARE
   /**
    * ATTENTION: increase `macroflags` size if more macroflags added.
-   * NOTE: teach platformIO's monitor-filter about new macroflags.
+   * NOTE: remember to teach platformIO's monitor-filter about new macroflags.
    */
   const macroflags_t macroflags{
     ((ENABLE_OBD && 1) << 0)
@@ -215,6 +214,16 @@ struct node_info_t {
     | ((BOARD_HAS_PSRAM && 1) << 11)
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
   };
+  const uint8_t log_level_build{CORE_DEBUG_LEVEL};
+  const int nslots{BUFFER_SLOTS};
+  const int serialize_len{SERIALIZE_BUFFER_SIZE};
+  const int slot_len{BUFFER_LENGTH};
+  const uint16_t stationary_timeout_vals[3]{STATIONARY_TIME_TABLE};
+  const uint16_t data_interval_vals[3]{DATA_INTERVAL_TABLE};
+  /** Bit for enable/disable decided GLOBALon compile-time.  */
+  const uint8_t storage{STORAGE};
+  const uint8_t gnss{GNSS};
+  const uint8_t srv_proto{SERVER_PROTOCOL};
   const uint32_t partition_size{esp_ota_get_running_partition()->size};
   const uint32_t sketch_size{ESP.getSketchSize()};
   const float partition_use{(float) 100.0 * sketch_size / partition_size};
@@ -237,45 +246,34 @@ struct node_info_t {
 
   //////////
   // CONFIG
-  /** NOTE: remember to update also `macroflags.py` monitor-filter. */
-  int serial_autoconf_timeout{CONFIG_MODE_TIMEOUT};
-  uint8_t log_level_build{CORE_DEBUG_LEVEL};
+  int serial_autoconf_timeout{CONFIG_MODE_TIMEOUT};  // TODO: reconfigureable
   LogLevels log_levels{RUNTIME_LOG_LEVELS};
-  uint8_t log_sink{LOG_SINK};
+  uint8_t log_sink{LOG_SINK};  // TODO: reconfigureable
   const char *log_sink_fpath{LOG_SINK_FPATH};
   float log_sink_disk_usage_purge_prcnt{LOG_SINK_DISK_USAGE_PURGE_RATIO};
   int32_t log_sink_sync_interval_ms{LOG_SINK_SYNC_INTERVAL_MS};
-  int nslots{BUFFER_SLOTS};
-  int slot_len{BUFFER_LENGTH};
-  int serialize_len{SERIALIZE_BUFFER_SIZE};
-  /** Bit for enable/disable decided GLOBALon compile-time.  */
-  uint8_t storage{STORAGE};
-  uint8_t gnss{GNSS};
   const char *ota_url{OTA_UPDATE_URL};
   const char *ota_update_cert_pem{OTA_UPDATE_CERT_PEM};
-  uint8_t net_dev{NET_DEVICE};
+  uint8_t net_dev{NET_DEVICE};  // TODO: reconfigurable
   const char *wifi_ssd{WIFI_SSID};
   const char *wifi_pwd{WIFI_PASSWORD};
   const char *cell_apn{CELL_APN};
   const char *sim_card_pin{SIM_CARD_PIN};
-  uint8_t srv_proto{SERVER_PROTOCOL};
   const char *srv_host{SERVER_HOST};
   const char *srv_path{SERVER_PATH};
   uint16_t srv_port{SERVER_PORT};
-  uint32_t net_recv_timeout{DATA_RECEIVING_TIMEOUT};
-  uint32_t srv_sync_timeout{SERVER_SYNC_INTERVAL};
+  uint32_t net_recv_timeout_ms{DATA_RECEIVING_TIMEOUT_MS};
+  uint32_t srv_sync_timeout_ms{SERVER_SYNC_INTERVAL_SEC * 1000};
   uint8_t net_retries{NET_CONNECT_RETRIES};
-  uint16_t net_udp_reconnect_delay{UDP_CONNECT_RETRY_DELAY_MS};
-  uint16_t stationary_timeout_vals[3]{STATIONARY_TIME_TABLE};
-  uint16_t data_interval_vals[3]{DATA_INTERVAL_TABLE};
+  uint16_t net_udp_reconnect_delay_ms{UDP_CONNECT_RETRY_DELAY_MS};
   uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
-  uint16_t ping_back_interval{PING_BACK_INTERVAL};
-  uint8_t wakeup_reset{RESET_AFTER_WAKEUP};
+  uint16_t ping_back_interval_sec{PING_BACK_INTERVAL_SEC};
+  uint8_t reboot_on_wakeup{REBOOT_ON_WAKEUP};
   float wakeup_motion_thr{MOTION_THRESHOLD};
   float wakeup_jumpstart_thr{THR_VOLTAGE};
   float cool_temp{COOLING_DOWN_TEMP};
-  uint16_t cool_delay{COOLING_DOWN_SLEEP_SEC};
+  uint16_t cool_delay_sec{COOLING_DOWN_SLEEP_SEC};
   uint8_t pin_sensor1{PIN_SENSOR1};
   uint8_t pin_sensor2{PIN_SENSOR2};
 };
