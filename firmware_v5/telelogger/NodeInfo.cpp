@@ -299,8 +299,8 @@ static void _hide_sensitive_configs(Json &cfg) {
 #endif  // HIDE_SECRETS_IN_LOGS
 
 
-Json node_info_t::to_json() const {
-  Json cfg{
+Json node_info_t::config_to_json() const {
+  return {
       {"obd_pipe_sec", obd_pipe_sec},
       {"log_levels", log_levels},
       {"log_sink", log_sink},
@@ -332,11 +332,10 @@ Json node_info_t::to_json() const {
       {"pin_sensor1", pin_sensor1},
       {"pin_sensor2", pin_sensor2},
   };
+}  // config_to_json()
 
-#if HIDE_SECRETS_IN_LOGS
-  _hide_sensitive_configs(cfg);
-#endif // HIDE_SECRETS_IN_LOGS
 
+Json node_info_t::to_json() const {
   const PartInfos precs = collect_ota_partition_records();
   const auto fw_j = fw_info_to_json(precs);
 
@@ -352,6 +351,12 @@ Json node_info_t::to_json() const {
     app_desc = part_j.value("app_desc", "");
     build_date = part_j.value("build_date", "");
   }
+
+  auto cfg = config_to_json();
+#if HIDE_SECRETS_IN_LOGS
+  _hide_sensitive_configs(cfg);
+#endif // HIDE_SECRETS_IN_LOGS
+
 
   return {
         {"device_id", device_id},

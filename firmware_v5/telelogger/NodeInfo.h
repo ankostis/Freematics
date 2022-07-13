@@ -181,6 +181,7 @@ struct node_info_t {
   Json hw_info_to_json() const;
   Json fw_info_to_json(const PartInfos precs) const;
   Json node_state_to_json() const;
+  Json config_to_json() const;
 
   /**
    * Produces a valid JSON string as output, like the pone on file header.
