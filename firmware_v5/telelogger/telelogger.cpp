@@ -1300,30 +1300,41 @@ void standby()
   SETUP (after boot)
 *******************************************************************************/
 void enter_coproc_bootpipe_mode() {
+  constexpr const char EOT = 0x04; // End Of Transmission
   const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
 
+  ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE ))--");
+  Serial.printf(
+      "Awaiting user-input for %isec;"
+      "\n  please type any ELM327 AT cmds for OBD, or"
+      "\n  press [Ctrl+D] to exit immediately:\n",
+      node_info.obd_pipe_sec);
+  Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX,
+                PIN_LINK_UART_TX);
   uint32_t last_traffic_ms = millis();
+  bool input_given = false;
   do {
-    // Reboot only if any command given.
-    //
     if (Serial.available()) {
-      ESP_LOGI(TAG_SETUP, "#BOOT_OBD_PIPE#");
-      Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX,
-                    PIN_LINK_UART_TX);
-      do {
-        if (Serial.available()) {
-          Serial1.write(Serial.read());
-          last_traffic_ms = millis();
-        }
-        if (Serial1.available()) {
-          Serial.write(Serial1.read());
-          last_traffic_ms = millis();
-        }
-      } while ((millis() - last_traffic_ms) < timeout_ms);
-      ESP_LOGI(TAG_SETUP, "#REBOOT from BOOT_OBD_PIPE#");
-      esp_restart();
+      char usb_char = Serial.read();
+      if (usb_char == EOT) break;
+      Serial1.write(usb_char);
+      // Echo user-input back to serial port.
+      // Coproc's `ATE1` cmd seems not that adept...
+      Serial.write(usb_char);
+      last_traffic_ms = millis();
+      input_given = true;
+    }
+    if (Serial1.available()) {
+      Serial.write(Serial1.read());
+      last_traffic_ms = millis();
     }
   } while ((millis() - last_traffic_ms) < timeout_ms);
+
+  if (input_given) {
+    ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did things...REBOOTING! ))--");
+    esp_restart();
+  }
+ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did nothing ))--");
 }
 
 void apply_runtime_log_levels(const LogLevels &levels) {
