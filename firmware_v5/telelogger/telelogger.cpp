@@ -1285,9 +1285,9 @@ void standby()
 
   if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
-  mems->end();
+    mems->end();
 #endif
-  esp_restart();
+    esp_restart();
   }
 
   state.clear(STATE_STANDBY);
@@ -1299,34 +1299,32 @@ void standby()
 /*******************************************************************************
   SETUP (after boot)
 *******************************************************************************/
-#if CONFIG_MODE_TIMEOUT
-void configMode()
-{
-  uint32_t t = millis();
+void enter_coproc_bootpipe_mode() {
+  const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
 
+  uint32_t last_traffic_ms = millis();
   do {
+    // Reboot only if any command given.
+    //
     if (Serial.available()) {
-      // enter config mode
-      ESP_LOGI(TAG_SETUP, "#CONFIG MODE#");
-      Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX, PIN_LINK_UART_TX);
+      ESP_LOGI(TAG_SETUP, "#BOOT_OBD_PIPE#");
+      Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX,
+                    PIN_LINK_UART_TX);
       do {
         if (Serial.available()) {
           Serial1.write(Serial.read());
-          t = millis();
+          last_traffic_ms = millis();
         }
         if (Serial1.available()) {
           Serial.write(Serial1.read());
-          t = millis();
+          last_traffic_ms = millis();
         }
-      } while (millis() - t < CONFIG_MODE_TIMEOUT);
-      ESP_LOGD(TAG_SETUP, "#RESET#");
-      delay(100);
+      } while ((millis() - last_traffic_ms) < timeout_ms);
+      ESP_LOGI(TAG_SETUP, "#REBOOT from BOOT_OBD_PIPE#");
       esp_restart();
     }
-  } while (millis() - t < CONFIG_MODE_TIMEOUT);
+  } while ((millis() - last_traffic_ms) < timeout_ms);
 }
-#endif
-
 
 void apply_runtime_log_levels(const LogLevels &levels) {
     for (auto iter = std::cbegin(levels); iter != std::cend(levels); ++iter)
@@ -1417,7 +1415,6 @@ void setup_multilog() {
 void setup()
 {
     buzzer.tone(1);  // 2hz ticks until `initialize()`
-    delay(500);
 
 #if ENABLE_OLED
     oled.begin();
@@ -1448,9 +1445,9 @@ void setup()
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
-#if CONFIG_MODE_TIMEOUT
-    configMode();
-#endif
+    // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
+    if (node_info.obd_pipe_sec)
+        enter_coproc_bootpipe_mode();
 
     node_info_j = node_info.to_json();
     ESP_LOGE(

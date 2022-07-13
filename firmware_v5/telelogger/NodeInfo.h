@@ -90,7 +90,7 @@
    *     "def_largest_free_block": 110580
    *   },
    *   "config": {
-   *     "serial_autoconf_timeout": 1,
+   *     "obd_pipe_sec": 3,
    *     "log_levels": {
    *       "*": 4
    *     },
@@ -246,7 +246,7 @@ struct node_info_t {
 
   //////////
   // CONFIG
-  int serial_autoconf_timeout{CONFIG_MODE_TIMEOUT};  // TODO: reconfigureable
+  int obd_pipe_sec{BOOT_OBD_PIPE_TIMEOUT_SEC};
   LogLevels log_levels{RUNTIME_LOG_LEVELS};
   uint8_t log_sink{LOG_SINK};  // TODO: reconfigureable
   const char *log_sink_fpath{LOG_SINK_FPATH};

@@ -166,8 +166,16 @@
 /**************************************
 * OBD-II configurations
 **************************************/
-/** Talk directly to OBD on boot? (bad name,  know...:-) */
-#define CONFIG_MODE_TIMEOUT     0
+/**
+ * When not 0, after boot the USB-uart is bidirectionally piped
+ * directly to LINK-uart (connected to STM32F103CX co-processor's usart-2),
+ * effectively allowing to send ELM327 AT-commands from the Serial <--> OBD.
+ *
+ * - The timeout resets on any Rx/Tx chars.
+ * - Reboots after the timeout has expired AND any chars have Rx/Tx,
+ *   otherwise, proceeds with regular setup.
+ */
+#define BOOT_OBD_PIPE_TIMEOUT_SEC    0
 
 #ifndef ENABLE_OBD
 #define ENABLE_OBD              1

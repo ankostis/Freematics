@@ -42,8 +42,9 @@ Buzzer notes & patterns
 -----------------------
 While connected to OBD, the device may produce the following buzzing-sounds:
 
-- 1Hz tick: while booting (occurs again if "reboot" from standby configured).
-- 2Hz ta-tick: initialize, always follows boot, and wake-up from standby
+  - 1Hz tick: immediately after boot, while in `setup()` & before `initialize()`; hence while `BOOT_OBD_PIPE_TIMEOUT_SEC` mode is enabled.
+  Occurs again if "reboot" from standby configured.
+- 2Hz ta-tick: `initialize()`; always follows boot, and wake-up from standby
   (even if no "reboot" from standby configured).
 - 1Hz ta-tick: while waiting to reconnect, after multiple attempts to login.
 

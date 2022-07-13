@@ -301,7 +301,7 @@ static void _hide_sensitive_configs(Json &cfg) {
 
 Json node_info_t::to_json() const {
   Json cfg{
-      {"serial_autoconf_timeout", serial_autoconf_timeout},
+      {"obd_pipe_sec", obd_pipe_sec},
       {"log_levels", log_levels},
       {"log_sink", log_sink},
       {"log_sink_fpath", log_sink_fpath},
