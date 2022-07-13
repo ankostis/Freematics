@@ -29,15 +29,31 @@
 #include <soc/rtc.h>
 
 #include <cstring>
+#include <fstream>
 #include <iomanip>
-#include <json.hpp>
+#include <iostream>
 #include <sstream>
 #include <vector>
+
+#include <json.hpp>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #include "esp32/himem.h"
 #endif
 
+
+Json read_json(const std::string &fname) {
+    std::ifstream ifs{fname};
+    if (!ifs.is_open()) return {{fname, "error: failed to open"}};
+
+    try {
+      Json root;
+      ifs >> root;
+      return root;
+    } catch (const nlohmann::json::exception& ex) {
+      return {{fname, ex.what()}};
+    }
+}
 
 std::string  mac_to_device_id(const uint64_t mac) {
   std::stringstream ss{};
@@ -207,6 +223,8 @@ Json node_info_t::fw_info_to_json(const PartInfos precs) const {
 
   return {
       {"macroflags", ss_macroflags.str()},
+      {"reconf", reconf},
+      {"reconf_fpath", reconf_fpath},
       {"arduino_ver", ss_arduino_ver.str()},
       {"esp32_ver", IDF_VER},
       {"ota_parts_used", ss_parts_used.str()},
@@ -357,8 +375,7 @@ Json node_info_t::to_json() const {
   _hide_sensitive_configs(cfg);
 #endif // HIDE_SECRETS_IN_LOGS
 
-
-  return {
+  Json root = {
         {"device_id", device_id},
         {"vin", vin},
         {"app_desc", app_desc},
@@ -368,6 +385,21 @@ Json node_info_t::to_json() const {
         {"node_state", node_state_to_json()},
         {"config", cfg},
     };
+
+  if (reconf) {
+    Json cfg = root["config_build"] = root["config"];
+    if (reconf & RECONF_SD)
+      cfg.update(
+          (root["config_sd"] = read_json(std::string("/sd/") + reconf_fpath)),
+          true);
+    if (reconf & RECONF_SPIFFS)
+      cfg.update((root["config_spiffs"] =
+                      read_json(std::string("/spiffs/") + reconf_fpath)),
+                 true);
+    root["config"] = cfg;
+  }
+
+  return root;
 }
 
 

@@ -22,8 +22,8 @@
    * {
    *   "device_id": "A0HNZRJU",
    *   "vin": "",
-   *   "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-20-ga822865-dirty",
-   *   "build_date": "13 Jul 2022, 10:20:24+0300",
+   *   "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.0.3-109-g6ac3f4a-dirty",
+   *   "build_date": "13 Jul 2022, 18:57:01+0300",
    *   "node_hw": {
    *     "board": "ESP32-D0WDQ6-v1",
    *     "cpu": "2x160MHz",
@@ -32,7 +32,9 @@
    *     "slow_rtc": "0@150KHz"
    *   },
    *   "node_fw": {
-   *     "macroflags": (733 --> 0x733: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|ENABLE_MULTILOG|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
+   *     "macroflags": (6f3 --> 0x6f3: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|_NEED_SD|_NEED_SPIFFS|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
+   *     "reconf": 3,
+   *     "reconf_fpath": "config.json",
    *     "arduino_ver": "2.0.4",
    *     "esp32_ver": "v4.4.1-472-gc9140caf8c",
    *     "ota_parts_used": "x2, R0, B0, U1",
@@ -40,9 +42,9 @@
    *       {
    *         "part": "app0:0x10000:160000",
    *         "ota_state": "0xffffffff",
-   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.2.0-20-ga822865-dirty",
-   *         "build_date": "13 Jul 2022, 10:20:24+0300",
-   *         "part_sha256": "77d43861"
+   *         "app_desc": "jrcmatic(ankostis@kudos):jrc-v0.0.3-109-g6ac3f4a-dirty",
+   *         "build_date": "13 Jul 2022, 18:57:01+0300",
+   *         "part_sha256": "002b0365"
    *       },
    *       {
    *         "part": "app1:0x170000:160000",
@@ -52,7 +54,7 @@
    *         "part_sha256": "ac02da04"
    *       }
    *     ],
-   *     "log_level_build": 4,
+   *     "log_level_build": 3,
    *     "nslots": 256,
    *     "slot_len": 180,
    *     "storage": 0,
@@ -72,27 +74,64 @@
    *   "node_state": {
    *     "last_boot_reason": 1,
    *     "partition_size": 1441792,
-   *     "sketch_size": 1246496,
-   *     "partition_max_use": 86.45463562011719,
-   *     "boot_heap_size": 154176,
-   *     "heap_size": 303684,
-   *     "heap_max_used": 136008,
-   *     "heap_max_use": 44.78602758130162,
-   *     "heap_free_min": 167676,
-   *     "esp_get_free_heap_size": 172256,
-   *     "esp_get_free_internal_heap_size": 172092,
-   *     "ESP_getFreeHeap": 218124,
-   *     "ESP_getMinFreeHeap": 212604,
+   *     "sketch_size": 1353584,
+   *     "partition_max_use": 93.8820571899414,
+   *     "boot_heap_size": 151728,
+   *     "heap_size": 300980,
+   *     "heap_max_used": 160432,
+   *     "heap_max_use": 53.30320951558243,
+   *     "heap_free_min": 140548,
+   *     "esp_get_free_heap_size": 139980,
+   *     "esp_get_free_internal_heap_size": 139816,
+   *     "ESP_getFreeHeap": 183464,
+   *     "ESP_getMinFreeHeap": 183224,
    *     "ESP_getMaxAllocHeap": 110580,
-   *     "def_total_allocated": 84084,
-   *     "def_total_free": 173452,
-   *     "def_minimum_free": 167676,
+   *     "def_total_allocated": 116040,
+   *     "def_total_free": 141176,
+   *     "def_minimum_free": 140548,
    *     "def_largest_free_block": 110580
    *   },
    *   "config": {
-   *     "obd_pipe_sec": 3,
+   *     "obd_pipe_sec": 7,
    *     "log_levels": {
-   *       "*": 4
+   *       "*": 3
+   *     },
+   *     "log_sink": 1,
+   *     "log_sink_fpath": "/foo.txt",
+   *     "log_sink_disk_usage_purge_prcnt": 0.8999999761581421,
+   *     "log_sink_sync_interval_ms": 3141,
+   *     "serialize_len": 1024,
+   *     "ota_url": "<len: 37>",
+   *     "ota_update_cert_pem_len": 3749,
+   *     "net_dev": 1,
+   *     "wifi_ssd": "GreatWifi",
+   *     "wifi_pwd": "***",
+   *     "cell_apn": "<len: 19>",
+   *     "sim_card_pin": "***",
+   *     "srv_host": "<len: 22>",
+   *     "srv_path": "***",
+   *     "srv_port": 0,
+   *     "net_recv_timeout_ms": 5000,
+   *     "srv_sync_timeout_ms": 120000,
+   *     "net_retries": 5,
+   *     "net_udp_reconnect_delay_ms": 3000,
+   *     "obfcm_interval": 120000,
+   *     "obd_max_errors": 3,
+   *     "ping_back_interval_sec": 900,
+   *     "reboot_on_wakeup": 0,
+   *     "wakeup_motion_thr": 0.4000000059604645,
+   *     "wakeup_jumpstart_thr": 13.600000381469727,
+   *     "cool_temp": 80.0,
+   *     "cool_delay_sec": 5,
+   *     "pin_sensor1": 34,
+   *     "pin_sensor2": 26,
+   *     "bar": 3,
+   *     "/spiffs/config.json": "error: [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal"
+   *   },
+   *   "config_build": {
+   *     "obd_pipe_sec": 7,
+   *     "log_levels": {
+   *       "*": 3
    *     },
    *     "log_sink": 1,
    *     "log_sink_fpath": "/logs.txt",
@@ -101,7 +140,7 @@
    *     "serialize_len": 1024,
    *     "ota_url": "<len: 37>",
    *     "ota_update_cert_pem_len": 3749,
-   *     "net_dev": 4,
+   *     "net_dev": 1,
    *     "wifi_ssd": "GreatWifi",
    *     "wifi_pwd": "***",
    *     "cell_apn": "<len: 19>",
@@ -123,8 +162,16 @@
    *     "cool_delay_sec": 5,
    *     "pin_sensor1": 34,
    *     "pin_sensor2": 26
+   *   },
+   *   "config_sd": {
+   *     "log_sink_fpath": "/foo.txt",
+   *     "bar": 3
+   *   },
+   *   "config_spiffs": {
+   *     "/spiffs/config.json": "error: [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal"
    *   }
    * }
+   *
    * ```
    */
 
@@ -144,11 +191,13 @@
 #include <soc/rtc.h>
 
 #include <cstring>
+#include <fstream>
 #include <iomanip>
-#include <json.hpp>
-#include <map>
+#include <iostream>
 #include <sstream>
 #include <vector>
+
+#include <json.hpp>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
 #include "esp32/himem.h"
@@ -164,6 +213,8 @@ struct PartRec {
 };
 typedef std::vector<PartRec> PartInfos;
 
+
+Json read_json(const char *fname);
 
 /**
  * Idempotent transformation of freematics MACs --> device-ids,
@@ -216,6 +267,8 @@ struct node_info_t {
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
   };
   const uint8_t log_level_build{CORE_DEBUG_LEVEL};
+  const uint8_t reconf{RECONF};
+  const char *reconf_fpath{RECONF_FPATH};
   const int nslots{BUFFER_SLOTS};
   const int serialize_len{SERIALIZE_BUFFER_SIZE};
   const int slot_len{BUFFER_LENGTH};

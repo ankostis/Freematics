@@ -73,6 +73,10 @@
  */
 #define LOG_SINK_SPIFFS         0x4
 
+#define RECONF_NONE           0x0
+#define RECONF_SD             0x1
+#define RECONF_SPIFFS         0x2
+
 #define STORAGE_NONE            0
 /**
  * Store trip-traces into SD/SPIFFS;  SD & SPIFFS are mutual-exclusive.
@@ -94,6 +98,14 @@
 #define LOG_EXT_SENSORS_NONE    0
 #define LOG_EXT_SENSORS_DIGITAL 1
 #define LOG_EXT_SENSORS_ANALOG  2
+
+/**************************************
+ * Reconfiguration overlays
+ **************************************/
+#define RECONF                RECONF_SD | RECONF_SPIFFS
+#define RECONF_FPATH       "config.json"
+#define RECONF_FPATH_SPIFFS   "/spiffs/config.json"
+
 
 /**************************************
  * Logging (see also `platformio.ini`)
@@ -347,10 +359,18 @@
 #   include "secrets.h"
 #endif
 
-#define _NEED_SD        (ENABLE_SD || (STORAGE == STORAGE_SD) || \
-        (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SD)))
-#define _NEED_SPIFFS    (ENABLE_SPIFFS || (STORAGE == STORAGE_SPIFFS) || \
-        (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SPIFFS)))
+#define _NEED_SD        ( \
+        ENABLE_SD \
+        || (STORAGE == STORAGE_SD) \
+        || (ENABLE_MULTILOG && USE_ESP_IDF_LOG && ((LOG_SINK) & LOG_SINK_SD)) \
+        || ((RECONF) & RECONF_SD) \
+        )
+#define _NEED_SPIFFS    ( \
+        ENABLE_SPIFFS \
+        || (STORAGE == STORAGE_SPIFFS) \
+        || (ENABLE_MULTILOG && USE_ESP_IDF_LOG && ((LOG_SINK) & LOG_SINK_SPIFFS)) \
+        || ((RECONF) & RECONF_SPIFFS) \
+        )
 
 #if HIDE_SECRETS_IN_LOGS
 #define _DIGIT2C(n) ('0' + (n % 10))
