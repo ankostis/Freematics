@@ -652,6 +652,10 @@ String executeCommand(const char* cmd)
     teleClient.shutdown();
     esp_restart();
 
+  } else if (!strcmp(cmd, "CFG")) {
+    auto cfg_j = node_info.config_to_json();
+    result = cfg_j.dump(2, ' ', false, json_dump_handler).c_str();
+
   } else if (!strcmp(cmd, "INFO")) {
     node_info_j = node_info.to_json();
     result = node_info_j.dump(2, ' ', false, json_dump_handler).c_str();
