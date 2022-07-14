@@ -53,17 +53,102 @@ Remote Commands
 
 Commands can be sent to Freematics ONE+ for execution with results obtained, through serial terminal or by [Freematics Hub API](https://freematics.com/hub/api/) (remotely). Currently following commands are implemented.
 
-* LED [0/1/2] - setting device LED status (0:auto 1:always off 2:always on)
-* REBOOT - performing a reboot immediately
-* STANDBY - entering standby mode immediately
-* WAKEUP - waking up the device from standby mode
-* SET SYNC [interval in ms] - setting server sync checking interval
-* STATS - returning some stats
-* OBD <AT-command> - send ELM327 command to to OBD-II co-proc and await result
-* OTA [URL] - upgrade firmware from default or given url
-* SET
-  * SYNC [interval in ms] - setting server sync checking interval
-  * OTABOOT 0|1 - set next OTA partition to boot
+
+- `LED [0/1/2]`
+
+  set device LED status (0:auto 1:always off 2:always on)
+
+- `REBOOT`
+
+  perform a reboot immediately
+
+- `STANDBY`
+
+  enter standby mode immediately (until motion or voltage spike detected)
+
+- `WAKEUP`
+
+  wake up the device from standby mode
+
+- `STATS`
+
+  return some stats
+
+- `OBD <AT-command>`
+
+  send given ELM327 command to co-processor connected to OBD-II and await result
+
+- `OTA [URL]`
+
+  upgrade firmware from default or given url
+
+- `OTABOOT <0|1>`
+
+  set next OTA partition to boot (but do not reboot)
+
+- `INFOS [<source>]`
+
+  dump specified node infos as JSON, where `source` is one of:
+
+  - `H`: hardware
+  - `F`: firmware
+  - `S`: status
+  - `*`: all [default]
+
+- `CFGGET [<layer> [<key>]]`
+
+  dump config `key`(s) (or all if `*`) from the given `layer`,
+  where `layer` is one of:
+
+  - `B`: "build", read-only
+  - `F`: "flash"
+  - `S`: "sd"
+  - `R`: "noinit-dram", changed values hold until power-cycled
+  - `M`: "merged", read-only, recalculated from the x4 layers above
+  - `A`: "active", changed values hold until rebooted
+  - `*`: all above
+
+  Example: `CFGGET S foo_key`
+
+  [default: `A *`]
+
+- `CFGSET <layer> <json-object>`
+
+  write `json-object` config to a `layer`
+  (`layer`: one of `FSRA` chars, see `CFGGET` above).
+
+  NOTE: not validated or re-applied (eg. log-levels), use `CFGAPPLY` for that.
+
+  Example: `CFGSET A {"wifi_pwd": "foo"}`
+
+- `CFGRM <layer> [<key>...|*]`
+
+  remove the given `key`(s) (or all if `*`) from the given `layer`
+  (`layer`: one of `FSR` chars, see `CFGGET` above).
+
+  NOTE: not validated or re-applied (eg. log-levels), use `CFGAPPLY` for that.
+
+  [default: `*`]
+
+- `CFGSTORE <layer> [<key>...|*]`
+
+  copy the "active" value of `key`(s) (or all if `*`) to the given `layer`
+  (`layer`: one of `FSR` chars, see `CFGGET` above).
+
+  [default: `*`]
+
+- `CFGMERGE [<key>...|*]`
+
+  merge `FSR` config-layers for the given `key`(s) (or all if `*`)
+  and set them as "active"
+
+  NOTE: not validated or re-applied (eg. log-levels), use `CFGAPPLY` for that.
+
+- `CFGAPPLY [<key>...|*]`
+
+  run actions related to the given `key`(s) (or all if `*`) with values from the "active" layer
+
+  [default: `*`]
 
 Example API calls
 -----------------

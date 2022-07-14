@@ -652,13 +652,28 @@ String executeCommand(const char* cmd)
     teleClient.shutdown();
     esp_restart();
 
-  } else if (!strcmp(cmd, "CFG")) {
-    auto cfg_j = node_info.config_to_json();
-    result = cfg_j.dump(2, ' ', false, json_dump_handler).c_str();
+  } else if (!strcmp(cmd, "RECONF")) {
 
-  } else if (!strcmp(cmd, "INFO")) {
-    node_info_j = node_info.to_json();
-    result = node_info_j.dump(2, ' ', false, json_dump_handler).c_str();
+  } else if (!strcmp(cmd, "CFG2SD")) {
+
+  } else if (!strcmp(cmd, "CFG2FL")) {
+
+
+  } else if (!strcmp(cmd, "INFO") || !strcmp(cmd, "HW") || !strcmp(cmd, "FW") || !strcmp(cmd, "CFG")) {
+    Json j;
+    if (!strcmp(cmd, "INFO")) // BUG: STACK TOO SMALL!!
+      j = node_info.to_json();
+
+    else if (!strcmp(cmd, "HW"))
+      j = node_info.hw_info_to_json();
+
+    else if (!strcmp(cmd, "FW")) {
+      const PartInfos& precs = collect_ota_partition_records();
+      j = node_info.fw_info_to_json(precs);
+
+    } else if (!strcmp(cmd, "CFG"))
+      j = node_info.config_to_json();
+    result = j.dump(2, ' ', false, json_dump_handler).c_str();
 
 #if ENABLE_OTA_UPDATE
   } else if (!strcmp(cmd, "OTA") || !strncmp(cmd, "OTA ", 4)) {
