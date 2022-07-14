@@ -658,6 +658,7 @@ void do_firmware_upgrade(const char *ota_url = nullptr) {
 
 String executeCommand(const char* cmd)
 {
+  int cmd_len = strlen(cmd);
   String result = "OK";
   ESP_LOGI(TAG_PROC, "cmd: %s", cmd);
   if (!strncmp(cmd, "LED ", 4) && cmd[4]) {
@@ -674,13 +675,30 @@ String executeCommand(const char* cmd)
     teleClient.shutdown();
     esp_restart();
 
-  } else if (!strcmp(cmd, "CFG")) {
-    auto cfg_j = node_info.config_to_json();
-    result = cfg_j.dump(2, ' ', false, json_dump_handler).c_str();
+  } else if (cmd_len <= 5 && !strncmp(cmd, "INFO", 4)) {
+    const char *itype = cmd[4] ? cmd + 4 : nullptr;
+    Json j;
 
-  } else if (!strcmp(cmd, "INFO")) {
-    node_info_j = node_info.to_json();
-    result = node_info_j.dump(2, ' ', false, json_dump_handler).c_str();
+    if (!itype || *itype == '*') // BUG: STACK TOO SMALL!!
+      j = node_info.to_json();
+
+    else if (*itype == 'H')
+      j = node_info.hw_info_to_json();
+
+    else if (*itype == 'F') {
+      const PartInfos& precs = collect_ota_partition_records();
+      j = node_info.fw_info_to_json(precs);
+
+    } else if (*itype == 'S')
+      j = node_info.node_state_to_json();
+
+    else if (*itype == 'C')
+      j = node_info.config_to_json();
+
+    else
+      return "ERROR";
+
+    result = j.dump(2, ' ', false, json_dump_handler).c_str();
 
 #if ENABLE_OTA_UPDATE
   } else if (!strcmp(cmd, "OTA") || !strncmp(cmd, "OTA ", 4)) {

@@ -53,17 +53,49 @@ Remote Commands
 
 Commands can be sent to Freematics ONE+ for execution with results obtained, through serial terminal or by [Freematics Hub API](https://freematics.com/hub/api/) (remotely). Currently following commands are implemented.
 
-* LED [0/1/2] - setting device LED status (0:auto 1:always off 2:always on)
-* REBOOT - performing a reboot immediately
-* STANDBY - entering standby mode immediately
-* WAKEUP - waking up the device from standby mode
-* SET SYNC [interval in ms] - setting server sync checking interval
-* STATS - returning some stats
-* OBD <AT-command> - send ELM327 command to to OBD-II co-proc and await result
-* OTA [URL] - upgrade firmware from default or given url
-* SET
-  * SYNC [interval in ms] - setting server sync checking interval
-  * OTABOOT 0|1 - set next OTA partition to boot
+
+- `LED [0/1/2]`
+
+  set device LED status (0:auto 1:always off 2:always on)
+
+- `REBOOT`
+
+  perform a reboot immediately
+
+- `STANDBY`
+
+  enter standby mode immediately (until motion or voltage spike detected)
+
+- `WAKEUP`
+
+  wake up the device from standby mode
+
+- `STATS`
+
+  return some stats
+
+- `OBD <AT-command>`
+
+  send given ELM327 command to co-processor connected to OBD-II and await result
+
+- `OTA [URL]`
+
+  upgrade firmware from default or given url
+
+- `SET OTABOOT <0|1>`
+
+  set next OTA partition to boot (but do not reboot)
+
+- `INFO[<source>]`
+
+  dump specified node infos as JSON, where `source` is one of:
+
+  - `H`: hardware
+  - `F`: firmware
+  - `S`: status
+  - `C`: configs
+  - `*`: all [default]
+
 
 Example API calls
 -----------------
