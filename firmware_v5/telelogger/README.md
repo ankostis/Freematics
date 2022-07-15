@@ -1,7 +1,7 @@
 This Arduino sketch is designed for running on [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) to collect vehicle telemetry data from OBD-II, GPS and motion sensor and transmit the collected data to a remote server running [Freematics Hub](https://freematics.com/hub) software in realtime. It also has a mechansim for executing and responding to commands sent from serverside.
 
 Data Collection
----------------
+===============
 
 The sketch collects following data.
 
@@ -12,7 +12,7 @@ The sketch collects following data.
 * Device temperature (from MEMS sensor or ESP32 built-in sensor)
 
 Data Transmissions
-------------------
+==================
 
 Data transmission over UDP and HTTP protocols are implemented with following hardware.
 
@@ -31,7 +31,7 @@ There two ways of sending data:
    uses 5055 port)
 
 Data Storage
-------------
+============
 
 Following types of data storage are supported.
 
@@ -39,7 +39,7 @@ Following types of data storage are supported.
 * ESP32 built-in Flash memory storage (SPIFFS)
 
 Buzzer notes & patterns
------------------------
+=======================
 While connected to OBD, the device may produce the following buzzing-sounds:
 
   - 1Hz tick: immediately after boot, while in `setup()` & before `initialize()`; hence while `BOOT_OBD_PIPE_TIMEOUT_SEC` mode is enabled.
@@ -49,7 +49,7 @@ While connected to OBD, the device may produce the following buzzing-sounds:
 - 1Hz ta-tick: while waiting to reconnect, after multiple attempts to login.
 
 Remote Commands
----------------
+===============
 
 Commands can be sent to Freematics ONE+ for execution with results obtained, through serial terminal or by [Freematics Hub API](https://freematics.com/hub/api/) (remotely). Currently following commands are implemented.
 
@@ -62,14 +62,14 @@ Commands can be sent to Freematics ONE+ for execution with results obtained, thr
 * OBD [PID] - querying and returning specified OBD-II PID value (raw data)
 
 Viewing Trip Data
------------------
+=================
 
 Once the sketch is running and data is being submitted to hub.freematics.com, you can open https://hub.freematics.com from any of your devices and enter your device ID (displayed in serial output) to view real-time data and history trip data.
 
 ![Freematics Hub Dashboard](https://freematics.com/pages/wp-content/uploads/2019/01/freematics_hub_dash-1024x576.png)
 
 Prerequisites
--------------
+=============
 
 * [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) or [Freematics ONE+ Model B](https://freematics.com/products/freematics-one-plus-model-b/)
 * A micro SIM card if cellular network required
