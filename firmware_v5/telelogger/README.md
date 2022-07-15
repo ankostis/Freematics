@@ -59,7 +59,24 @@ Commands can be sent to Freematics ONE+ for execution with results obtained, thr
 * WAKEUP - waking up the device from standby mode
 * SET SYNC [interval in ms] - setting server sync checking interval
 * STATS - returning some stats
-* OBD [PID] - querying and returning specified OBD-II PID value (raw data)
+* OBD <AT-command> - send ELM327 command to to OBD-II co-proc and await result
+* OTA [URL] - upgrade firmware from default or given url
+* SET
+  * SYNC [interval in ms] - setting server sync checking interval
+  * OTABOOT 0|1 - set next OTA partition to boot
+
+Example API calls
+-----------------
+
+Send OTA command through the *teleserver* with your browser like this:
+
+  <teleserver-url>/api/command?id=DEVICEID&cmd=OTA
+
+Switch which OTA partition to boot & reboot:
+
+  <teleserver-url>/api/command?id=DEVICEID&cmd=SET%20OTABOOT%200
+  <teleserver-url>/api/command?id=DEVICEID&cmd=REBOOT
+
 
 Viewing Trip Data
 =================
