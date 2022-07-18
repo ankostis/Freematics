@@ -353,6 +353,24 @@ Json node_info_t::config_to_json() const {
 }  // config_to_json()
 
 
+Json read_n_merge_cfg_sources(bool reconf, const char *reconf_fpath) {
+  Json root{};
+  Json active = root["build"] = node_info_t().config_to_json();
+
+  if (reconf & RECONF_SPIFFS)
+    active.update(
+        (root["flash"] = read_json(std::string("/spiffs/") + reconf_fpath)),
+        true);
+  if (reconf & RECONF_SD)
+    active.update(
+        (root["sd"] = read_json(std::string("/sd/") + reconf_fpath)),
+        true);
+  root["active"] = active;
+
+  return root;
+}  // read_n_merge_cfg_sources()
+
+
 Json node_info_t::to_json() const {
   const PartInfos precs = collect_ota_partition_records();
   const auto fw_j = fw_info_to_json(precs);
@@ -370,12 +388,34 @@ Json node_info_t::to_json() const {
     build_date = part_j.value("build_date", "");
   }
 
-  auto cfg = config_to_json();
+  const auto cfg = config_to_json();  // Assume i'm the active struct.
+  Json cfg_sources{};
+
+  if (reconf) {
+    read_n_merge_cfg_sources(reconf, reconf_fpath)
+    Json cfg = root["cfg_build"] = root["cfg"];
+    if (reconf & RECONF_SD) {
+      cfg.update(
+          (root["cfg_sd"] = read_json(std::string("/sd/") + reconf_fpath)),
+          true);
+#if HIDE_SECRETS_IN_LOGS
+      _hide_sensitive_configs(root["cfg_sd"]);
+#endif // HIDE_SECRETS_IN_LOGS
+    }
+    if (reconf & RECONF_SPIFFS) {
+      cfg.update((root["cfg_fl"] =
+                      read_json(std::string("/spiffs/") + reconf_fpath)),
+                 true);
+#if HIDE_SECRETS_IN_LOGS
+      _hide_sensitive_configs(root["cfg_fl"]);
+#endif // HIDE_SECRETS_IN_LOGS
+    }
 #if HIDE_SECRETS_IN_LOGS
   _hide_sensitive_configs(cfg);
 #endif // HIDE_SECRETS_IN_LOGS
 
-  Json root = {
+
+  return {
         {"device_id", device_id},
         {"vin", vin},
         {"app_desc", app_desc},
@@ -383,23 +423,9 @@ Json node_info_t::to_json() const {
         {"node_hw", hw_info_to_json()},
         {"node_fw", fw_j},
         {"node_state", node_state_to_json()},
-        {"config", cfg},
+        {"cfg", cfg},
+        {"cfg_sources", cfg_sources},
     };
-
-  if (reconf) {
-    Json cfg = root["config_build"] = root["config"];
-    if (reconf & RECONF_SD)
-      cfg.update(
-          (root["config_sd"] = read_json(std::string("/sd/") + reconf_fpath)),
-          true);
-    if (reconf & RECONF_SPIFFS)
-      cfg.update((root["config_spiffs"] =
-                      read_json(std::string("/spiffs/") + reconf_fpath)),
-                 true);
-    root["config"] = cfg;
-  }
-
-  return root;
 }
 
 

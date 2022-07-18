@@ -1453,9 +1453,6 @@ void setup()
     // initialize USB serial
     Serial.begin(115200);
 
-    // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
-    apply_runtime_log_levels(node_info.log_levels);
-
 #if _NEED_SD
     setup_SD();
 #endif  // _NEED_SD
@@ -1475,10 +1472,8 @@ void setup()
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
-    // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
-    if (node_info.obd_pipe_sec)
-        enter_coproc_bootpipe_mode();
-
+    Json sources =
+        read_n_merge_cfg_sources(node_info.reconf, node_info.reconf_fpath);
     node_info_j = node_info.to_json();
     ESP_LOGE(
       TAG_SETUP,
@@ -1490,6 +1485,9 @@ void setup()
         "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
         (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
         node_info.device_id);
+
+    // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
+    apply_runtime_log_levels(node_info.log_levels);
 
     if (sys.begin()) {
       ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
@@ -1503,6 +1501,11 @@ void setup()
 #if ENABLE_OBD
     obd.begin(sys.link);
 #endif
+
+    // TODO: move Boot-obd_pipe after net-connect, to allow remote obd-pipe.
+    if (node_info.obd_pipe_sec)
+        enter_coproc_bootpipe_mode();
+
 
 #if ENABLE_MEMS
   if (!state.check(STATE_MEMS_READY)) {

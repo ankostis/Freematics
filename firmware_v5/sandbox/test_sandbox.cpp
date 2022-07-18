@@ -29,6 +29,63 @@
 #include <esp_log.h>
 #include <string>
 
+#include <esp_system.h>
+#include <Esp.h>
+
+/**
+ * sample output:
+ * ```
+ * esp_get_free_heap_size:          4378415
+ * esp_get_free_internal_heap_size: 186276
+ * esp_get_minimum_free_heap_size:  4373219
+ * ESP.getHeapSize:                 306116
+ * ESP.getFreeHeap:                 229708
+ * ESP.getMinFreeHeap:              224496
+ * ESP.getMaxAllocHeap:             110580
+ * ```
+ */
+void test_report_heap() {
+  ESP_LOGE(TAG,
+    "\nesp_get_free_heap_size: %u"
+    "\nesp_get_free_internal_heap_size: %u"
+    "\nesp_get_minimum_free_heap_size: %u"
+    "\nESP.getHeapSize: %u"
+    "\nESP.getFreeHeap: %u"
+    "\nESP.getMinFreeHeap: %u"
+    "\nESP.getMaxAllocHeap: %u"
+
+    , esp_get_free_heap_size()
+    , esp_get_free_internal_heap_size()
+    , esp_get_minimum_free_heap_size()
+    , ESP.getHeapSize()
+    , ESP.getFreeHeap()
+    , ESP.getMinFreeHeap()
+    , ESP.getMaxAllocHeap()
+    );
+}
+
+#include <esp_ota_ops.h>
+#include <esp_partition.h>
+
+void test_report_partitions() {
+  ESP_LOGE(TAG,
+    "\npartitions#: %u"
+    "\nesp_ota_get_running_partition: %x"
+    "\nesp_ota_get_boot_partition: %x"
+    "\nesp_ota_get_next_update_partition: %x"
+    "\nota0: %x"
+    "\nota1: %x"
+
+    , esp_ota_get_app_partition_count()
+    , esp_ota_get_running_partition()->address
+    , esp_ota_get_boot_partition()->address
+    , esp_ota_get_next_update_partition(nullptr)->address
+    , esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_0, nullptr)->address
+    , esp_partition_find_first(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_APP_OTA_1, nullptr)->address
+    );
+}
+
+
 /**
  *  NOTE: undef unity.h macros or else:
  *    json.hpp:22020:44: note: in expansion of macro 'isnan'
@@ -59,6 +116,22 @@ void test_sys_info() {
 
   const auto info_j = node_info.to_json();
   ESP_LOGE(TAG, "JSON:\n%s", _jdump(info_j).c_str());
+}
+
+
+#define NO_INIT_MAGIC 0x73aec001
+__NOINIT_ATTR int boot_counter_magic;
+__NOINIT_ATTR int boot_counter;
+void test_no_init_ram() {
+  delay(3);
+  if (boot_counter_magic == NO_INIT_MAGIC) {
+    boot_counter++;
+  } else {
+    boot_counter_magic = NO_INIT_MAGIC;
+    boot_counter = 0;
+  }
+  ESP_LOGE(TAG, "boot_counter_magic: %x, count: %i\n", boot_counter_magic, boot_counter);
+  esp_restart();
 }
 
 
@@ -347,11 +420,14 @@ void process_tests() {
 
     UNITY_BEGIN();
     RUN_TEST(test_sys_info);
-    RUN_TEST(test_logging);
-    RUN_TEST(test_fsutil);
-    RUN_TEST(test_SD);
-    RUN_TEST(test_buzzer);
-    RUN_TEST(test_ClientWIFI_connect_and_listAPs);
+    // RUN_TEST(test_report_heap);
+    // RUN_TEST(test_report_partitions);
+    // RUN_TEST(test_no_init_ram);
+    // RUN_TEST(test_logging);
+    // RUN_TEST(test_fsutil);
+    // RUN_TEST(test_SD);
+    // RUN_TEST(test_buzzer);
+    // RUN_TEST(test_ClientWIFI_connect_and_listAPs);
     UNITY_END();
 }
 

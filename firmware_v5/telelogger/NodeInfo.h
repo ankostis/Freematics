@@ -91,7 +91,7 @@
    *     "def_minimum_free": 140548,
    *     "def_largest_free_block": 110580
    *   },
-   *   "config": {
+   *   "cfg": {
    *     "obd_pipe_sec": 7,
    *     "log_levels": {
    *       "*": 3
@@ -128,7 +128,7 @@
    *     "bar": 3,
    *     "/spiffs/config.json": "error: [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal"
    *   },
-   *   "config_build": {
+   *   "cfg_build": {
    *     "obd_pipe_sec": 7,
    *     "log_levels": {
    *       "*": 3
@@ -163,11 +163,11 @@
    *     "pin_sensor1": 34,
    *     "pin_sensor2": 26
    *   },
-   *   "config_sd": {
+   *   "cfg_sd": {
    *     "log_sink_fpath": "/foo.txt",
    *     "bar": 3
    *   },
-   *   "config_spiffs": {
+   *   "cfg_fl": {
    *     "/spiffs/config.json": "error: [json.exception.parse_error.101] parse error at line 1, column 1: syntax error while parsing value - unexpected end of input; expected '[', '{', or a literal"
    *   }
    * }
@@ -227,6 +227,7 @@ Json read_json(const char *fname);
  */
 std::string mac_to_device_id(uint64_t max);
 
+Json read_n_merge_cfg_sources(uint reconf, const char *reconf_fpath);
 
 struct node_info_t {
   Json hw_info_to_json() const;
@@ -267,7 +268,7 @@ struct node_info_t {
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
   };
   const uint8_t log_level_build{CORE_DEBUG_LEVEL};
-  const uint8_t reconf{RECONF};
+  const uint reconf{RECONF};
   const char *reconf_fpath{RECONF_FPATH};
   const int nslots{BUFFER_SLOTS};
   const int serialize_len{SERIALIZE_BUFFER_SIZE};
