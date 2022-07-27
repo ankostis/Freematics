@@ -1256,7 +1256,7 @@ void standby()
 #endif  // ENABLE_OBD
 
     v_grad = (v - v_old)/(t - t_old)*1000;
-    ESP_LOGI(
+    ESP_LOGD(
         TAG_PROC,
         "Wake-up trigger dt: %.2fs"
         ", Voltage old: %.2f, Voltage new: %.2f, Gradient: %.2f"
