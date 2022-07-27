@@ -202,7 +202,7 @@
 // WiFi settings
 #define WIFI_SSID               "SSID"
 #define WIFI_PASSWORD           "PASSWORD"
-// cellular network settings
+/** Cellular access-point name for network;  leave empty for all. */
 #define CELL_APN                ""
 // Freematics Hub server settings
 #define SERVER_HOST             "hub.freematics.com"
@@ -242,7 +242,15 @@
 #define DATA_RECEIVING_TIMEOUT_MS   5000 /* ms */
 // expected maximum server sync signal interval
 #define SERVER_SYNC_INTERVAL_SEC    120 /* 0 to disable */
-// data interval settings
+/**
+ * Intervals for when to send data based on stationary status.
+ *
+ * When vehicle is moving, the 1st element of `DATA_INTERVAL_TABLE` applies
+ * for the interval to transmit PIDs, otherwise,
+ * the frequency is gradually reduced as stationary duration increases,
+ * until the last element of `STATIONARY_TIME_TABLE` is reached,
+ * and falls to standby.
+ */
 #define STATIONARY_TIME_TABLE       20, 40, 60 /* seconds */
 #define DATA_INTERVAL_TABLE         1000, 2000, 5000 /* ms */
 #define PING_BACK_INTERVAL_SEC      900
