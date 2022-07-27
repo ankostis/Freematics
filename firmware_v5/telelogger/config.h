@@ -256,7 +256,7 @@
 #define PING_BACK_INTERVAL_SEC      900
 
 // How often to send PIDs form the on-board fuel-consumption monitoring device.
-#define OBFCM_INTERVAL_MS           120000
+#define OBFCM_INTERVAL_MS           30000
 
 /**************************************
 * Data storage configurations
