@@ -57,17 +57,7 @@
    *     "slot_len": 180,
    *     "storage": 0,
    *     "gnss": 1,
-   *     "srv_proto": 1,
-   *     "stationary_timeout_vals": [
-   *       20,
-   *       40,
-   *       60
-   *     ],
-   *     "data_interval_vals": [
-   *       1000,
-   *       2000,
-   *       5000
-   *     ]
+   *     "srv_proto": 1
    *   },
    *   "node_state": {
    *     "last_boot_reason": 1,
@@ -113,6 +103,20 @@
    *     "srv_sync_timeout_ms": 120000,
    *     "net_retries": 5,
    *     "net_udp_reconnect_delay_ms": 3000,
+   *     "transmission_intervals": [
+   *       [
+   *         20,
+   *         1000
+   *       ],
+   *       [
+   *         40,
+   *         2000
+   *       ],
+   *       [
+   *         60,
+   *         5000
+   *       ]
+   *     ],
    *     "obfcm_interval": 120000,
    *     "obd_max_errors": 3,
    *     "ping_back_interval_sec": 900,
@@ -219,8 +223,6 @@ struct node_info_t {
   const int nslots{BUFFER_SLOTS};
   const int serialize_len{SERIALIZE_BUFFER_SIZE};
   const int slot_len{BUFFER_LENGTH};
-  const uint16_t stationary_timeout_vals[3]{STATIONARY_TIME_TABLE};
-  const uint16_t data_interval_vals[3]{DATA_INTERVAL_TABLE};
   /** Bit for enable/disable decided GLOBALon compile-time.  */
   const uint8_t storage{STORAGE};
   const uint8_t gnss{GNSS};
@@ -267,6 +269,7 @@ struct node_info_t {
   uint32_t srv_sync_timeout_ms{SERVER_SYNC_INTERVAL_SEC * 1000};
   uint8_t net_retries{NET_CONNECT_RETRIES};
   uint16_t net_udp_reconnect_delay_ms{UDP_CONNECT_RETRY_DELAY_MS};
+  std::map<int, int> transmission_intervals{STATIONARY_TRANSMISSION_INTERVALS};
   uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
   uint16_t ping_back_interval_sec{PING_BACK_INTERVAL_SEC};

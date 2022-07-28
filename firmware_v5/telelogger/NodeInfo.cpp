@@ -218,8 +218,6 @@ Json node_info_t::fw_info_to_json(const PartInfos precs) const {
       {"storage", storage},
       {"gnss", gnss},
       {"srv_proto", srv_proto},
-      {"stationary_timeout_vals", stationary_timeout_vals},
-      {"data_interval_vals", data_interval_vals},
   };
 }  // fw_info_to_json()
 
@@ -321,6 +319,7 @@ Json node_info_t::config_to_json() const {
       {"srv_sync_timeout_ms", srv_sync_timeout_ms},
       {"net_retries", net_retries},
       {"net_udp_reconnect_delay_ms", net_udp_reconnect_delay_ms},
+      {"transmission_intervals", transmission_intervals},
       {"obfcm_interval", obfcm_interval},
       {"obd_max_errors", obd_max_errors},
       {"ping_back_interval_sec", ping_back_interval_sec},

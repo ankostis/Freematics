@@ -245,14 +245,23 @@
 /**
  * Intervals for when to send data based on stationary status.
  *
- * When vehicle is moving, the 1st element of `DATA_INTERVAL_TABLE` applies
- * for the interval to transmit PIDs, otherwise,
- * the frequency is gradually reduced as stationary duration increases,
- * until the last element of `STATIONARY_TIME_TABLE` is reached,
- * and falls to standby.
+ * The values below are initializers for a `std::map<int, int>`
+ * with keys & value pairs like:
+ *
+ *     {<stationary-duration-sec>, <transmission-interval-ms>}
+ *
+ * Τhe 1st interval(value) applies either when the vehicle is moving, or
+ * when stationary for less than the 1st duration(key);
+ * the rest pairs are expected to gradually increase the intervals (values)
+ * as the stationary durations (keys) increase,
+ * until the last stationary duration (key), which defines when the device
+ * should fall to standby.
  */
-#define STATIONARY_TIME_TABLE       20, 40, 60 /* seconds */
-#define DATA_INTERVAL_TABLE         1000, 2000, 5000 /* ms */
+#define STATIONARY_TRANSMISSION_INTERVALS \
+        {20, 1000}, \
+        {40, 2000}, \
+        {60, 5000},
+
 #define PING_BACK_INTERVAL_SEC      900
 
 // How often to send PIDs form the on-board fuel-consumption monitoring device.
