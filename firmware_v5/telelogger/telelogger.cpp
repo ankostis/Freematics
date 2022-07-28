@@ -52,6 +52,23 @@ inline constexpr const char TAG_INIT[] = "INIT";
 inline constexpr const char TAG_TELE[] = "TELE";
 inline constexpr const char TAG_PROC[] = "PROC";
 
+#if HIDE_SECRETS_IN_LOGS
+#define _DIGIT2C(n) ('0' + (n % 10))
+#define _SIZEOFSTR(s)     _DIGIT2C(sizeof(s) / 10), _DIGIT2C(sizeof(s))
+const char apn2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(CELL_APN), '>', '\0'};
+const char host2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(SERVER_HOST), '>', '\0'};
+const int port2log = 0;
+const char ota_url2log[]{
+    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(OTA_UPDATE_URL), '>', '\0'};
+#else
+const char apn2log[] = CELL_APN;
+const char host2log[] = SERVER_HOST;
+const int port2log = SERVER_PORT;
+const char ota_url2log[] = OTA_UPDATE_URL;
+#endif
+
 /**
  * NOTE: changes here, must convey to platformIO's monitor-filter.
  */

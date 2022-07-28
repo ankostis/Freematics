@@ -287,12 +287,12 @@ static void _hide_sensitive_configs(Json &cfg) {
   cfg.update(
       {
           {"wifi_pwd", mask},
-          {"cell_apn", apn2log},
+          {"cell_apn", (const char *)apn2log},
           {"sim_card_pin", mask},
-          {"srv_host", host2log},
+          {"srv_host", (const char *)host2log},
           {"srv_path", mask},
           {"srv_port", 0},
-          {"ota_url", ota_url2log},
+          {"ota_url", (const char *)ota_url2log},
       },
       /* (recursively) merge_objects? */ false);
 }  // _hide_sensitive_configs()

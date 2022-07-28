@@ -360,22 +360,12 @@
 #define _NEED_SPIFFS    (ENABLE_SPIFFS || (STORAGE == STORAGE_SPIFFS) || \
         (ENABLE_MULTILOG && USE_ESP_IDF_LOG && (LOG_SINK & LOG_SINK_SPIFFS)))
 
-#if HIDE_SECRETS_IN_LOGS
-#define _DIGIT2C(n) ('0' + (n % 10))
-#define _SIZEOFSTR(s)     _DIGIT2C(sizeof(s) / 10), _DIGIT2C(sizeof(s))
-inline constexpr const char apn2log[]{
-    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(CELL_APN), '>', '\0'};
-inline constexpr const char host2log[]{
-    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(SERVER_HOST), '>', '\0'};
-inline constexpr const int port2log = 0;
-inline constexpr const char ota_url2log[]{
-    '<', 'l', 'e', 'n', ':', ' ', _SIZEOFSTR(OTA_UPDATE_URL), '>', '\0'};
-#else
-inline constexpr const char apn2log[] = CELL_APN;
-inline constexpr const char host2log[] = SERVER_HOST;
-inline constexpr const int port2log = SERVER_PORT;
-inline constexpr const char ota_url2log[] = OTA_UPDATE_URL;
-#endif
+// Masked secrets to log instead.
+//
+extern const char apn2log[];
+extern const char host2log[];
+extern const int port2log;
+extern const char ota_url2log[];
 
 #ifndef BOARD_HAS_PSRAM
 #define BOARD_HAS_PSRAM 0
