@@ -125,6 +125,11 @@ DS_CAN_MSG obdDataMulti[]=
   {0}
 };
 
+/** Stuff to remember surviving reboots. */
+__NOINIT_ATTR boot_ark_t boot_ark;
+unsigned long standby_tstamp;
+unsigned long wakeup_tstamp = 0;
+
 /**
  * Without it, bad UTF-8 strings not sanitized while building JSON
  * crash later on `json.dump()`,
@@ -1235,6 +1240,10 @@ void telemetry(void* inst)
 *******************************************************************************/
 void standby()
 {
+  boot_ark.naps += 1;
+  boot_ark.wake_sec += (millis() - wakeup_tstamp) / 1000;
+  standby_tstamp = millis();
+
 #if STORAGE
   if (state.check(STATE_STORAGE_READY)) {
     logger.end();
@@ -1303,6 +1312,9 @@ void standby()
   delay(5000);
 #endif
   ESP_LOGI(TAG_PROC, "Wakeup!");
+
+  boot_ark.nap_sec += (millis() - standby_tstamp) / 1000;
+  wakeup_tstamp = millis();
 
   if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS

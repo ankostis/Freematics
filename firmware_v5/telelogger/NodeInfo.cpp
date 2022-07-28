@@ -241,8 +241,16 @@ Json node_info_t::node_state_to_json() const {
 #endif
 #endif
 
+  unsigned long wake_sec_now = (millis() - wakeup_tstamp) / 1000;
+
   return {
   {"last_boot_reason", esp_reset_reason()},
+  {"reboots", boot_ark.reboots},
+  {"naps", boot_ark.naps},
+  {"nap_sec", boot_ark.nap_sec},
+  {"wake_sec", boot_ark.wake_sec + wake_sec_now},
+  {"nap_ratio", (float) boot_ark.nap_sec / (boot_ark.nap_sec +
+      boot_ark.wake_sec + wake_sec_now)},
 
   {"partition_size", partition_size},
   {"sketch_size", sketch_size},

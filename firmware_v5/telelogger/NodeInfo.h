@@ -61,6 +61,11 @@
    *   },
    *   "node_state": {
    *     "last_boot_reason": 1,
+   *     "reboots": 0,
+   *     "naps": 0,
+   *     "nap_sec": 0,
+   *     "wake_sec": 17,
+   *     "nap_ratio": 0.0,
    *     "partition_size": 1441792,
    *     "sketch_size": 1246496,
    *     "partition_max_use": 86.45463562011719,
@@ -179,6 +184,35 @@ typedef std::vector<PartRec> PartInfos;
  *    a x12-char  string (to be stored on :field:`node_info_t.device_id`)
  */
 std::string mac_to_device_id(uint64_t max);
+
+
+/** Stuff that survives reboots. */
+#define NO_INIT_MAGIC 0x73ae
+struct boot_ark_t {
+  int16_t magic;
+  uint16_t reboots;
+  uint16_t naps;
+  uint64_t nap_sec;
+  uint64_t wake_sec;
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wuninitialized"
+#pragma GCC diagnostic ignored "-Wmaybe-uninitialized"
+  void init_boot_ark();
+
+  boot_ark_t() {
+    if (magic != NO_INIT_MAGIC) {
+      magic = NO_INIT_MAGIC;
+      reboots = naps = nap_sec = wake_sec = 0;
+    } else {
+      reboots += 1;
+    }
+  }
+#pragma GCC diagnostic pop
+};
+
+extern boot_ark_t boot_ark;
+extern unsigned long wakeup_tstamp;
 
 
 struct node_info_t {
