@@ -269,17 +269,6 @@ struct node_info_t {
   //////////
   // STATUS
   char vin[18]{};
-  int last_boot{};
-  uint32_t heap_used{};
-  float heap_use{};
-#if BOARD_HAS_PSRAM
-  uint32_t psram_used{};
-  float psram_use{};
-#if BOARD_HAS_PSRAM_HIGH
-  uint32_t psramh_used{};
-  float psramh_use{};
-#endif
-#endif
 
   //////////
   // CONFIG
