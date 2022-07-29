@@ -102,13 +102,19 @@ Example API calls
 
 Send OTA command through the *teleserver* with your browser like this:
 
-  <teleserver-url>/api/command?id=DEVICEID&cmd=OTA
+    <teleserver-url>/api/command?id=DEVICEID&cmd=OTA
 
 Switch which OTA partition to boot & reboot:
 
-  <teleserver-url>/api/command?id=DEVICEID&cmd=SET%20OTABOOT%200
-  <teleserver-url>/api/command?id=DEVICEID&cmd=REBOOT
+    <teleserver-url>/api/command?id=DEVICEID&cmd=SET%20OTABOOT%201
+    <teleserver-url>/api/command?id=DEVICEID&cmd=REBOOT
 
+To read command results, extract the "token" from the JSON response (eg. `3`)
+and send it:
+
+    <teleserver-url>/api/command?id=DEVICEID&token=3
+
+> **NOTE:** as of July 2022, reading back cmd results does not seem to work.
 
 Viewing Trip Data
 =================
