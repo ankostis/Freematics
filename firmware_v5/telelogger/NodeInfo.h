@@ -215,6 +215,13 @@ extern boot_ark_t boot_ark;
 extern unsigned long wakeup_tstamp;
 
 
+struct stationary_interval_t {
+  int stationary_duration_sec;
+  int transmission_interval_ms;
+};
+void to_json(Json &j, const stationary_interval_t &t);
+void from_json(const Json &j, stationary_interval_t &t);
+
 struct node_info_t {
   Json hw_info_to_json() const;
   Json fw_info_to_json(const PartInfos precs) const;
@@ -292,7 +299,7 @@ struct node_info_t {
   uint32_t srv_sync_timeout_ms{SERVER_SYNC_INTERVAL_SEC * 1000};
   uint8_t net_retries{NET_CONNECT_RETRIES};
   uint16_t net_udp_reconnect_delay_ms{UDP_CONNECT_RETRY_DELAY_MS};
-  std::map<int, int> transmission_intervals{STATIONARY_TRANSMISSION_INTERVALS};
+  std::vector<stationary_interval_t> transmission_intervals{STATIONARY_TRANSMISSION_INTERVALS};
   uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
   uint16_t ping_back_interval_sec{PING_BACK_INTERVAL_SEC};

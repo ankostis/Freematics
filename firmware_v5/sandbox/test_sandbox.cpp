@@ -266,7 +266,7 @@ uint32_t _check_wifi_status(
  */
 void test_ClientWIFI_connect_and_listAPs() {
     log_i("Connecting...");
-    wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+    wifi.begin({WIFI_SSIDS});
     uint32_t ok_delay_ms = _check_wifi_status();
     // TEST_ASSERT_NOT_EQUAL(0, ok_delay_ms);
     ESP_LOGI("gg", "Connected after: %ims", ok_delay_ms);

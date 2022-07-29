@@ -245,17 +245,17 @@
 /**
  * Intervals for when to send data based on stationary status.
  *
- * The values below are initializers for a `std::map<int, int>`
- * with keys & value pairs like:
+ * The values below are initializers for a `std::vector<stationary_interval_t>`
+ * pairs like this:
  *
  *     {<stationary-duration-sec>, <transmission-interval-ms>}
  *
- * Τhe 1st interval(value) applies either when the vehicle is moving, or
- * when stationary for less than the 1st duration(key);
- * the rest pairs are expected to gradually increase the intervals (values)
- * as the stationary durations (keys) increase,
- * until the last stationary duration (key), which defines when the device
- * should fall to standby.
+ * Τhe 1st interval(right-value) applies either when the vehicle is moving, or
+ * when stationary for less than the 1st duration(left-value);
+ * the rest pairs are expected to gradually increase the intervals (left-values)
+ * as the stationary durations (right-values) increase,
+ * until the last stationary duration (left-value),
+ * which defines when the device should fall to standby.
  */
 #define STATIONARY_TRANSMISSION_INTERVALS \
         {20, 1000}, \

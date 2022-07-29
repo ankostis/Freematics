@@ -70,6 +70,16 @@ std::string  mac_to_device_id(const uint64_t mac) {
 }
 
 
+void to_json(Json& j, const stationary_interval_t& t) {
+  j = Json{ t.stationary_duration_sec, t.transmission_interval_ms };
+}
+
+void from_json(const Json& j, stationary_interval_t& t) {
+  j[0].get_to(t.stationary_duration_sec);
+  j[1].get_to(t.transmission_interval_ms);
+}
+
+
 const PartInfos collect_ota_partition_records() {
   esp_partition_iterator_t it = esp_partition_find(
       ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, nullptr);

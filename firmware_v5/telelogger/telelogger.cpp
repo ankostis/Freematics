@@ -1012,8 +1012,8 @@ void process()
   unsigned int motionless = (millis() - lastMotionTime) / 1000;
   bool stationary = true;
   for (auto iter = cbegin(intervals); iter != cend(intervals); ++iter) {
-    const auto stationaryDuration = iter->first;
-    dataInterval = iter->second;
+    const auto stationaryDuration = iter->stationary_duration_sec;
+    dataInterval = iter->transmission_interval_ms;
     if (motionless < stationaryDuration || stationaryDuration == 0) {
       stationary = false;
       break;
