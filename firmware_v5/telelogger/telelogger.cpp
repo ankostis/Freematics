@@ -822,30 +822,31 @@ bool processCommand(char* data)
   if (!(p = strstr(data, "CMD="))) return false;
   char *cmd = p + 4;
 
+  std::stringstream tx;
   if (token > lastCmdToken) {
     // new command
     std::string result = executeCommand(cmd);
     // send command response
-    char buf[256];
-    snprintf(buf, sizeof(buf), "TK=%u,MSG=%s", token, result.c_str());
+    tx << "TK=" << token << ",MSG=" << result;
     for (byte attempts = 0; attempts < 3; attempts++) {
-      if (teleClient.notify(EVENT_ACK, buf)) {
-        ESP_LOGD(TAG_PROC, "ACK notified");
+      if (teleClient.notify(EVENT_ACK, tx.str().c_str())) {
+        ESP_LOGI(
+          TAG_PROC, "ACK token(%i) CMD(%s) replied: %s", token, cmd,
+          tx.str().c_str());
         break;
       } else {
-        ESP_LOGW(TAG_PROC, "ACK ignored");
+        ESP_LOGW(TAG_PROC, "ACK token(%i) CMD(%s) ignored", token, cmd);
       }
     }
   } else {
     // previously executed command
-    char buf[64];
-    snprintf(buf, sizeof(buf), "TK=%u,DUP=1", token);
+    tx << "TK=" << token << ",DUP=1";
     for (byte attempts = 0; attempts < 3; attempts++) {
-      if (teleClient.notify(EVENT_ACK, buf)) {
-        ESP_LOGD(TAG_PROC, "ACK notified");
+      if (teleClient.notify(EVENT_ACK, tx.str().c_str())) {
+        ESP_LOGI(TAG_PROC, "ACK token(%i) prev CMD(%s) notified", token, cmd);
         break;
       } else {
-        ESP_LOGW(TAG_PROC, "ACK ignored");
+        ESP_LOGW(TAG_PROC, "ACK  token(%i) prev CMD(%s) ignored", token, cmd);
       }
     }
   }
