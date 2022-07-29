@@ -211,6 +211,9 @@ Json node_info_t::fw_info_to_json(const PartInfos precs) const {
       {"esp32_ver", IDF_VER},
       {"ota_parts_used", ss_parts_used.str()},
       {"partitions", partitions},
+      {"partition_size", partition_size},
+      {"sketch_size", sketch_size},
+      {"partition_use", partition_use},
       {"log_level_build", log_level_build},
       {"nslots", nslots},
       {"slot_len", slot_len},
@@ -251,10 +254,6 @@ Json node_info_t::node_state_to_json() const {
   {"wake_sec", boot_ark.wake_sec + wake_sec_now},
   {"nap_ratio", (float) boot_ark.nap_sec / (boot_ark.nap_sec +
       boot_ark.wake_sec + wake_sec_now)},
-
-  {"partition_size", partition_size},
-  {"sketch_size", sketch_size},
-  {"partition_max_use", partition_use},
 
   {"boot_heap_size", boot_heap_size},
   {"heap_size", heap_size},

@@ -52,6 +52,9 @@
    *         "part_sha256": "ac02da04"
    *       }
    *     ],
+   *    "partition_size": 1441792,
+   *    "sketch_size": 1258848,
+   *    "partition_use": 87.31134796142578,
    *     "log_level_build": 4,
    *     "nslots": 256,
    *     "slot_len": 180,
@@ -66,9 +69,6 @@
    *     "nap_sec": 0,
    *     "wake_sec": 17,
    *     "nap_ratio": 0.0,
-   *     "partition_size": 1441792,
-   *     "sketch_size": 1246496,
-   *     "partition_max_use": 86.45463562011719,
    *     "boot_heap_size": 154176,
    *     "heap_size": 303684,
    *     "heap_max_used": 136008,
