@@ -200,6 +200,9 @@
  * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
  * like:
  *     {"ssid1", "pswd1"}, ...`
+ *
+ * If empty, connects to the 1st open WiFi.
+ * If only one given, force-connects even if hidden.
  */
 #define WIFI_SSIDS
 /** Cellular access-point name for network;  leave empty for all. */

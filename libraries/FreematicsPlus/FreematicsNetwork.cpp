@@ -53,29 +53,45 @@ std::string ClientWIFI::getIP()
 
 bool ClientWIFI::begin(std::map<std::string, std::string> ssids)
 {
-  int n = listAPs();
-  if (ssids.size() > 1) {
-    for (int i = 0; i < n; ++i) {
-      const char *ssid = WiFi.SSID(i).c_str();
+  const int n_known = ssids.size();
+  const bool first_open = (n_known == 0);
+  const int n_around = listAPs();
+  if (first_open || n_known > 1) {
+    for (int i = 0; i < n_around; ++i) {
+      String ssid1;
+      uint8_t encType;
+      int32_t _rssi;
+      uint8_t *_bssid;
+      int32_t _channel;
+      WiFi.getNetworkInfo(i, ssid1, encType, _rssi, _bssid, _channel);
+      const char *ssid = ssid1.c_str();
+
+      if (first_open && encType == WIFI_AUTH_OPEN) {
+        ESP_LOGI(TAG_WIFI, "Joining 1st open SSID no-%i '%s'...", (i + 1), ssid);
+        WiFi.begin(ssid, nullptr);
+        return true;
+      }
+
       const auto known_it = ssids.find(ssid);
       if (known_it != ssids.end()) {
         const char* pwd = known_it->second.c_str();
-        ESP_LOGI(TAG_WIFI, "Joining known WiFi no-%i '%s'...", (i + 1), ssid);
+        ESP_LOGI(TAG_WIFI, "Joining known SSID no-%i '%s'...", (i + 1), ssid);
         WiFi.begin(ssid, pwd);
         return true;
       }
+
+      ESP_LOGD(TAG_WIFI, "Unknown SSID no-%i '%s'...", (i + 1), ssid);
     }
     ESP_LOGE(TAG_WIFI, "No known SSIDs around!");
-  } else if (ssids.size() == 1) {
-    // Force ssid-pswd combination (for hidden SSIDs)
+  } else if (n_known == 1) {
+    // Force ssid-pwd combination (for hidden SSIDs)
     const auto it = ssids.begin();
     const char *ssid = it->first.c_str();
     const char *pwd = it->second.c_str();
-    ESP_LOGI(TAG_WIFI, "Forcing WiFi '%s'...", ssid);
+    ESP_LOGI(TAG_WIFI, "Forcing SSID '%s'...", ssid);
     WiFi.begin(ssid, pwd);
     return true;
-  } else
-    ESP_LOGE(TAG_WIFI, "No WiFi SSIDs known!");
+  }
 
   return false;
 }
@@ -137,13 +153,14 @@ int ClientWIFI::listAPs()
   } else {
     ESP_LOGI(TAG_WIFI, "x%i nearby WiFi APs:", n);
     for (int i = 0; i < n; ++i) {
-        ESP_LOGI(TAG_WIFI,
-                 "  +--%i: %s (%idb, ch%02i, %s)",
-                 (i + 1),
-                 WiFi.SSID(i).c_str(),
-                 WiFi.RSSI(i),
-                 WiFi.channel(i),
-                 auth_mode_str(WiFi.encryptionType(i)));
+      String ssid;
+      uint8_t encType;
+      int32_t rssi;
+      uint8_t* bssid;
+      int32_t channel;
+      WiFi.getNetworkInfo(i, ssid, encType, rssi, bssid, channel);
+      ESP_LOGI(TAG_WIFI, "  +--%i: %s (%idb, ch%02i, %s)", (i + 1),
+               ssid.c_str(), rssi, channel, auth_mode_str(encType));
     }
   }
   return n;
