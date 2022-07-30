@@ -177,6 +177,7 @@ uint32_t lastStatsTime = 0;
 uint32_t lastObfcmTime = 0;
 
 int32_t dataInterval = 1000;
+int current_stationary_tx_interval_stage = -1;
 
 #if STORAGE
 int fileid = 0;
@@ -1011,22 +1012,33 @@ void process()
   const auto &intervals = node_info.transmission_intervals;
   unsigned int motionless = (millis() - lastMotionTime) / 1000;
   bool stationary = true;
+  int new_tx_interval_stage = 0;
+  int stationary_duration = 0;
   for (auto iter = cbegin(intervals); iter != cend(intervals); ++iter) {
-    const auto stationaryDuration = iter->stationary_duration_sec;
+    stationary_duration = iter->stationary_duration_sec;
     dataInterval = iter->transmission_interval_ms;
-    if (motionless < stationaryDuration || stationaryDuration == 0) {
+    if (motionless < stationary_duration || stationary_duration == 0) {
       stationary = false;
       break;
     }
+    new_tx_interval_stage++;
   }
   if (stationary) {
     // stationery timeout
     // trip ended if OBD is not available
     if (!state.check(STATE_OBD_READY)) state.clear(STATE_WORKING);
+    ESP_LOGI(
+      TAG_PROC, "STATIONARY for %u sec, state: %X", motionless, state.m_state);
+  } else if (new_tx_interval_stage != current_stationary_tx_interval_stage) {
     ESP_LOGI(TAG_PROC,
-        "Stationary for %i sec, state: %X",
-        motionless, state.m_state);
+             "Motionless for %u, stage %i-->%i below %usec, transmit every %ums",
+             motionless,
+             current_stationary_tx_interval_stage,
+             new_tx_interval_stage,
+             stationary_duration,
+             dataInterval);
   }
+  current_stationary_tx_interval_stage = new_tx_interval_stage;
 #endif
   long t = dataInterval - (millis() - startTime);
   if (t > 0 && t < dataInterval) delay(t);
@@ -1341,6 +1353,7 @@ void standby()
 
   boot_ark.nap_sec += (millis() - standby_tstamp) / 1000;
   wakeup_tstamp = millis();
+  current_stationary_tx_interval_stage = 0;
 
   if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
