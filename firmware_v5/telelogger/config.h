@@ -17,10 +17,8 @@
  *
  * #define NET_DEVICE NET_XXX
  *
- * #undef WIFI_SSID
- * #define WIFI_SSID "..."
- * #undef WIFI_PASSWORD
- * #define WIFI_PASSWORD "..."
+ * #undef WIFI_SSIDS
+ * #define WIFI_SSIDS {"ssid1", "pswd1"}, {"ssid2", "pswd2"}
  *
  * #undef CELL_APN
  * #define CELL_APN "..."
@@ -152,7 +150,7 @@
  * Secrets hidden:
  * - srv_XXX(URL fields): dump str-length
  * - ota_url: dump str-length
- * - wifi_pwd(s)
+ * - wifi_ssids
  * - cell_apn: dump str-length
  * - sim_card_pin
  *
@@ -190,8 +188,7 @@
  * Don't modify per-device network settings & secrets here,
  * do it in `secrets.h` overrides instead:
  *      #define NET_DEVICE            NET_xxx   //(default below)
- *      #define WIFI_SSID             ""
- *      #define WIFI_SSID             ""
+ *      #define WIFI_SSIDS            {"ssid1", "pswd1"}, ...
  *      #define CELL_APN ""
  *      #define SIM_CARD_PIN          ""
  *      #define SERVER_HOST           "hub.freematics.com"
@@ -199,9 +196,12 @@
 #ifndef NET_DEVICE
 // change the following line to change network device
 #define NET_DEVICE              NET_WIFI
-// WiFi settings
-#define WIFI_SSID               "SSID"
-#define WIFI_PASSWORD           "PASSWORD"
+/**
+ * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
+ * like:
+ *     {"ssid1", "pswd1"}, ...`
+ */
+#define WIFI_SSIDS
 /** Cellular access-point name for network;  leave empty for all. */
 #define CELL_APN                ""
 // Freematics Hub server settings

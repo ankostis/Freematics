@@ -5,6 +5,7 @@
 * (C)2012-2019 Developed by Stanley Huang <stanley@freematics.com.au>
 *************************************************************************/
 
+#include <map>
 #include <string>
 #include <sstream>
 
@@ -50,11 +51,33 @@ std::string ClientWIFI::getIP()
   return std::string(WiFi.localIP().toString().c_str());
 }
 
-bool ClientWIFI::begin(const char* ssid, const char* password)
+bool ClientWIFI::begin(std::map<std::string, std::string> ssids)
 {
-  //listAPs();
-  WiFi.begin(ssid, password);
-  return true;
+  int n = listAPs();
+  if (ssids.size() > 1) {
+    for (int i = 0; i < n; ++i) {
+      const char *ssid = WiFi.SSID(i).c_str();
+      const auto known_it = ssids.find(ssid);
+      if (known_it != ssids.end()) {
+        const char* pwd = known_it->second.c_str();
+        ESP_LOGI(TAG_WIFI, "Joining known WiFi no-%i '%s'...", (i + 1), ssid);
+        WiFi.begin(ssid, pwd);
+        return true;
+      }
+    }
+    ESP_LOGE(TAG_WIFI, "No known SSIDs around!");
+  } else if (ssids.size() == 1) {
+    // Force ssid-pswd combination (for hidden SSIDs)
+    const auto it = ssids.begin();
+    const char *ssid = it->first.c_str();
+    const char *pwd = it->second.c_str();
+    ESP_LOGI(TAG_WIFI, "Forcing WiFi '%s'...", ssid);
+    WiFi.begin(ssid, pwd);
+    return true;
+  } else
+    ESP_LOGE(TAG_WIFI, "No WiFi SSIDs known!");
+
+  return false;
 }
 
 bool ClientWIFI::reconnect()
@@ -65,6 +88,43 @@ bool ClientWIFI::reconnect()
 void ClientWIFI::end()
 {
   WiFi.disconnect(true);
+}
+
+/** Copied from `WiFiGeneric.cpp`. */
+static const char * auth_mode_str(int authmode)
+{
+    switch (authmode) {
+    case WIFI_AUTH_OPEN:
+    	return ("OPEN");
+        break;
+    case WIFI_AUTH_WEP:
+    	return ("WEP");
+        break;
+    case WIFI_AUTH_WPA_PSK:
+    	return ("WPA_PSK");
+        break;
+    case WIFI_AUTH_WPA2_PSK:
+    	return ("WPA2_PSK");
+        break;
+    case WIFI_AUTH_WPA_WPA2_PSK:
+    	return ("WPA_WPA2_PSK");
+        break;
+    case WIFI_AUTH_WPA2_ENTERPRISE:
+    	return ("WPA2_ENTERPRISE");
+        break;
+    case WIFI_AUTH_WPA3_PSK:
+    	return ("WPA3_PSK");
+        break;
+    case WIFI_AUTH_WPA2_WPA3_PSK:
+    	return ("WPA2_WPA3_PSK");
+        break;
+    case WIFI_AUTH_WAPI_PSK:
+    	return ("WPAPI_PSK");
+        break;
+    default:
+        break;
+    }
+	return ("UNKNOWN");
 }
 
 int ClientWIFI::listAPs()
@@ -78,9 +138,12 @@ int ClientWIFI::listAPs()
     ESP_LOGI(TAG_WIFI, "x%i nearby WiFi APs:", n);
     for (int i = 0; i < n; ++i) {
         ESP_LOGI(TAG_WIFI,
-                 "  +--%i: %s (%idb)", (i + 1),
+                 "  +--%i: %s (%idb, ch%02i, %s)",
+                 (i + 1),
                  WiFi.SSID(i).c_str(),
-                 WiFi.RSSI(i));
+                 WiFi.RSSI(i),
+                 WiFi.channel(i),
+                 auth_mode_str(WiFi.encryptionType(i)));
     }
   }
   return n;

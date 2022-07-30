@@ -97,8 +97,7 @@
    *     "ota_url": "<len: 37>",
    *     "ota_update_cert_pem_len": 3749,
    *     "net_dev": 4,
-   *     "wifi_ssd": "GreatWifi",
-   *     "wifi_pwd": "***",
+   *     "wifi_ssids": "***",
    *     "cell_apn": "<len: 19>",
    *     "sim_card_pin": "***",
    *     "srv_host": "<len: 22>",
@@ -288,8 +287,7 @@ struct node_info_t {
   const char *ota_url{OTA_UPDATE_URL};
   const char *ota_update_cert_pem{OTA_UPDATE_CERT_PEM};
   uint8_t net_dev{NET_DEVICE};  // TODO: reconfigurable
-  const char *wifi_ssd{WIFI_SSID};
-  const char *wifi_pwd{WIFI_PASSWORD};
+  std::map<std::string, std::string> wifi_ssids{WIFI_SSIDS};
   const char *cell_apn{CELL_APN};
   const char *sim_card_pin{SIM_CARD_PIN};
   const char *srv_host{SERVER_HOST};

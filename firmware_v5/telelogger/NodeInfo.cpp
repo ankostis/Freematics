@@ -301,7 +301,7 @@ static void _hide_sensitive_configs(Json &cfg) {
   constexpr const char *mask = "***";
   cfg.update(
       {
-          {"wifi_pwd", mask},
+          {"wifi_ssids", mask},
           {"cell_apn", (const char *)apn2log},
           {"sim_card_pin", mask},
           {"srv_host", (const char *)host2log},
@@ -325,8 +325,7 @@ Json node_info_t::config_to_json() const {
       {"ota_url", ota_url},
       {"ota_update_cert_pem_len", std::strlen(ota_update_cert_pem)},
       {"net_dev", net_dev},
-      {"wifi_ssd", wifi_ssd},
-      {"wifi_pwd", wifi_pwd},
+      {"wifi_ssids", wifi_ssids},
       {"cell_apn", cell_apn},
       {"sim_card_pin", sim_card_pin},
       {"srv_host", srv_host},

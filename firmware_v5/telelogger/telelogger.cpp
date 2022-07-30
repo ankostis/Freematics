@@ -1037,8 +1037,7 @@ bool initNetwork()
 #if NET_DEVICE == NET_WIFI
   OLED_PRINT("Connecting WiFi...");
   for (byte attempts = 0; attempts < 3; attempts++) {
-    ESP_LOGI(TAG_NET, "Joining WiFi: %s", node_info.wifi_ssd);
-    teleClient.net.begin(node_info.wifi_ssd, node_info.wifi_pwd);
+    teleClient.net.begin(node_info.wifi_ssids);
     if (teleClient.net.setup()) {
       state.set(STATE_NET_READY);
       std::string ip = teleClient.net.getIP();
@@ -1049,8 +1048,7 @@ bool initNetwork()
         break;
       }
     } else {
-      ESP_LOGE(TAG_NET, "No WiFi");
-      teleClient.net.listAPs();
+      ESP_LOGE(TAG_NET, "No WiFi!");
     }
   }  // wifi attempts loop
 #else // NET_DEVICE != NET_WIFI

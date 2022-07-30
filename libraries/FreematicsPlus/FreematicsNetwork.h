@@ -7,6 +7,7 @@
 #ifndef FREEMATICS_NETWORK
 #define FREEMATICS_NETWORK
 
+# include <map>
 # include <string>
 # include <sstream>
 
@@ -69,7 +70,7 @@ protected:
 class ClientWIFI
 {
 public:
-    bool begin(const char* ssid, const char* password);
+    bool begin(std::map<std::string, std::string> ssids);
     bool reconnect();
     void end();
     bool setup(unsigned int timeout = 5000);
