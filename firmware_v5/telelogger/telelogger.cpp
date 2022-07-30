@@ -1030,7 +1030,8 @@ void process()
 #endif
   long t = dataInterval - (millis() - startTime);
   if (t > 0 && t < dataInterval) delay(t);
-}
+}  // process()
+
 
 bool initNetwork()
 {
@@ -1123,7 +1124,7 @@ void telemetry(void* inst)
   store.init(SERIALIZE_BUFFER_SIZE);
   teleClient.reset();
 
-  for (;;) {
+  for (;;) {  // outer tx-loop
     ESP_LOGD(TAG_TELE, "state: %X", state.m_state);
     if (state.check(STATE_STANDBY)) {
       if (state.check(STATE_NET_READY)) {
@@ -1166,7 +1167,7 @@ void telemetry(void* inst)
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
       }
       continue;
-    }
+    }  // STANBDY?
 
     if (!state.check(STATE_NET_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
@@ -1177,12 +1178,12 @@ void telemetry(void* inst)
         buzzer.tone(0);
         continue;
       }
-    }
+    }  // !CONNCTED?
 
     connErrors = 0;
     teleClient.startTime = millis();
 
-    for (;;) {
+    for (;;) {  // inner tx-loop 2
       CBuffer* buffer = bufman.getNewest();
       if (!buffer) {
         if (!state.check(STATE_WORKING)) break;
@@ -1248,8 +1249,8 @@ void telemetry(void* inst)
         bufman.purge();
       }
 
-    }
-  }
+    }  // inner tx-loop 2
+  }  // outer tx-loop
 }
 
 /*******************************************************************************
