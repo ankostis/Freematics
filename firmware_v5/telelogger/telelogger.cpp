@@ -1167,6 +1167,14 @@ void telemetry(void* inst)
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
       }
       continue;
+    } else if (!state.check(STATE_WORKING)) {
+      // WARNING: without this delay,
+      // it stucks in state(3C) just before falling to sleep:
+      // not WORKING anymore but not yet STANDBY,
+      // so that the outer-loop rolls in quick succession
+      // meaning that the CPU cannot task-switch(!??)
+      // for `process()` to return, and STANDBY flag to become 1.
+      delay(1000);
     }  // STANBDY?
 
     if (!state.check(STATE_NET_CONNECTED)) {
