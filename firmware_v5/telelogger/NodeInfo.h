@@ -122,6 +122,8 @@
    *       ]
    *     ],
    *     "obfcm_interval": 120000,
+   *     "buf_stats_interval_sec": 7,
+   *     "net_stats_interval_sec": 7,
    *     "obd_max_errors": 3,
    *     "ping_back_interval_sec": 900,
    *     "reboot_on_wakeup": 0,
@@ -299,6 +301,8 @@ struct node_info_t {
   uint16_t net_udp_reconnect_delay_ms{UDP_CONNECT_RETRY_DELAY_MS};
   std::vector<stationary_interval_t> transmission_intervals{STATIONARY_TRANSMISSION_INTERVALS};
   uint32_t obfcm_interval{OBFCM_INTERVAL_MS};
+  uint32_t net_stats_interval_sec{STATS_INTERVAL_SEC};
+  uint32_t buf_stats_interval_sec{STATS_INTERVAL_SEC};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
   uint16_t ping_back_interval_sec{PING_BACK_INTERVAL_SEC};
   uint8_t reboot_on_wakeup{REBOOT_ON_WAKEUP};

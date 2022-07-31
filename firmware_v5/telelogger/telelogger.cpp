@@ -173,7 +173,8 @@ char isoTime[26] = {0};
 uint32_t lastMotionTime = 0;
 uint32_t timeoutsOBD = 0;
 uint32_t timeoutsNet = 0;
-uint32_t lastStatsTime = 0;
+uint32_t last_buf_stats_tstamp = 0;
+uint32_t last_net_stats_tstamp = 0;
 uint32_t lastObfcmTime = 0;
 
 int32_t dataInterval = 1000;
@@ -990,10 +991,11 @@ void process()
   buffer->timestamp = millis();
   buffer->state = BUFFER_STATE_FILLED;
 
-  // display file buffer stats
-  if (startTime - lastStatsTime >= 3000) {
+  const uint32_t buf_stats_elapsed_sec =
+      (startTime - last_buf_stats_tstamp) / 1000;
+  if (buf_stats_elapsed_sec >= node_info.buf_stats_interval_sec) {
+    last_buf_stats_tstamp = startTime;
     bufman.showCacheStats(state.m_state);
-    lastStatsTime = startTime;
   }
 
 #if STORAGE
@@ -1229,14 +1231,20 @@ void telemetry(void* inst)
       if (teleClient.transmit(store.buffer(), store.length())) {
         // successfully sent
         connErrors = 0;
-        char timestr[16];
-        teleClient.showNetStats(timestr, state.m_state);
-        OLED_SET_CURSOR(0, 2);
-        OLED_PRINTLN(timestr);
-        OLED_PRINTF("%2i", teleClient.txCount);
-        OLED_SET_CURSOR(80, 5);
-        OLED_PRINTF("%3i", teleClient.txBytes >> 10);
 
+        const uint32_t net_stats_elapsed_sec =
+            (teleClient.startTime - last_net_stats_tstamp) / 1000;
+        if (net_stats_elapsed_sec >= node_info.net_stats_interval_sec) {
+          last_net_stats_tstamp = teleClient.startTime;
+          char timestr[16];
+          teleClient.showNetStats(timestr, state.m_state);
+
+          OLED_SET_CURSOR(0, 2);
+          OLED_PRINTLN(timestr);
+          OLED_PRINTF("%2i", teleClient.txCount);
+          OLED_SET_CURSOR(80, 5);
+          OLED_PRINTF("%3i", teleClient.txBytes >> 10);
+        }
       } else {
         connErrors++;
         timeoutsNet++;

@@ -270,6 +270,8 @@
 // How often to send PIDs form the on-board fuel-consumption monitoring device.
 #define OBFCM_INTERVAL_MS           30000
 
+#define STATS_INTERVAL_SEC          12
+
 /**************************************
 * Data storage configurations
 **************************************/

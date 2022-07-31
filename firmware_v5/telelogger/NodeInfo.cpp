@@ -337,6 +337,8 @@ Json node_info_t::config_to_json() const {
       {"net_udp_reconnect_delay_ms", net_udp_reconnect_delay_ms},
       {"transmission_intervals", transmission_intervals},
       {"obfcm_interval", obfcm_interval},
+      {"net_stats_interval_sec", net_stats_interval_sec},
+      {"buf_stats_interval_sec", buf_stats_interval_sec},
       {"obd_max_errors", obd_max_errors},
       {"ping_back_interval_sec", ping_back_interval_sec},
       {"reboot_on_wakeup", reboot_on_wakeup},
