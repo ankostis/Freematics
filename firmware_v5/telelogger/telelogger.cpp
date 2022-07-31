@@ -739,9 +739,10 @@ std::string executeCommand(const char* cmd)
     }
 
   } else if (!strcmp(cmd, "STATS")) {
-    char buf[64];
-    sprintf(buf, "TX:%u OBD:%u NET:%u", teleClient.txCount, timeoutsOBD, timeoutsNet);
-    result = buf;
+    char timestr[16];
+    teleClient.showNetStats(timestr, state.m_state);
+    bufman.showCacheStats(state.m_state);
+    printTimeoutStats();
 
 #if ENABLE_OBD
   } else if (!strncmp(cmd, "OBD ", 4) && cmd[4]) {
