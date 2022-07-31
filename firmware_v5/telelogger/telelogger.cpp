@@ -607,6 +607,9 @@ void initialize()
   }
 #endif
 
+  // Notify server early that the device for some VIN has waken up.
+  teleClient.notify(EVENT_PING);
+
   // check system time
   printTime();
 
@@ -623,8 +626,6 @@ void initialize()
   oled.print("KB Sent");
   oled.setFontSize(FONT_SIZE_MEDIUM);
 #endif
-
-  teleClient.notify(EVENT_PING); // Nestor
 
   buzzer.tone(0);  // stop ticking
   ESP_LOGI(TAG_INIT, "completed");
