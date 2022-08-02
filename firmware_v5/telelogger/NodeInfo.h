@@ -32,7 +32,7 @@
    *     "slow_rtc": "0@150KHz"
    *   },
    *   "node_fw": {
-   *     "macroflags": (733 --> 0x733: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZZING_INIT|ENABLE_OTA_UPDATE|ENABLE_MULTILOG|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
+   *     "macroflags": (733 --> 0x733: ENABLE_OBD|ENABLE_MEMS|ENABLE_BUZTICKS|ENABLE_OTA_UPDATE|ENABLE_MULTILOG|USE_ESP_IDF_LOG|HIDE_SECRETS_IN_LOGS),
    *     "arduino_ver": "2.0.4",
    *     "esp32_ver": "v4.4.1-472-gc9140caf8c",
    *     "ota_parts_used": "x2, R0, B0, U1",
@@ -251,7 +251,7 @@ struct node_info_t {
     | ((ENABLE_MEMS && 1) << 1)
     | ((ENABLE_ORIENTATION && 1) << 2)
     | ((ENABLE_OLED && 1) << 3)
-    | ((ENABLE_BUZZING_INIT && 1) << 4)
+    | ((ENABLE_BUZTICKS && 1) << 4)
     | ((ENABLE_OTA_UPDATE && 1) << 5)
     | ((_NEED_SD && 1) << 6)
     | ((_NEED_SPIFFS && 1) << 7)

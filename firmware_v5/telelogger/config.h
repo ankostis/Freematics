@@ -346,9 +346,12 @@
  */
 #define OTA_UPDATE_CERT_PEM     ""
 
-// When enabled, significant states produce buzzing patterns,
-// as explained in `./README.md` file.
-#define ENABLE_BUZZING_INIT     1
+/**
+ * When enabled, significant states produce buzzing patterns,
+ * as explained in `./README.md` file.
+ */
+#define ENABLE_BUZTICKS         1
+
 // enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED             0
 
@@ -387,5 +390,7 @@ extern const char ota_url2log[];
 #ifndef BOARD_HAS_PSRAM_HIGH
 #define BOARD_HAS_PSRAM_HIGH 0
 #endif
+
+#define _CHECK_BUZTICKS          (node_info.macroflags & (1 << 4))
 
 #endif // CONFIG_H_INCLUDED

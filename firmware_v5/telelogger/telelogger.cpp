@@ -521,7 +521,11 @@ void initialize()
 {
   buzzer.tone(2000);
   delay(100);
-  buzzer.tone(4, 0.5);  // 2Hz ta-ticks till `initialize()` ends.
+  if (_CHECK_BUZTICKS)
+    // 2Hz ta-ticks till `initialize()` ends.
+    buzzer.tone(4, 0.5);
+  else
+    buzzer.tone(0);
 
   // dump buffer data
   bufman.purge();
@@ -628,7 +632,7 @@ void initialize()
   oled.setFontSize(FONT_SIZE_MEDIUM);
 #endif
 
-  buzzer.tone(0);  // stop ticking
+  if (_CHECK_BUZTICKS) buzzer.tone(0);  // stop ticking
   ESP_LOGI(TAG_INIT, "completed");
 }
 
@@ -1195,11 +1199,12 @@ void telemetry(void* inst)
 
     if (!state.check(STATE_NET_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
-        buzzer.tone(1, 0.2);  // 1Hz ta-tick while waiting to reconnect.
+        // 1Hz ta-tick till reconnect.
+        if (_CHECK_BUZTICKS) buzzer.tone(1, 0.2);
         teleClient.shutdown();
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
         delay(10000);
-        buzzer.tone(0);
+        if (_CHECK_BUZTICKS) buzzer.tone(0);
         continue;
       }
     }  // !CONNCTED?
@@ -1507,7 +1512,8 @@ void setup_multilog() {
 #ifndef PIO_UNIT_TESTING
 void setup()
 {
-    buzzer.tone(1);  // 2hz ticks until `initialize()`
+    // 2hz ticks till `initialize()` starts.
+    if (_CHECK_BUZTICKS) buzzer.tone(1);
 
 #if ENABLE_OLED
     oled.begin();
