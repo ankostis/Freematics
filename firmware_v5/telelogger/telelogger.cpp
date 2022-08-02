@@ -594,7 +594,7 @@ void initialize()
   if (state.check(STATE_OBD_READY)) {
     char buf[128];
     if (obd.getVIN(buf, sizeof(buf))) {
-      memcpy(vin, buf, sizeof(vin) - 1);
+      memcpy(vin, buf, sizeof(node_info.vin) - 1);
       ESP_LOGI(TAG_INIT, "VIN: %s", vin);
     }
     int dtcCount = obd.readDTC(dtc, sizeof(dtc) / sizeof(dtc[0]));
