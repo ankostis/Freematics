@@ -50,7 +50,18 @@ public:
 	void clearDTC();
 	// get battery voltage (works without ECU)
 	float getVoltage();
-	// get VIN as a string, buffer length should be >= OBD_RECV_BUF_SIZE
+	/**
+	 * Read VIN from OBD and fill buffer with it (zero-ended only if success).
+	 *
+	 * :return:
+	 * 		true if read successful
+	 * 		NOTE: buffer modified always.
+	 *
+     * Buffer size should be >= OBD_RECV_BUF_SIZE const,
+     * which was eradicated from code on 604d83caef (Nov 2015),
+     * had started in 36a19a65 (Feb 2014) as 80,
+     * increased to 128 on ae56f0682 (Apr 2014).
+	 */
 	bool getVIN(char* buffer, byte bufsize);
 	// read OBFCM data (each pid has multiply data)
 	bool GetOBFCM(DS_CAN_MSG* obfcmDataArray);
