@@ -158,6 +158,7 @@
 #include <json.hpp>
 #include <map>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH

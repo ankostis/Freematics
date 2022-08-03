@@ -8,6 +8,9 @@
 #ifndef FREEMATICS_OBD
 #define FREEMATICS_OBD
 
+#include <Arduino.h>
+
+#include "FreematicsBase.h"
 #include "utility/OBD.h"
 
 // ESP_IDF logging tags used

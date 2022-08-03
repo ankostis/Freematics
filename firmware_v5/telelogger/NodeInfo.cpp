@@ -32,6 +32,7 @@
 #include <iomanip>
 #include <json.hpp>
 #include <sstream>
+#include <string>
 #include <vector>
 
 #if BOARD_HAS_PSRAM && BOARD_HAS_PSRAM_HIGH
