@@ -5,9 +5,13 @@ for OBD, OBFCM and GNSS data from light & heavy vehicles.
 
 ## Reduce size of this git repo
 
-Code from the underlying ["freematics" git repo](https://github.com/stanleyhuangyc/Freematics.git) takes considerable time & space when cloning this repo (~500mb in disk), while only few parts of it are utilized;
-running the commands below to *sparsely* clone & checkout results
-in a x10 reduction in space/bandwidth (~45mb) and time to clone:
+> **NOTE:** the feature described here requires a version of cmd-line `git >= 2.25`.
+
+Code from the underlying ["freematics" git repo](https://github.com/stanleyhuangyc/Freematics.git) takes considerable time & space when cloning this repo (~500mb in disk)
+when `firmware_v5/telelogger` is mostly used;  running the commands below
+*sparsely* clone & checkout this dir, resulting in a x10 reduction in space/bandwidth(~45mb)
+and time to clone:
+
 ```bash
 git clone --sparse <repo-url>
 cd <repo-dir>
@@ -17,17 +21,19 @@ git sparse-checkout set --cone \
     firmware_v5/{telelogger,sandbox}
 ```
 
-Limiting in addition history depth while cloning, eg with `--depth=30`
-would result in half the size above.
+Limiting additionally history-depth while cloning with `--depth=30`
+reduces the clone bandwidth even further in half (~20mb).
 
-**Tip:** Even if you fully cloned, you may still choose to *sparsely checkout* later,
-to limit distraction & speedup the IDE scanning your working dir,
-by running the last cmd above.
+> **Tip-1:** Even if you fully cloned initially, you may *checkout sparsely* later,
+> to limit distraction & speedup the IDE scanning your working dir,
+> by running the last cmd above from the root of the repo,
+> to leave just the directories in the "cone" in your working-dir.
 
-To checkout fully and disable *sparseness*, type:
-```bash
-git sparse-checkout disable
-```
+> **Tip-2:** To checkout fully and disable *sparseness*, type:
+>
+> ```bash
+> git sparse-checkout disable
+> ```
 
 ## git notes
 
@@ -48,12 +54,14 @@ git fetch <remote> refs/notes/*:refs/notes/*
 Directories
 ===========
 
-firmware_v4 - Arduino sketches and libraries for ATmega328p based [Freematics ONE](https://freematics.com/products/freematics-one)
+- **firmware_v4/** - Arduino sketches and libraries for ATmega328p based [Freematics ONE](https://freematics.com/products/freematics-one)
 
-firmware_v5 - Arduino sketches for ESP32 based [Freematics ONE+](https://freematics.com/products/freematics-one-plus)
+- **firmware_v5/** - Arduino sketches for ESP32 based [Freematics ONE+](https://freematics.com/products/freematics-one-plus)
 
-ESPRIT - Arduino library and example sketches for ESP32 development board [Freematics Esprit](https://freematics.com/products/freematics-esprit) and [devkits based on it](https://freematics.com/products/#kits)
+- **ESPRIT** - Arduino library and example sketches for ESP32 development board
+  [Freematics Esprit](https://freematics.com/products/freematics-esprit) and
+  [devkits based on it](https://freematics.com/products/#kits)
 
-libraries - Arduino libraries for ESP32 based Freematics ONE+ and Esprit
+- **libraries/** - Arduino libraries for ESP32 based Freematics ONE+ and Esprit
 
-server - [Freematics Hub](https://freematics.com/hub/) server source code
+- **server/** - [Freematics Hub](https://freematics.com/hub/) server source code

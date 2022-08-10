@@ -1,10 +1,96 @@
 This Arduino sketch is designed for running on [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) to collect vehicle telemetry data from OBD-II, GPS and motion sensor and transmit the collected data to a remote server running [Freematics Hub](https://freematics.com/hub) software in realtime. It also has a mechansim for executing and responding to commands sent from serverside.
 
+Installation
+============
+
+Prerequisites
+-------------
+
+* [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) or [Freematics ONE+ Model B](https://freematics.com/products/freematics-one-plus-model-b/)
+* A micro SIM card if cellular network required (otherwise WiFi is ok)
+* [Visual Studio Code (vscode)](https://code.visualstudio.com/)
+* [PlatformIO](http://platformio.org/) vscode-extension for compiling and uploading;
+  this directory contains its `.pio/` configuration folder
+
+
+Installation steps
+------------------
+
+1. Read the `README.md` at the base of the repo for instructions on how to
+   git-clone this repo *sparsingly* for this folder - preferably use a `git` command
+   in a separate terminal (not from within *vscode*)
+
+2. Ensure the *plaformio* has been installed
+
+3. Use vscode's "File|Open folder" menuitem to select and open this project's
+   sub-directory `firmware_v5/telelogger`.
+   <img src="./doc/platformioUI.png"
+     alt="PlatformIO UI tab"
+     style="float: right; margin-right: 10px; width: 300px" />
+
+   At that point your should have a vscode window opened as *vscode workspace*
+   properly located on this project directory and the *platformio* extension
+   should have detected the `.pio/` folder and after some time,
+   the *platformio UI* must have been activated in a tab (shown in the image, right).
+
+4. From the *platform UI* select the `firmware_v5/telelogger` project to open it.
+   <img src="./doc/platformioUI-openProject.png"
+      alt="PlatformIO open project"
+      style="float: right; margin-right: 10px; width: 300px" />
+
+   This should take some time to download dependencies, until the build/upload
+   items from the left-sidebar appear.
+
+5. Review configurations in `config.h` and customize them to your settings
+   with a `secrets.h` overlay file (process as explained in the header of `config.h`).
+
+6. Connect the device in a usb port and click "upload" from the left-sidebar.
+   <img src="./doc/platformioSidebar.png"
+      alt="PlatformIO sidebar"
+      style="float: right; margin-right: 10px; width: 150px" />
+
+<br clear=all>
+
+> **ATTENTION:** if you work on *Windows-10* or *Windows-11-without-symlinks*,
+the **monitor** command would not work, and will print an error instead:
+>
+> ```txt
+> Error: Traceback (most recent call last):
+>   File "${HOME}/.platformio/penv/lib/python3.10/site-packages/platformio/__main__.py", line 102, in main
+>     cli()  # pylint: disable=no-value-for-parameter
+> ...
+>   File "<frozen importlib._bootstrap_external>", line 883, in exec_module
+>   File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+>   File "${HOME}/Work/JRCMATICS.git/firmware_v5/telelogger/monitor/filter_freestate.py", line 1, in <module>
+>     ../freestate.py
+> NameError: name '../freestate.py' is not defined
+>
+> ============================================================
+>
+> An unexpected error occurred. Further steps:
+>
+> * Verify that you have the latest version of PlatformIO using
+>   `pip install -U platformio` command
+>
+> * Try to find answer in FAQ Troubleshooting section
+>   https://docs.platformio.org/page/faq/index.html
+>
+> * Report this problem to the developers
+>   https://github.com/platformio/platformio-core/issues
+>
+> ============================================================
+>
+>
+>  *  The terminal process "platformio 'device', 'monitor'" terminated with exit code: 1.
+> ```
+
+> Read [this SO question](https://stackoverflow.com/questions/5917249/git-symbolic-links-in-windows) on how to enable symlinks on Windows,
+> and ensure a proper git-checkout of the project
+
 Data Collection
 ===============
 
 The sketch collects following data.
-
 * Vehicle OBD-II PIDs data (from OBD port)
 * Battery voltage (from OBD port)
 * Geolocation data (from cellular module's internal GNSS or external GNSS receiver)
@@ -123,10 +209,3 @@ Viewing Trip Data
 Once the sketch is running and data is being submitted to hub.freematics.com, you can open https://hub.freematics.com from any of your devices and enter your device ID (displayed in serial output) to view real-time data and history trip data.
 
 ![Freematics Hub Dashboard](https://freematics.com/pages/wp-content/uploads/2019/01/freematics_hub_dash-1024x576.png)
-
-Prerequisites
-=============
-
-* [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) or [Freematics ONE+ Model B](https://freematics.com/products/freematics-one-plus-model-b/)
-* A micro SIM card if cellular network required
-* [PlatformIO](http://platformio.org/), [Arduino IDE](https://github.com/espressif/arduino-esp32#installation-instructions) or [Freematics Arduino Builder](https://freematics.com/software/arduino-builder) for compiling and uploading code
