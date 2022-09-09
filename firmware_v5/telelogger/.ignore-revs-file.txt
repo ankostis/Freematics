@@ -1,0 +1,15 @@
+## Commits in the file are ignored in `git blame` reports;
+## enable it with:
+##      git config blame.ignoreRevsFile firmware_v5/telelogger/.ignore-revs-file.txt
+
+# 13 Jul 2022: style(fw4.cfg) indent macro-values consistently, >
+927ec7088731eb9bca6df21bf5f43db5ad3bfbbb
+
+# 13 Jul 2022: refact(fw5.cfg) minor regroup of typedefs
+49bb8de3f0affb31b9f21dcb181819691bb2d54d
+
+# 6 Jul 2022: refact(build.fw5) python-friendly script-names >
+d5f951541130eb2a5c56f61f1e5d5fb0279f8a37
+
+# 14 Jun 2022: refact(fw5.cfg) reorder enable-flags to the top
+ebb26961de673a3f89489e1e17231e532f9ac07c

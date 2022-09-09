@@ -46,6 +46,16 @@ git push <remote> refs/notes/*
 git fetch <remote> refs/notes/*:refs/notes/*
 ```
 
+## Skip commit noise from git-blame
+
+Commits in the `firmware_v5/telelogger/.` file are ignored when `git blame` is run
+because they have been deemed as containing style-changes, moving code around verbatim,
+and other unimportant stuff when reviewing code;
+you may permanently ignore them with this command:
+
+```bash
+git config blame.ignoreRevsFile firmware_v5/telelogger/.ignore-revs-file.txt
+```
 
 --( original README follow )--
 
