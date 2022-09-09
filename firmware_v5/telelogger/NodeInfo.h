@@ -298,6 +298,7 @@ struct node_info_t {
   uint16_t srv_port{SERVER_PORT};
   uint32_t net_recv_timeout_ms{DATA_RECEIVING_TIMEOUT_MS};
   uint32_t srv_sync_timeout_ms{SERVER_SYNC_INTERVAL_SEC * 1000};
+  uint8_t reconnect_max_nerrors{MAX_CONN_ERRORS_RECONNECT};
   uint8_t net_retries{NET_CONNECT_RETRIES};
   uint16_t net_udp_reconnect_delay_ms{UDP_CONNECT_RETRY_DELAY_MS};
   std::vector<stationary_interval_t> transmission_intervals{STATIONARY_TRANSMISSION_INTERVALS};

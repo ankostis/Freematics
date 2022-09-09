@@ -1267,7 +1267,7 @@ void telemetry(void* inst)
         connErrors++;
         timeoutsNet++;
       }
-      if (connErrors > MAX_CONN_ERRORS_RECONNECT) {
+      if (connErrors > node_info.reconnect_max_nerrors) {
         ESP_LOGE(TAG_TELE, "Shutdown due to %i network errors!", connErrors);
         teleClient.net.close();
         if (!teleClient.connect()) {

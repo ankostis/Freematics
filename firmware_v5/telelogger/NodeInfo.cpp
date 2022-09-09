@@ -334,6 +334,7 @@ Json node_info_t::config_to_json() const {
       {"srv_port", srv_port},
       {"net_recv_timeout_ms", net_recv_timeout_ms},
       {"srv_sync_timeout_ms", srv_sync_timeout_ms},
+      {"reconnect_max_nerrors", reconnect_max_nerrors},
       {"net_retries", net_retries},
       {"net_udp_reconnect_delay_ms", net_udp_reconnect_delay_ms},
       {"transmission_intervals", transmission_intervals},
