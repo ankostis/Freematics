@@ -266,7 +266,6 @@ struct node_info_t {
   const int nslots{BUFFER_SLOTS};
   const int serialize_len{SERIALIZE_BUFFER_SIZE};
   const int slot_len{BUFFER_LENGTH};
-  /** Bit for enable/disable decided GLOBALon compile-time.  */
   const uint8_t storage{STORAGE};
   const uint8_t gnss{GNSS};
   const uint8_t srv_proto{SERVER_PROTOCOL};
@@ -283,13 +282,13 @@ struct node_info_t {
   // CONFIG
   int obd_pipe_sec{BOOT_OBD_PIPE_TIMEOUT_SEC};
   LogLevels log_levels{RUNTIME_LOG_LEVELS};
-  uint8_t log_sink{LOG_SINK};  // TODO: reconfigureable
+  const uint8_t log_sink{LOG_SINK};  // TODO: reconfigurable
   const char *log_sink_fpath{LOG_SINK_FPATH};
   float log_sink_disk_usage_purge_prcnt{LOG_SINK_DISK_USAGE_PURGE_RATIO};
   int32_t log_sink_sync_interval_ms{LOG_SINK_SYNC_INTERVAL_MS};
   const char *ota_url{OTA_UPDATE_URL};
   const char *ota_update_cert_pem{OTA_UPDATE_CERT_PEM};
-  uint8_t net_dev{NET_DEVICE};  // TODO: reconfigurable
+  const uint8_t net_dev{NET_DEVICE};  // TODO: reconfigurable
   std::map<std::string, std::string> wifi_ssids{WIFI_SSIDS};
   const char *cell_apn{CELL_APN};
   const char *sim_card_pin{SIM_CARD_PIN};

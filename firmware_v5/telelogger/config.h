@@ -1,5 +1,8 @@
 /**
- * Configuration macros for `src_dir` code (NOT libs).
+ * Configuration macros for `src_dir` code AND libs.
+ *
+ * TIP: Whichever config option below is marked with **json-config default(s)**,
+ * it can change on *runtime*.
  *
  * NOTE: Instead of putting secrets & per device/user settings here
  * (and git-committing them!)
@@ -96,7 +99,10 @@
 /**************************************
  * Logging (see also `platformio.ini`)
  **************************************/
-// Works only when ESP_IDF logging-lib selected in `platformio.ini`.
+/**
+ * Works only when ESP_IDF logging-lib selected in `platformio.ini`.
+ * (json-config default)
+ */
 #define RUNTIME_LOG_LEVELS \
     {"*", (esp_log_level_t)CORE_DEBUG_LEVEL},
 
@@ -142,6 +148,7 @@
  * Either `LOG_SINK_NONE` or `LOG_SINK_XXX` constants OR-ed together.
  */
 #define LOG_SINK                            LOG_SINK_SERIAL
+ /** (json-config defaults) */
 #define LOG_SINK_FPATH                      "/logs.txt"
 #define LOG_SINK_DISK_USAGE_PURGE_RATIO     0.90f
 #define LOG_SINK_SYNC_INTERVAL_MS           3141
@@ -172,6 +179,7 @@
  * - The timeout resets on any Rx/Tx chars.
  * - Reboots after the timeout has expired AND any chars have Rx/Tx,
  *   otherwise, proceeds with regular setup.
+ * - (json-config default)
  */
 #define BOOT_OBD_PIPE_TIMEOUT_SEC    0
 
@@ -179,7 +187,10 @@
 #define ENABLE_OBD              1
 #endif
 
-// maximum consecutive OBD access errors before entering standby
+/**
+ * Maximum consecutive OBD access errors before entering standby.
+ * (json-config default)
+ */
 #define MAX_OBD_ERRORS          3
 
 /**************************************
@@ -193,7 +204,6 @@
  *      #define SIM_CARD_PIN          ""
  *      #define SERVER_HOST           "hub.freematics.com"
  */
-#ifndef NET_DEVICE
 // change the following line to change network device
 #define NET_DEVICE              NET_WIFI
 /**
@@ -201,24 +211,37 @@
  * like:
  *     {"ssid1", "pswd1"}, ...`
  *
- * If empty, connects to the 1st open WiFi.
- * If only one given, force-connects even if hidden.
+ * - If empty, connects to the 1st open WiFi.
+ * - If only one given, force-connects even if hidden.
+ * - (json-config defaul)
  */
 #define WIFI_SSIDS
-/** Cellular access-point name for network;  leave empty for all. */
+/**
+ * Cellular access-point name for network;  leave empty for all.
+ * (json-config default)
+ */
 #define CELL_APN                ""
-// Freematics Hub server settings
+/** Freematics Hub server where to send collected data
+ * (json-config default)
+ */
 #define SERVER_HOST             "hub.freematics.com"
 #define SERVER_PROTOCOL         PROTOCOL_UDP
-#endif
 
-// SIM card setting
+/**
+ * SIM card setting
+ * (json-config default)
+ */
 #define SIM_CARD_PIN            ""
 
 // HTTPS settings
 #define SERVER_METHOD           PROTOCOL_METHOD_POST
+/**
+ * The path-part of the url of the traccar server to send data to.
+ * (json-config default)
+ */
 #define SERVER_PATH             "/hub/api"
 
+/** (json-config default) */
 #if !SERVER_PORT
 #if SERVER_PROTOCOL == PROTOCOL_UDP
 #define SERVER_PORT             8081
@@ -235,16 +258,32 @@
 #define WIFI_AP_SSID            "TELELOGGER"
 #define WIFI_AP_PASSWORD        "PASSWORD"
 
-// Attempts to open net-connection before reporting error.
+/**
+ * How many times to attempt opening net-connection before reporting error.
+ * (json-config default)
+ */
 #define NET_CONNECT_RETRIES         5
-// How many time to attempt opening net-connection
+/**
+ * How much time to sleep before reattempting to net-connect.
+ * (json-config default)
+ */
 #define UDP_CONNECT_RETRY_DELAY_MS  3000
-// maximum consecutive communication errors before resetting network
+/**
+ * Maximum consecutive communication errors before resetting network.
+ * (json-config default)
+ */
 #define MAX_CONN_ERRORS_RECONNECT   3
-// data receiving timeout
-#define DATA_RECEIVING_TIMEOUT_MS   5000 /* ms */
-// expected maximum server sync signal interval
-#define SERVER_SYNC_INTERVAL_SEC    120 /* 0 to disable */
+/**
+ * Timeout for receiving an event response.
+ * (json-config default)
+ */
+#define DATA_RECEIVING_TIMEOUT_MS   5000
+/**
+ * Expected maximum server sync signal interval.
+*  Set 0 to disable
+ * (json-config default)
+ */
+#define SERVER_SYNC_INTERVAL_SEC    120
 /**
  * Intervals for when to send data based on stationary status.
  *
@@ -259,17 +298,30 @@
  * as the stationary durations (right-values) increase,
  * until the last stationary duration (left-value),
  * which defines when the device should fall to standby.
+ *
+ * (json-config default)
  */
 #define STATIONARY_TRANSMISSION_INTERVALS \
         {20, 1000}, \
         {40, 2000}, \
         {60, 5000},
 
+/**
+ * How often to ping the server?
+ * (json-config default)
+ */
 #define PING_BACK_INTERVAL_SEC      900
 
-// How often to send PIDs form the on-board fuel-consumption monitoring device.
+/**
+ * How often to send PIDs form the on-board fuel-consumption monitoring device.
+ * (json-config default)
+ */
 #define OBFCM_INTERVAL_MS           30000
 
+/**
+ * How often to dump buffer & network statistics (both of them).
+ * (json-config default)
+ */
 #define STATS_INTERVAL_SEC          12
 
 /**************************************
@@ -301,7 +353,10 @@
 /**************************************
 * Standby/wakeup
 **************************************/
-// reset device after waking up
+/**
+ * Whether to reset the device after waking up from "sleep".
+ * (json-config default)
+ */
 #define REBOOT_ON_WAKEUP        0
  /* moving vehicle motion threshold in G */
 #define MOTION_THRESHOLD        0.4f
@@ -338,11 +393,15 @@
  * If enabled, MUST also define `OTA_UPDATE_URL` and `OTA_UPDATE_CERT_PEM`.
  */
 #define ENABLE_OTA_UPDATE       0
-/** The HTTPS site to download the firmware from. */
+/**
+ * The HTTPS site to download the firmware from.
+ * (json-config default)
+ */
 #define OTA_UPDATE_URL          ""
 /**
  * The certificate-chain in pem format is needed here,
  * taken from, eg `/etc/letsencrypt/live/<server.url>/chain.pem`.
+ * (json-config default)
  */
 #define OTA_UPDATE_CERT_PEM     ""
 
@@ -355,12 +414,15 @@
 // enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED             0
 
+/** (json-config defaults) */
 #define PIN_SENSOR1             34
 #define PIN_SENSOR2             26
 
 #define LOG_EXT_SENSORS         LOG_EXT_SENSORS_NONE
 
+/** (json-config default) */
 #define COOLING_DOWN_TEMP       80 /* celsius degrees */
+/** (json-config default) */
 #define COOLING_DOWN_SLEEP_SEC  5 /* celsius degrees */
 
 ////////////////////////////
