@@ -79,10 +79,7 @@ class Task
 public:
   bool create(void (*task)(void*), const char* name, int priority = 0, int stacksize = 1024);
   void destroy();
-  void suspend();
-  void resume();
   bool running();
-  void sleep(uint32_t ms);
 private:
   void* xHandle = 0;
 };

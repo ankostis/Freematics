@@ -163,24 +163,9 @@ void Task::destroy()
     }
 }
 
-void Task::sleep(uint32_t ms)
-{
-    vTaskDelay(ms / portTICK_PERIOD_MS);
-}
-
 bool Task::running()
 {
     return xHandle != 0;
-}
-
-void Task::suspend()
-{
-    if (xHandle) vTaskSuspend(xHandle);
-}
-
-void Task::resume()
-{
-    if (xHandle) vTaskResume(xHandle);
 }
 
 Mutex::Mutex()
