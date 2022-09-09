@@ -423,7 +423,7 @@ void FreematicsESP32::gpsEnd()
     ESP_LOGI(TAG_GNSS, "<END>");
     if ((m_flags & FLAG_GNSS_USE_LINK)) {
         char buf[16];
-        link->sendCommand("ATGPSOFF", buf, sizeof(buf), 0);
+        link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 0);
     } else {
         taskGPS.destroy();
         if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) {
@@ -442,7 +442,7 @@ bool FreematicsESP32::gpsBegin(int baudrate)
     // try co-processor GPS link
     if (m_flags & FLAG_GNSS_USE_LINK) {
         char buf[128];
-        link->sendCommand("ATGPSON", buf, sizeof(buf), 100);
+        link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
         m_flags |= FLAG_GNSS_USE_LINK;
         uint32_t t = millis();
         bool success = false;
@@ -460,7 +460,7 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             ESP_LOGI(TAG_GNSS, "<BEGIN> through LINK");
             return true;
         }
-        link->sendCommand("ATGPSOFF", buf, sizeof(buf), 100);
+        link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 100);
         m_flags &= ~FLAG_GNSS_USE_LINK;
     }
     // switch on GNSS power
