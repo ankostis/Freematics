@@ -1260,9 +1260,7 @@ void telemetry(void* inst)
 
       store.purge();
 
-      teleClient.inbound();
-      if (node_info.srv_sync_timeout_ms > 0 &&
-          millis() - teleClient.lastSyncTime > node_info.srv_sync_timeout_ms) {
+      if (!teleClient.inbound()) {
         ESP_LOGW(TAG_TELE, "Unstable connection");
         connErrors++;
         timeoutsNet++;

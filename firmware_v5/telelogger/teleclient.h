@@ -139,7 +139,6 @@ public:
     virtual bool notify(byte event, const char* payload = 0) { return true; }
     virtual bool connect() { return true; }
     virtual bool transmit(const char* packetBuffer, unsigned int packetSize)  { return true; }
-    virtual void inbound() {}
     void showNetStats(char *timestr, uint16_t state) {
         uint32_t t = millis() - startTime;
         sprintf(timestr,
@@ -173,7 +172,10 @@ public:
     bool connect();
     bool transmit(const char* packetBuffer, unsigned int packetSize);
     bool ping();
-    void inbound();
+    /**
+     * :return: true if event received OR not timeout yet
+     */
+    bool inbound();
     bool verifyChecksum(char* data);
     void shutdown();
 #if NET_DEVICE == NET_WIFI

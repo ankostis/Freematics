@@ -293,23 +293,30 @@ bool TeleClientUDP::transmit(const char* packetBuffer, unsigned int packetSize)
   return success;
 }
 
-void TeleClientUDP::inbound()
+bool TeleClientUDP::inbound()
 {
   // check incoming datagram
+  const char *err;
   do {
     int len = 0;
     char *data = net.receive(&len, 0);
-    if (!data) break;
+    if (!data) {
+      err = "timeout";
+      break;
+    }
     data[len] = 0;
     rxBytes += len;
     if (!verifyChecksum(data)) {
-      ESP_LOGE(TAG_NET, "Checksum mismatch: %s", data);
+      err = "bad checksum";
       break;
     }
     char *p = strstr(data, "EV=");
-    if (!p) break;
+    if (!p) {
+      err = "no event";
+      break;
+    }
 
-    // By now server connection assumed OK, mark recv-time.
+    // By now server-connection assumed OK, mark sync-time.
     lastSyncTime = millis();
 
     int eventID = atoi(p + 3);
@@ -317,6 +324,7 @@ void TeleClientUDP::inbound()
       case EVENT_COMMAND:
         processCommand(data);
         break;
+
       case EVENT_SYNC: {
         uint16_t id = hex2uint16(data);
         if (id && id != feedid) {
@@ -324,8 +332,20 @@ void TeleClientUDP::inbound()
           ESP_LOGI(TAG_NET, "FEED ID: %i", feedid);
         }
       } break;
-    }  // switch-eventID
-  } while(0);
+
+      default:
+        ESP_LOGW(TAG_NET, "Unknown inbound event: %i", eventID);
+    }  // switch eventID
+
+    return true;
+
+  } while (0);
+
+  ESP_LOGW(TAG_NET, "Inbound error: %s", err);
+  auto timeout = node_info.srv_sync_timeout_ms;
+  auto ok = timeout == 0 || (millis() - lastSyncTime) < timeout;
+
+  return ok;
 }
 
 void TeleClientUDP::shutdown()
