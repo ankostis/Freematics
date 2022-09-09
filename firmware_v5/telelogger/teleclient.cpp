@@ -308,22 +308,23 @@ void TeleClientUDP::inbound()
     }
     char *p = strstr(data, "EV=");
     if (!p) break;
+
+    // By now server connection assumed OK, mark recv-time.
+    lastSyncTime = millis();
+
     int eventID = atoi(p + 3);
     switch (eventID) {
-    case EVENT_COMMAND:
-      processCommand(data);
-      break;
-    case EVENT_SYNC:
-        {
-          uint16_t id = hex2uint16(data);
-          if (id && id != feedid) {
-            feedid = id;
-            ESP_LOGI(TAG_NET, "FEED ID: %i", feedid);
-          }
-        }
+      case EVENT_COMMAND:
+        processCommand(data);
         break;
-    }
-    lastSyncTime = millis();
+      case EVENT_SYNC: {
+        uint16_t id = hex2uint16(data);
+        if (id && id != feedid) {
+          feedid = id;
+          ESP_LOGI(TAG_NET, "FEED ID: %i", feedid);
+        }
+      } break;
+    }  // switch-eventID
   } while(0);
 }
 
