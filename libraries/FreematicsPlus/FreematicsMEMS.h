@@ -249,7 +249,7 @@ public:
   virtual byte begin(bool fusion = false) = 0;
   virtual void end() { uninitI2C(); }
   virtual bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0) = 0;
-  virtual const char *name();
+  virtual const char *name() = 0;
 protected:
   bool initI2C(unsigned long clock);
   void uninitI2C();
