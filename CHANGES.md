@@ -2,6 +2,12 @@
 
 ## firmware v5
 
+### TODO:
+
+- complete re-config
+- dynamic PID-list
+- trip/timestamp uint32-->64 server fixes
+- [doc fixes](https://hypothes.is/users/ankostis?q=graphtik#)
 
 ### jrc-v0.3.0 (03 Aug 2022) upgrade some devices for summer with OTA
 
