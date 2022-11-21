@@ -4,10 +4,21 @@
 
 ### TODO:
 
+#### Urgent
+
 - complete re-config
 - dynamic PID-list
 - trip/timestamp uint32-->64 server fixes
 - [doc fixes](https://hypothes.is/users/ankostis?q=graphtik#)
+
+#### Other
+
+- [ ] dump stats less frequently (configurable interval)
+- [ ] stats/infos should include WiFis around & stats
+- [ ] +configuration combining **Tx-frequency of PIDs + OBFCM with Stats-frequency.**
+- [ ] report `uxTaskGetNumberOfTasks()` & `uxTaskGetSystemState()` in NodeInfo status
+- Port fixes:
+  - [ ] 9343dc1a: Stanley GSM fixes @ `FreematcisNetwork.cpp`
 
 ### jrc-v0.3.0 (03 Aug 2022) upgrade some devices for summer with OTA
 
