@@ -478,21 +478,20 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 	ESP_LOGI(TAG_OBD, "<init> proto: %i", protocol);
 	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
 	char buffer[64];
-	byte stage;
 
 	if (!link) {
 		return false;
 	}
 
 	m_state = OBD_DISCONNECTED;
-	stage = 0;
+	init_stage = 0;
 	for (byte n = 0; n < 10; n++) {
 		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
-			stage = 1;
+			init_stage = 1;
 			break;
 		}
 	}
-	if (stage == 0) return false;
+	if (init_stage == 0) return false;
 	for (byte i = 0; i < sizeof(initcmd) / sizeof(initcmd[0]); i++) {
 		link->sendCommand(initcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
@@ -502,7 +501,7 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 			return false;
 		}
 	}
-	stage = 2;
+	init_stage = 2;
 	if (protocol == PROTO_J1939) {
 		m_state = OBD_CONNECTED;
 		errors = 0;
@@ -512,11 +511,11 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 	for (byte n = 0; n < 2; n++) {
 		int value;
 		if (readPID(PID_SPEED, value)) {
-			stage = 3;
+			init_stage = 3;
 			break;
 		}
 	}
-	if (stage != 3) return false;
+	if (init_stage != 3) return false;
 
 	// load pid map
 	memset(pidmap, 0xff, sizeof(pidmap));

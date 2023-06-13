@@ -88,6 +88,7 @@ public:
 	byte pidmap[4 * 8] = {0};
 	// link object pointer
 	CLink* link = 0;
+	int init_stage = -1;
 protected:
 	virtual void idleTasks() { delay(5); }
 	char* getResponse(byte& pid, char* buffer, byte bufsize);

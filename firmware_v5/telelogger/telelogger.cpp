@@ -558,7 +558,7 @@ void initialize()
       ESP_LOGI(TAG_INIT, "OBD: OK, state: %X", state.m_state);
       OLED_PRINTLN("OBD OK");
     } else {
-      ESP_LOGE(TAG_INIT, "OBD:NO");
+      ESP_LOGE(TAG_INIT, "OBD:NO(%i)", obd.init_stage);
       //state.clear(STATE_WORKING);
       //return;
     }
@@ -957,7 +957,7 @@ void process()
 
     if (obd.errors >= node_info.obd_max_errors) {
       if (!obd.init()) {
-        ESP_LOGE(TAG_PROC, "OBD OFF!");
+        ESP_LOGE(TAG_PROC, "OBD OFF(%i)", obd.init_stage);
         state.clear(STATE_OBD_READY | STATE_WORKING);
         return;
       }
