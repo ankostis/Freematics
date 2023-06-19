@@ -86,6 +86,18 @@ the **monitor** command would not work, and will print an error instead:
 
 > Read [this SO question](https://stackoverflow.com/questions/5917249/git-symbolic-links-in-windows) on how to enable symlinks on Windows,
 > and ensure a proper git-checkout of the project
+>
+> Otherwise, you can issue the following commands to "copy" the offending filter files
+> that failed to symlink into `firmware_v5/telelogger/monitor/`
+> (assuming you are in the ``firmware_v5/telelogger/` directory):
+>
+> ```bash
+> cp freestate.py monitor/filter_
+> cp macroflags.py monitor/filter_macroflags.py
+> ```
+>
+> ...and remember NOT to commit those files in `monitor/`.
+
 
 Data Collection
 ===============
