@@ -541,6 +541,14 @@ success_1:
 
 success:
 
+	// Read Protocol.
+	sprintf(buffer, "ATDP\r");
+	link->send(buffer);
+	if (link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
+		active_protocol = buffer;
+		init_stage += 1;
+	}
+
 	// load pid map
 	memset(pidmap, 0xff, sizeof(pidmap));
 	for (int i = 0; i < 8; i++) {

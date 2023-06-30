@@ -555,7 +555,8 @@ void initialize()
     timeoutsOBD = 0;
     if (obd.init(PROTO_AUTO, node_info.obd_alt_init_cmds)) {
       state.set(STATE_OBD_READY | STATE_GET_OBFCM);
-      ESP_LOGI(TAG_INIT, "OBD: OK, state: %X", state.m_state);
+      ESP_LOGI(TAG_INIT, "OBD: OK(%i), %s\n  state: %X", obd.init_stage,
+               obd.active_protocol.c_str(), state.m_state);
       OLED_PRINTLN("OBD OK");
     } else {
       ESP_LOGE(TAG_INIT, "OBD:NO(%i)", obd.init_stage);
@@ -960,6 +961,9 @@ void process()
         ESP_LOGE(TAG_PROC, "OBD OFF(%i)", obd.init_stage);
         state.clear(STATE_OBD_READY | STATE_WORKING);
         return;
+      } else {
+        ESP_LOGI(TAG_INIT, "OBD: OK(%i), %s\n  state: %X", obd.init_stage,
+                obd.active_protocol.c_str(), state.m_state);
       }
     }
   }

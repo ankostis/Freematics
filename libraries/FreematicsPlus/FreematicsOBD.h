@@ -99,6 +99,8 @@ public:
 	CLink* link = 0;
 	/* Debug-aid incremented during `init()`. */
 	int init_stage = -1;
+	/* Discovered with `ATDP` cmd affter `init()` success. */
+	std::string active_protocol;
 protected:
 	virtual void idleTasks() { delay(5); }
 	char* getResponse(byte& pid, char* buffer, byte bufsize);
