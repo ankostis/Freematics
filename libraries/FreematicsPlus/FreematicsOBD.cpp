@@ -492,7 +492,7 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 		}
 	}
 	if (init_stage == 0) return false;
-	for (byte i = 0; i < sizeof(initcmd) / sizeof(initcmd[0]); i++) {
+	for (byte i = 0; i < sizeof_array(initcmd); i++) {
 		link->sendCommand(initcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
 	if (protocol != PROTO_AUTO) {
@@ -558,7 +558,7 @@ void COBD::uninit()
 byte COBD::checkErrorMessage(const char* buffer)
 {
 	const char *errmsg[] = {"UNABLE", "ERROR", "TIMEOUT", "NO DATA"};
-	for (byte i = 0; i < sizeof(errmsg) / sizeof(errmsg[0]); i++) {
+	for (byte i = 0; i < sizeof_array(errmsg); i++) {
 		if (strstr(buffer, errmsg[i])) return i + 1;
 	}
 	return 0;

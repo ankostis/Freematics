@@ -293,7 +293,7 @@ void processOBD(CBuffer* buffer)
 {
   static int idx[2] = {0, 0};
   int tier = 1;
-  for (byte i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
+  for (byte i = 0; i < sizeof_array(obdData); i++) {
     if (obdData[i].tier > tier) {
         // reset previous tier index
         idx[tier - 2] = 0;
@@ -597,7 +597,7 @@ void initialize()
       memcpy(vin, buf, sizeof(node_info.vin) - 1);
       ESP_LOGI(TAG_INIT, "VIN: %s", vin);
     }
-    int dtcCount = obd.readDTC(dtc, sizeof(dtc) / sizeof(dtc[0]));
+    int dtcCount = obd.readDTC(dtc, sizeof_array(dtc));
     if (dtcCount > 0) {
       ESP_LOGI(TAG_INIT, "DTC: %i", dtcCount);
     }

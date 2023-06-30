@@ -35,6 +35,12 @@
 #define PID_EXT_SENSOR1 0x90
 #define PID_EXT_SENSOR2 0x91
 
+// From SO: https://stackoverflow.com/questions/1500363/compile-time-sizeof-array-without-using-a-macro/1500917
+template <typename T>
+constexpr auto sizeof_array(const T& iarray) {
+    return (sizeof(iarray) / sizeof(iarray[0]));
+}
+
 typedef struct {
 	float pitch;
 	float yaw;
