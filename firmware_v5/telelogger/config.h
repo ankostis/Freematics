@@ -193,6 +193,32 @@
  */
 #define MAX_OBD_ERRORS          3
 
+/**
+ * A list-of-list-of-alternate ELM327-like Protocol AT-commands
+ * to send to OBD-coprocessor if default initialization in `OBD.init()` fails
+ * ie. sending `ATZ, ATEO, ATHO` and then querying `010D` (PID_SPEED).
+ *
+ * As an aid, here thre are some usefull commands:
+ *
+ * - ATSP 0 - Automaticaly detected by coprocessor
+ * - ATSP 3 - ISO 9141-2
+ * - ATSP 4 - ISO 14230-4 (KWP 5BAUD)
+ * - ATSP 5 - ISO 14230-4 (KWP FAST)
+ * - ATSP 6 - ISO 15765-4 (CAN 11/500)
+ * - ATSP 7 - ISO 15765-4 (CAN 29/500)
+ * - ATSP 8 - ISO 15765-4 (CAN 11/250)
+ * - ATSP 9 - ISO 15765-4 (CAN 29/250)
+ * - ATSP B - SAE J1939 CAN (29 bit ID, 250* kbaud)
+ *
+ * - ATCM hhh/hhhhhhhh: Set the ID Mask (11bit/29bit CAN)
+ * - ATCF hhh/hhhhhhhh: Set the ID Filter (11bit/29bit CAN)
+ * - ATSH xyz/xxyyzz:   Set Header(11bit/29bit CAN)
+ * - ATCP hh:           Set CAN Priority to hh (29 bit)
+ *
+ * (json-config default)
+ */
+#define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
+
 /**************************************
  * Networking configurations
  **************************************

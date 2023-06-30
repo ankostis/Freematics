@@ -125,6 +125,12 @@
    *     "buf_stats_interval_sec": 7,
    *     "net_stats_interval_sec": 7,
    *     "obd_max_errors": 3,
+   *     "obd_alt_init_cmds": [
+   *       [
+   *         "ATSP7",
+   *         "ATCM0"
+   *       ]
+   *     ],
    *     "ping_back_interval_sec": 900,
    *     "reboot_on_wakeup": 0,
    *     "wakeup_motion_thr": 0.4000000059604645,
@@ -305,6 +311,7 @@ struct node_info_t {
   uint32_t net_stats_interval_sec{STATS_INTERVAL_SEC};
   uint32_t buf_stats_interval_sec{STATS_INTERVAL_SEC};
   uint8_t obd_max_errors{MAX_OBD_ERRORS};
+  std::vector<std::vector<std::string>> obd_alt_init_cmds{OBD_ALT_INIT_CMDS};
   uint16_t ping_back_interval_sec{PING_BACK_INTERVAL_SEC};
   uint8_t reboot_on_wakeup{REBOOT_ON_WAKEUP};
   float wakeup_motion_thr{MOTION_THRESHOLD};

@@ -553,7 +553,7 @@ void initialize()
   // initialize OBD communication
   if (!state.check(STATE_OBD_READY)) {
     timeoutsOBD = 0;
-    if (obd.init()) {
+    if (obd.init(PROTO_AUTO, node_info.obd_alt_init_cmds)) {
       state.set(STATE_OBD_READY | STATE_GET_OBFCM);
       ESP_LOGI(TAG_INIT, "OBD: OK, state: %X", state.m_state);
       OLED_PRINTLN("OBD OK");
@@ -956,7 +956,7 @@ void process()
     }
 
     if (obd.errors >= node_info.obd_max_errors) {
-      if (!obd.init()) {
+      if (!obd.init(PROTO_AUTO, node_info.obd_alt_init_cmds)) {
         ESP_LOGE(TAG_PROC, "OBD OFF(%i)", obd.init_stage);
         state.clear(STATE_OBD_READY | STATE_WORKING);
         return;

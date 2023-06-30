@@ -342,6 +342,7 @@ Json node_info_t::config_to_json() const {
       {"net_stats_interval_sec", net_stats_interval_sec},
       {"buf_stats_interval_sec", buf_stats_interval_sec},
       {"obd_max_errors", obd_max_errors},
+      {"obd_alt_init_cmds", obd_alt_init_cmds},
       {"ping_back_interval_sec", ping_back_interval_sec},
       {"reboot_on_wakeup", reboot_on_wakeup},
       {"wakeup_motion_thr", wakeup_motion_thr},

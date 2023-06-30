@@ -27,8 +27,17 @@ class COBD
 {
 public:
 	void begin(CLink* link) { this->link = link; }
-	// initialize OBD-II connection
-	bool init(OBD_PROTOCOLS protocol = PROTO_AUTO);
+	/**
+	 * initialize OBD-II connection
+	 *
+	 * :param obd_alt_init_cmds:
+	 * 		A list of ELM327-like Protocol AT-commands to send to the OBD-coprocessor
+	 * 		if initialization fails AND `protocol` is NOT `PROTO_J1939`.
+	 */
+	bool init(
+		OBD_PROTOCOLS protocol = PROTO_AUTO,
+		std::vector<std::vector<std::string>> obd_alt_init_cmds={}
+	);
 	// reset OBD-II connection
 	void reset();
 	// un-initialize OBD-II connection
@@ -88,6 +97,7 @@ public:
 	byte pidmap[4 * 8] = {0};
 	// link object pointer
 	CLink* link = 0;
+	/* Debug-aid incremented during `init()`. */
 	int init_stage = -1;
 protected:
 	virtual void idleTasks() { delay(5); }

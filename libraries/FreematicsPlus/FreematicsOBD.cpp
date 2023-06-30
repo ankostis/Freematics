@@ -473,8 +473,10 @@ bool COBD::isValidPID(byte pid)
 	return true || (pidmap[i] & b) != 0;
 }
 
-bool COBD::init(OBD_PROTOCOLS protocol)
-{
+bool COBD::init(
+	OBD_PROTOCOLS protocol,
+	std::vector<std::vector<std::string>> obd_alt_init_cmds
+) {
 	ESP_LOGI(TAG_OBD, "<init> proto: %i", protocol);
 	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
 	char buffer[64];
@@ -484,46 +486,69 @@ bool COBD::init(OBD_PROTOCOLS protocol)
 	}
 
 	m_state = OBD_DISCONNECTED;
+
 	init_stage = 0;
 	for (byte n = 0; n < 10; n++) {
 		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
-			init_stage = 1;
-			break;
+			init_stage += 1;
+			goto success_1;
 		}
 	}
-	if (init_stage == 0) return false;
+	return false;
+success_1:
+
 	for (byte i = 0; i < sizeof_array(initcmd); i++) {
 		link->sendCommand(initcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
+	init_stage += 1;
+
 	if (protocol != PROTO_AUTO) {
 		sprintf(buffer, "ATSP %X\r", protocol);
 		if (!link->sendCommand(buffer, buffer, sizeof(buffer), OBD_TIMEOUT_SHORT) || !strstr(buffer, "OK")) {
+			// Bail-out, set-protocol  command must not fail.
 			return false;
 		}
-	}
-	init_stage = 2;
-	if (protocol == PROTO_J1939) {
-		m_state = OBD_CONNECTED;
-		errors = 0;
-		return true;
-	}
-
-	for (byte n = 0; n < 2; n++) {
-		int value;
-		if (readPID(PID_SPEED, value)) {
-			init_stage = 3;
-			break;
+		init_stage += 1;
+		if (protocol == PROTO_J1939) {
+			m_state = OBD_CONNECTED;
+			errors = 0;
+			return true;
 		}
 	}
-	if (init_stage != 3) return false;
+
+	for(auto &cmd_list : obd_alt_init_cmds) {
+		for (int n = 0; n < 2; n++) {
+			int _value;
+			if (readPID(PID_SPEED, _value)) {
+				init_stage += 10;
+				goto success;
+			}
+		}
+
+		// Send Alternate Init Commands
+		for(auto &cmd : cmd_list) {
+			sprintf(buffer, "%s\r", cmd.c_str());
+			if (!link->sendCommand(buffer, buffer, sizeof(buffer), OBD_TIMEOUT_SHORT) ||
+					!strstr(buffer, "OK")) {
+				// NOTE: we should directly send the next `cmd_list`
+				// without trying to read PID_SPEED, but...
+				break;
+			}
+
+		}
+	}
+	return false;
+
+success:
 
 	// load pid map
 	memset(pidmap, 0xff, sizeof(pidmap));
-	for (byte i = 0; i < 8; i++) {
+	for (int i = 0; i < 8; i++) {
 		byte pid = i * 0x20;
 		sprintf(buffer, "%02X%02X\r", dataMode, pid);
 		link->send(buffer);
 		if (!link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_LONG) || checkErrorMessage(buffer)) {
+			init_stage += 1;
 			break;
 		}
 		for (char *p = buffer; (p = strstr(p, "41 ")); ) {
