@@ -253,7 +253,14 @@
  *
  * (json-config default for `node_info.obd_alt_init_cmds`)
  */
-#define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
+//// Toyota cmds
+#define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCF18DAF101", "ATCM1FFFFF00"}, {"ATSP6", "ATCF7E8", "ATCM7F8"}
+#define OBFCM_CMD_LIST_START    {"ATSP6\r", "ATCF7EA\r", "ATCM7FF\r"}
+#define OBFCM_CMD_LIST_END      {"ATSP6\r", "ATCF7E8\r", "ATCM7FF\r"}
+//// Mercedes cmds
+// #define OBFCM_CMD_LIST_START    {"ATSP7", "ATCF18DAF159", "ATCM1FFFFFFF"}  
+// #define OBFCM_CMD_LIST_END      {"ATSP7", "ATCF18DAF158", "ATCM1FFFFFFF"}
+
 
 /**************************************
  * Networking configurations

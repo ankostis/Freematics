@@ -423,6 +423,8 @@ bool COBD::getVIN(char* buffer, byte bufsize)
 bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 {
   // Write C++ code here
+	const char *obfcminitcmd[] = OBFCM_CMD_LIST_START;
+	const char *obfcmendcmd[] = OBFCM_CMD_LIST_END;
 	char command[128];
   	char data[16];
   	byte idx = 0;
@@ -431,7 +433,12 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 	char buffer[128];
 	byte bufsize;
 
-	while(obfcmDataArray[idx2].idx){
+
+	for (byte i = 0; i < sizeof_array(obfcminitcmd); i++) {
+		link->sendCommand(obfcminitcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
+	}
+
+		while(obfcmDataArray[idx2].idx){
 		sprintf(command, "%02d%02X\r", obfcmDataArray[idx2].service, obfcmDataArray[idx2].pid);
 		bufsize = sizeof(buffer);
 		if (link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG))
@@ -476,6 +483,11 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 				return true;
 		}
 	}
+
+	for (byte i = 0; i < sizeof_array(obfcmendcmd); i++) {
+		link->sendCommand(obfcmendcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
+	}
+
 	return true;
 }
 
