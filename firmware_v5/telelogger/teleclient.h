@@ -186,6 +186,8 @@ public:
     UDPClientSIM5360 net;
 #elif NET_DEVICE == NET_SIM7600
     UDPClientSIM7600 net;
+#elif NET_DEVICE == NET_SIM7070
+    UDPClientSIM7070 net;
 #elif NET_DEVICE == NET_WIFI_MESH
     ClientWiFiMesh net;
 #else
@@ -209,6 +211,8 @@ public:
     HTTPClientSIM5360 net;
 #elif NET_DEVICE == NET_SIM7600
     HTTPClientSIM7600 net;
+#elif NET_DEVICE == NET_SIM7070
+    HTTPClientSIM7070 net;
 #endif
 private:
     bool started = false;

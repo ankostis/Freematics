@@ -356,10 +356,12 @@ void TeleClientUDP::shutdown()
   }
   net.close();
   net.end();
+<<<<<<< HEAD
   ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
+=======
+  Serial.println("CELL OFF");
+>>>>>>> m1
 }
-
-#if NET_DEVICE == NET_WIFI || NET_DEVICE == NET_SIM800 || NET_DEVICE == NET_SIM5360 || NET_DEVICE == NET_SIM7600
 
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
@@ -382,7 +384,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 
   const char *devid = node_info.device_id.c_str();
   char url[256];
-  bool success;
+  bool success = false;
   int len;
   auto srv_path = node_info.srv_path;
 #if SERVER_METHOD == PROTOCOL_METHOD_GET
@@ -395,6 +397,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   }
   success = net.send(METHOD_GET, url, true);
 #else
+<<<<<<< HEAD
   len = snprintf(url, sizeof(url), "%s/post/%s", srv_path, devid);
   ESP_LOGD(TAG_NET,
       "TeleClientHTTP sending %i bytes to URL: %s",
@@ -405,6 +408,11 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
       url
 #endif
   );
+=======
+  len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
+  Serial.print("URL:");
+  Serial.println(url);
+>>>>>>> m1
   success = net.send(METHOD_POST, url, true, packetBuffer, packetSize);
   len += packetSize;
 #endif
@@ -426,8 +434,13 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     net.close();
     return false;
   }
+<<<<<<< HEAD
   ESP_LOGD(TAG_NET, "tx-reply: %s", response);
   if (strstr(response, " 200 ")) {
+=======
+  Serial.println(response);
+  if (net.code() == 200) {
+>>>>>>> m1
     // successful
     lastSyncTime = millis();
     rxBytes += bytes;
@@ -439,15 +452,24 @@ bool TeleClientHTTP::connect()
 {
   if (!started) {
     started = net.open();
-    Serial.println("HTTPS stack started");
   }
 
   // connect to HTTP server
   bool success = false;
+<<<<<<< HEAD
   for (byte attempts = 0; !success && attempts < node_info.net_retries;
        attempts++) {
     success = net.open(node_info.srv_host, node_info.srv_port);
     // TODO: pick up http-connect fixes from upstream(202204).
+=======
+
+  for (byte attempts = 0; !success && attempts < 3; attempts++) {
+    success = net.open(SERVER_HOST, SERVER_PORT);
+    if (!success) {
+      net.close();
+      delay(1000);
+    }
+>>>>>>> m1
   }
   if (!success) {
     ESP_LOGE(TAG_NET, "Error connecting to server");
@@ -487,5 +509,3 @@ void TeleClientHTTP::shutdown()
   started = false;
   ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
 }
-
-#endif

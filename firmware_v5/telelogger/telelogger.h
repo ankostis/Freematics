@@ -103,8 +103,13 @@ public:
     }
     void tailer()
     {
+<<<<<<< HEAD
         if (m_cache[m_cacheBytes - 1] == ',') m_cacheBytes--;
         m_cacheBytes += sprintf(m_cache + m_cacheBytes, "*%02X", (unsigned int)checksum(m_cache, m_cacheBytes));
+=======
+        //if (m_cache[m_cacheBytes - 1] == ',') m_cacheBytes--;
+        m_cacheBytes += sprintf(m_cache + m_cacheBytes, "*%X", (unsigned int)checksum(m_cache, m_cacheBytes));
+>>>>>>> m1
     }
     void untailer()
     {

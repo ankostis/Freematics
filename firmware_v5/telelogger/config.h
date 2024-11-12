@@ -55,12 +55,22 @@
 /**************************************
 * Configuration Definitions
 **************************************/
+<<<<<<< HEAD
 #define NET_WIFI                1
 #define NET_SIM800              2
 #define NET_SIM5360             3
 #define NET_SIM7600             4
 #define NET_WIFI_MESH           5
 #define NET_SERIAL              6
+=======
+#define NET_WIFI 1
+#define NET_WIFI_MESH 2
+#define NET_SERIAL 3
+#define NET_SIM800 4
+#define NET_SIM5360 5
+#define NET_SIM7600 6
+#define NET_SIM7070 7
+>>>>>>> m1
 
 #define LOG_SINK_NONE           0
 #define LOG_SINK_SERIAL         0x1
@@ -74,6 +84,7 @@
  */
 #define LOG_SINK_SPIFFS         0x4
 
+<<<<<<< HEAD
 #define STORAGE_NONE            0
 /**
  * Store trip-traces into SD/SPIFFS;  SD & SPIFFS are mutual-exclusive.
@@ -85,6 +96,16 @@
 #define GNSS_NONE               0
 #define GNSS_STANDALONE         1
 #define GNSS_CELLULAR           2
+=======
+#define GNSS_NONE 0
+#define GNSS_INTERNAL 1
+#define GNSS_EXTERNAL 2
+#define GNSS_CELLULAR 3
+
+#define PROTOCOL_UDP 1
+#define PROTOCOL_HTTP 2
+#define PROTOCOL_HTTPS 3
+>>>>>>> m1
 
 #define PROTOCOL_UDP            1
 #define PROTOCOL_HTTPS          2
@@ -231,6 +252,7 @@
  *      #define SERVER_HOST           "hub.freematics.com"
  */
 // change the following line to change network device
+<<<<<<< HEAD
 #define NET_DEVICE              NET_WIFI
 /**
  * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
@@ -252,6 +274,18 @@
  */
 #define SERVER_HOST             "hub.freematics.com"
 #define SERVER_PROTOCOL         PROTOCOL_UDP
+=======
+#define NET_DEVICE NET_SIM7600
+// WiFi settings
+#define WIFI_SSID "SSID"
+#define WIFI_PASSWORD "PASSWORD"
+// cellular network settings
+#define CELL_APN "hologram"
+// Freematics Hub server settings
+#define SERVER_HOST "hub.freematics.com"
+#define SERVER_PROTOCOL PROTOCOL_HTTP
+#endif 
+>>>>>>> m1
 
 /**
  * SIM card setting
@@ -270,7 +304,13 @@
 /** (json-config default) */
 #if !SERVER_PORT
 #if SERVER_PROTOCOL == PROTOCOL_UDP
+<<<<<<< HEAD
 #define SERVER_PORT             8081
+=======
+#define SERVER_PORT 8081
+#elif SERVER_PROTOCOL == PROTOCOL_HTTP
+#define SERVER_PORT 80
+>>>>>>> m1
 #elif SERVER_PROTOCOL == PROTOCOL_HTTPS
 #define SERVER_PORT             443
 #endif
@@ -284,6 +324,7 @@
 #define WIFI_AP_SSID            "TELELOGGER"
 #define WIFI_AP_PASSWORD        "PASSWORD"
 
+<<<<<<< HEAD
 /**
  * How many times to attempt opening net-connection before reporting error.
  * (json-config default)
@@ -349,6 +390,20 @@
  * (json-config default)
  */
 #define STATS_INTERVAL_SEC          12
+=======
+// maximum consecutive communication errors before resetting network
+#define MAX_CONN_ERRORS_RECONNECT 3
+// maximum allowed connecting time
+#define MAX_CONN_TIME 10000 /* ms */
+// data receiving timeout
+#define DATA_RECEIVING_TIMEOUT 5000 /* ms */
+// expected maximum server sync signal interval
+#define SERVER_SYNC_INTERVAL 120 /* seconds, 0 to disable */
+// data interval settings
+#define STATIONARY_TIME_TABLE {30, 60, 180} /* seconds */
+#define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
+#define PING_BACK_INTERVAL 900 /* seconds */
+>>>>>>> m1
 
 /**************************************
 * Data storage configurations
@@ -371,10 +426,16 @@
 **************************************/
 #ifndef GNSS
 // change the following line to change GNSS setting
+<<<<<<< HEAD
 #define GNSS                    GNSS_STANDALONE
 #endif
 #define GPS_SERIAL_BAUDRATE     115200L
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
+=======
+#define GNSS GNSS_EXTERNAL
+#endif
+#define GPS_MOTION_TIMEOUT 180 /* seconds */
+>>>>>>> m1
 
 /**************************************
 * Standby/wakeup
