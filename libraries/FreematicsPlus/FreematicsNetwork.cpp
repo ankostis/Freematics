@@ -1247,9 +1247,6 @@ char* HTTPClientSIM7600::receive(int* pbytes, unsigned int timeout)
   }
 }
 
-<<<<<<< HEAD
-// TODO: merge upstream(202204) for SIM7070
-=======
 /*************************************************************************************************
   SIM7070
 *************************************************************************************************/
@@ -1394,7 +1391,7 @@ void ClientSIM7070::checkGPS()
   } while (0);
 }
 
-String ClientSIM7070::getIP()
+std::string ClientSIM7070::getIP()
 {
   uint32_t t = millis();
   for (int i = 0; i < 10; i++) {
@@ -1414,7 +1411,7 @@ String ClientSIM7070::getIP()
   return "";
 }
 
-String ClientSIM7070::queryIP(const char* host)
+std::string ClientSIM7070::queryIP(const char* host)
 {
   sprintf(m_buffer, "AT+CDNSGIP=\"%s\",1,3000\r", host);
   if (sendCommand(m_buffer, 10000, "+CDNSGIP:")) {
@@ -1574,4 +1571,3 @@ char* HTTPClientSIM7070::receive(int* pbytes, unsigned int timeout)
   checkGPS();
   return 0;
 }
->>>>>>> m1

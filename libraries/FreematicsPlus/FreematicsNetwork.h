@@ -67,12 +67,8 @@ public:
 protected:
     std::string genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
     HTTP_STATES m_state = HTTP_DISCONNECTED;
-<<<<<<< HEAD
-    std::string m_host;
-=======
     byte m_code = 0;
-    String m_host;
->>>>>>> m1
+    std::string m_host;
 };
 
 class ClientWIFI
@@ -106,7 +102,7 @@ public:
     void close();
     bool send(const char* data, unsigned int len);
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
-    std::string queryIP(const char* host);
+    virtual std::string queryIP(const char* host);
 private:
     IPAddress udpIP;
     uint16_t udpPort;
@@ -136,7 +132,7 @@ public:
     std::string getOperatorName();
     bool checkSIM(const char* pin = 0);
     bool getLocation(NET_LOCATION* loc);
-    std::string queryIP(const char* host);
+    virtual std::string queryIP(const char* host);
     char* getBuffer() { return m_buffer; }
     const char* deviceName() { return "SIM800"; }
     const char* IMEI = "N/A";
@@ -176,21 +172,12 @@ public:
     virtual void end();
     virtual bool setup(const char* apn, unsigned int timeout = 30000);
     virtual bool setGPS(bool on);
-<<<<<<< HEAD
-    std::string getIP();
-=======
-    virtual String getIP();
->>>>>>> m1
+    virtual std::string getIP();
     int getSignal();
     std::string getOperatorName();
     bool checkSIM(const char* pin = 0);
-<<<<<<< HEAD
-    std::string queryIP(const char* host);
-    bool getLocation(GPS_DATA** pgd)
-=======
-    virtual String queryIP(const char* host);
+    virtual std::string queryIP(const char* host);
     virtual bool getLocation(GPS_DATA** pgd)
->>>>>>> m1
     {
         if (m_gps) {
             if (pgd) *pgd = m_gps;
@@ -273,8 +260,8 @@ public:
     bool setup(const char* apn, unsigned int timeout = 30000);
     bool setGPS(bool on);
     void checkGPS();
-    String getIP();
-    String queryIP(const char* host);
+    virtual std::string getIP();
+    virtual std::string queryIP(const char* host);
 };
 
 class UDPClientSIM7070 : public ClientSIM7070
@@ -286,7 +273,7 @@ public:
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
 protected:
     char* checkIncoming(int* pbytes);
-    String udpIP;
+    std::string udpIP;
     uint16_t udpPort = 0;
 };
 

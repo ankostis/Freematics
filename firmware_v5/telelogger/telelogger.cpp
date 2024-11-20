@@ -167,12 +167,7 @@ float batteryVoltage = 0;
 GPS_DATA* gd = 0;
 char obfcmTest[128] = {0};
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-char isoTime[26] = {0};
-=======
-char devid[12] = {0};
 char isoTime[32] = {0};
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 
 // stats data
 uint32_t lastMotionTime = 0;
@@ -1029,14 +1024,9 @@ void process()
   }
 #endif
 
-  const int dataIntervals[] = DATA_INTERVAL_TABLE;
 #if ENABLE_OBD || ENABLE_MEMS
   // motion adaptive data interval control
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   const auto &intervals = node_info.transmission_intervals;
-=======
-  const uint16_t stationaryTime[] = STATIONARY_TIME_TABLE;
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
   unsigned int motionless = (millis() - lastMotionTime) / 1000;
   bool stationary = true;
   int new_tx_interval_stage = 0;
@@ -1065,12 +1055,7 @@ void process()
              stationary_duration,
              dataInterval);
   }
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   current_stationary_tx_interval_stage = new_tx_interval_stage;
-=======
-#else
-  dataInterval = dataIntervals[0];
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 #endif
   long t = dataInterval - (millis() - startTime);
   if (t > 0 && t < dataInterval) delay(t);
@@ -1106,23 +1091,10 @@ bool initNetwork()
     return false;
   }
 #if NET_DEVICE >= SIM800
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
+  OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
   ESP_LOGI(TAG_NET, "CELL: %s", teleClient.net.deviceName());
   if (!teleClient.net.checkSIM(node_info.sim_card_pin)) {
     ESP_LOGE(TAG_NET, "NO SIM CARD");
-=======
-#if ENABLE_OLED
-    oled.print(teleClient.net.deviceName());
-    oled.println(" OK\r");
-    oled.print("IMEI:");
-    oled.println(teleClient.net.IMEI);
-#endif
-  Serial.print("CELL:");
-  Serial.println(teleClient.net.deviceName());
-  if (!teleClient.net.checkSIM(SIM_CARD_PIN)) {
-    Serial.println("NO SIM CARD");
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
     return false;
   }
   ESP_LOGI(TAG_NET, "IMEI: %s", teleClient.net.IMEI);
@@ -1270,12 +1242,7 @@ void telemetry(void* inst)
       buffer->serialize(store);
       buffer->purge();
       store.tailer();
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-#endif
       ESP_LOGD(TAG_TELE, "To tx: |%s|", store.buffer());
-=======
-      //Serial.println(store.buffer());
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 
       // start transmission
       if (ledMode == 0) digitalWrite(PIN_LED, HIGH);
@@ -1429,114 +1396,9 @@ void standby()
 /*******************************************************************************
   SETUP (after boot)
 *******************************************************************************/
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 void enter_coproc_bootpipe_mode() {
   constexpr const char EOT = 0x04; // End Of Transmission
   const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
-=======
-void genDeviceID(char* buf)
-{
-    uint64_t seed = ESP.getEfuseMac() >> 8;
-    for (int i = 0; i < 8; i++, seed >>= 5) {
-      byte x = (byte)seed & 0x1f;
-      if (x >= 10) {
-        x = x - 10 + 'A';
-        switch (x) {
-          case 'B': x = 'W'; break;
-          case 'D': x = 'X'; break;
-          case 'I': x = 'Y'; break;
-          case 'O': x = 'Z'; break;
-        }
-      } else {
-        x += '0';
-      }
-      buf[i] = x;
-    }
-    buf[8] = 0;
-}
-
-void showSysInfo()
-{
-  Serial.print("CPU:");
-  Serial.print(ESP.getCpuFreqMHz());
-  Serial.print("MHz FLASH:");
-  Serial.print(getFlashSize() >> 10);
-  Serial.println("MB");
-#ifdef BOARD_HAS_PSRAM
-  Serial.print("IRAM:");
-  Serial.print(ESP.getHeapSize() >> 10);
-  Serial.print("KB");
-  if (psramInit()) {
-    Serial.print(" PSRAM:");
-    Serial.print((ESP.getPsramSize() + esp_himem_get_phys_size()) >> 10);
-    Serial.print("KB");
-#if 0
-    Serial.println();
-    Serial.print("Writing PSRAM...");
-    int size = ESP.getPsramSize();
-    uint32_t *ptr = (uint32_t*)ps_malloc(size);
-    if (!ptr) {
-      Serial.print("unable to allocate ");
-      Serial.print(size);
-      Serial.println(" bytes");
-    } else {
-      uint32_t t = millis();
-      for (int i = 0; i < size / 4; i++) {
-        ptr[i] = 0xa5a5a5a5;
-      }
-      Serial.print("OK @");
-      Serial.print(size  / (millis() - t));
-      Serial.println("KB/s");
-    }
-    Serial.print("Verifying PSRAM...");
-    int errors = 0;
-    uint32_t t = millis();
-    for (int i = 0; i < size / 4; i++) {
-      if (ptr[i] != 0xa5a5a5a5) {
-        Serial.print("mismatch @ 0x");
-        Serial.println(i * 4, 16);
-        errors++;
-      }
-    }
-    if (errors == 0) {
-      Serial.print("OK @");
-      Serial.print(size  / (millis() - t));
-      Serial.println("KB/s");
-    }
-    free(ptr);
-#endif
-  }
-  Serial.println();
-#endif
-
-  int rtc = rtc_clk_slow_freq_get();
-  if (rtc) {
-    Serial.print("RTC:");
-    Serial.println(rtc);
-  }
-  
-#if ENABLE_OLED
-  oled.clear();
-  oled.print("CPU:");
-  oled.print(ESP.getCpuFreqMHz());
-  oled.print("Mhz ");
-  oled.print(getFlashSize() >> 10);
-  oled.println("MB Flash");
-#endif
-
-  Serial.print("DEVICE ID:");
-  Serial.println(devid);
-#if ENABLE_OLED
-  oled.print("DEVICE ID:");
-  oled.println(devid);
-#endif
-}
-
-#if CONFIG_MODE_TIMEOUT
-void configMode()
-{
-  uint32_t t = millis();
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 
   ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE ))--");
   Serial.printf(
@@ -1692,18 +1554,9 @@ void setup()
     pinMode(PIN_LED, OUTPUT);
     digitalWrite(PIN_LED, HIGH);
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
     if (node_info.obd_pipe_sec)
         enter_coproc_bootpipe_mode();
-=======
-    // generate unique device ID
-    genDeviceID(devid);
-
-#if CONFIG_MODE_TIMEOUT
-    configMode();
-#endif
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 
     node_info_j = node_info.to_json();
     ESP_LOGE(
@@ -1788,12 +1641,8 @@ void loop()
     }
   }
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   digitalWrite(node_info.pin_sensor2, digitalRead(node_info.pin_sensor1));
 
   ESP_LOGD(TAG_INIT, "<loop> state: %X", state.m_state);
-=======
-  //digitalWrite(26, digitalRead(34));
->>>>>>> m1:firmware_v5/telelogger/telelogger.ino
 }
 #endif // PIO_UNIT_TESTING
