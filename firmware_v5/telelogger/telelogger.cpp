@@ -1042,26 +1042,10 @@ void process()
   }
   if (stationary) {
     // stationery timeout
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    // trip ended if OBD is not available
-    if (!state.check(STATE_OBD_READY)) state.clear(STATE_WORKING);
     ESP_LOGI(
       TAG_PROC, "STATIONARY for %u sec, state: %X", motionless, state.m_state);
-  } else if (new_tx_interval_stage != current_stationary_tx_interval_stage) {
-    ESP_LOGI(TAG_PROC,
-             "Motionless for %u, stage %i-->%i below %usec, transmit every %ums",
-             motionless,
-             current_stationary_tx_interval_stage,
-             new_tx_interval_stage,
-             stationary_duration,
-             dataInterval);
-=======
-    Serial.print("Stationary for ");
-    Serial.print(motionless);
-    Serial.println(" secs");
     // trip ended, go into standby
     state.clear(STATE_WORKING);
->>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
   }
   current_stationary_tx_interval_stage = new_tx_interval_stage;
 #endif
@@ -1225,12 +1209,8 @@ void telemetry(void* inst)
         if (_CHECK_BUZTICKS) buzzer.tone(1, 0.2);
         teleClient.shutdown();
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-        delay(10000);
-        if (_CHECK_BUZTICKS) buzzer.tone(0);
-=======
         delay(30000);
->>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
+        if (_CHECK_BUZTICKS) buzzer.tone(0);
         continue;
       }
     }  // !CONNCTED?
@@ -1581,27 +1561,18 @@ void setup()
         (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
         node_info.device_id);
 
-#if ENABLE_OBD
-    if (sys.begin()) {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-      ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
-    }
-
 #if LOG_EXT_SENSORS
     pinMode(node_info.pin_sensor1, INPUT);
     pinMode(node_info.pin_sensor2, INPUT);
 #endif
 
 #if ENABLE_OBD
-    obd.begin(sys.link);
-=======
-      Serial.print("TYPE:");
-      Serial.println(sys.devType);
+    if (sys.begin()) {
+      ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
       obd.begin(sys.link);
     }
 #else
     sys.begin(false, true);
->>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
 #endif
 
 #if ENABLE_MEMS

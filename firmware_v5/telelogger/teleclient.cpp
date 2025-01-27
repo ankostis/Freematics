@@ -425,7 +425,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     return false;
   }
   ESP_LOGD(TAG_NET, "tx-reply: %s", response);
-  if (net.code == 200) {
+  if (net.code() == 200) {
     lastSyncTime = millis();
     rxBytes += bytes;
   }

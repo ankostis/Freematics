@@ -508,13 +508,8 @@ bool FreematicsESP32::gpsBegin(int baudrate)
         gpsEnd();
     }
 
-<<<<<<< HEAD
-    // try co-processor GPS link
-    if (m_flags & FLAG_GNSS_USE_LINK) {
-=======
     // try co-processor GNSS
     if (link) {
->>>>>>> soshial/master
         char buf[128];
         link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
         m_flags |= FLAG_GNSS_USE_LINK;
@@ -534,11 +529,7 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             ESP_LOGI(TAG_GNSS, "<BEGIN> through LINK");
             return true;
         }
-<<<<<<< HEAD
-        link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 100);
-=======
         gpsEnd();
->>>>>>> soshial/master
         m_flags &= ~FLAG_GNSS_USE_LINK;
     }
 
@@ -768,14 +759,7 @@ void FreematicsESP32::xbTogglePower()
     digitalWrite(PIN_BEE_PWR, HIGH);
     delay(100);
 	digitalWrite(PIN_BEE_PWR, LOW);
-<<<<<<< HEAD
-	delay(200);  // TODO: `delay(1010)` in upstream(202204)
-=======
 	delay(2000);
-#if VERBOSE_XBEE
-	Serial.println("xBee power pin set to high");
-#endif
->>>>>>> soshial/master
     digitalWrite(PIN_BEE_PWR, HIGH);
 #endif
     delay(100);
