@@ -331,7 +331,7 @@ void processOBD(CBuffer* buffer)
   }
 
   int kph = obdData[0].value;
-  if (kph >= 1) lastMotionTime = millis();
+  if (kph >= 2) lastMotionTime = millis();
 }
 #endif
 
@@ -346,7 +346,7 @@ bool processGPS(CBuffer* buffer)
     lastGPSLat = 0;
     lastGPSLng = 0;
   }
-#if GNSS == GNSS_STANDALONE
+#if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
   if (state.check(STATE_GPS_READY)) {
     // read parsed GPS data
     if (!sys.gpsGetData(&gd)) {
@@ -1042,6 +1042,7 @@ void process()
   }
   if (stationary) {
     // stationery timeout
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     // trip ended if OBD is not available
     if (!state.check(STATE_OBD_READY)) state.clear(STATE_WORKING);
     ESP_LOGI(
@@ -1054,6 +1055,13 @@ void process()
              new_tx_interval_stage,
              stationary_duration,
              dataInterval);
+=======
+    Serial.print("Stationary for ");
+    Serial.print(motionless);
+    Serial.println(" secs");
+    // trip ended, go into standby
+    state.clear(STATE_WORKING);
+>>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
   }
   current_stationary_tx_interval_stage = new_tx_interval_stage;
 #endif
@@ -1163,7 +1171,7 @@ void telemetry(void* inst)
       teleClient.reset();
       bufman.purge();
 
-#if GNSS == GNSS_STANDALONE
+#if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
       if (state.check(STATE_GPS_READY)) {
         sys.gpsEnd();
         state.clear(STATE_GPS_READY);
@@ -1217,8 +1225,12 @@ void telemetry(void* inst)
         if (_CHECK_BUZTICKS) buzzer.tone(1, 0.2);
         teleClient.shutdown();
         state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
         delay(10000);
         if (_CHECK_BUZTICKS) buzzer.tone(0);
+=======
+        delay(30000);
+>>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
         continue;
       }
     }  // !CONNCTED?
@@ -1390,7 +1402,6 @@ void standby()
   state.clear(STATE_STANDBY);
   // this will wake up co-processor
   sys.resetLink();
-  delay(200);
 }
 
 /*******************************************************************************
@@ -1570,7 +1581,9 @@ void setup()
         (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
         node_info.device_id);
 
+#if ENABLE_OBD
     if (sys.begin()) {
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
       ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
     }
 
@@ -1581,6 +1594,14 @@ void setup()
 
 #if ENABLE_OBD
     obd.begin(sys.link);
+=======
+      Serial.print("TYPE:");
+      Serial.println(sys.devType);
+      obd.begin(sys.link);
+    }
+#else
+    sys.begin(false, true);
+>>>>>>> soshial/master:firmware_v5/telelogger/telelogger.ino
 #endif
 
 #if ENABLE_MEMS

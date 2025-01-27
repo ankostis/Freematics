@@ -107,12 +107,12 @@ static void gps_soft_decode_task(void* inst)
     for (;;) {
         uint8_t c = 0;
         do {
-            taskYIELD();
+            //taskYIELD();
         } while (readRxPin());
         uint32_t start = getCycleCount();
         uint32_t duration;
         for (uint32_t i = 1; i <= 7; i++) {
-            taskYIELD();
+            //taskYIELD();
             duration = i * F_CPU / GPS_SOFT_BAUDRATE + F_CPU / GPS_SOFT_BAUDRATE / 3;
             while (getCycleCount() - start < duration);
             c = (c | readRxPin()) >> 1;
@@ -508,8 +508,13 @@ bool FreematicsESP32::gpsBegin(int baudrate)
         gpsEnd();
     }
 
+<<<<<<< HEAD
     // try co-processor GPS link
     if (m_flags & FLAG_GNSS_USE_LINK) {
+=======
+    // try co-processor GNSS
+    if (link) {
+>>>>>>> soshial/master
         char buf[128];
         link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
         m_flags |= FLAG_GNSS_USE_LINK;
@@ -529,7 +534,11 @@ bool FreematicsESP32::gpsBegin(int baudrate)
             ESP_LOGI(TAG_GNSS, "<BEGIN> through LINK");
             return true;
         }
+<<<<<<< HEAD
         link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 100);
+=======
+        gpsEnd();
+>>>>>>> soshial/master
         m_flags &= ~FLAG_GNSS_USE_LINK;
     }
 
@@ -759,7 +768,14 @@ void FreematicsESP32::xbTogglePower()
     digitalWrite(PIN_BEE_PWR, HIGH);
     delay(100);
 	digitalWrite(PIN_BEE_PWR, LOW);
+<<<<<<< HEAD
 	delay(200);  // TODO: `delay(1010)` in upstream(202204)
+=======
+	delay(2000);
+#if VERBOSE_XBEE
+	Serial.println("xBee power pin set to high");
+#endif
+>>>>>>> soshial/master
     digitalWrite(PIN_BEE_PWR, HIGH);
 #endif
     delay(100);
@@ -804,6 +820,7 @@ void FreematicsESP32::resetLink()
         digitalWrite(PIN_LINK_RESET, LOW);
         delay(50);
         digitalWrite(PIN_LINK_RESET, HIGH);
+        delay(2000);
     }
 }
 
@@ -823,20 +840,20 @@ bool FreematicsESP32::begin(bool useCoProc, bool useCellular)
 
     if (useCoProc) do {
         CLink_UART *linkUART = new CLink_UART;
+#if 0
         linkUART->begin(115200);
         char buf[16];
         // lift baudrate to 512Kbps
         linkUART->sendCommand("ATBR1 7D000\r", buf, sizeof(buf), 50);
         linkUART->end();
         delay(50);
-        if (linkUART->begin(512000)) {
+#endif
+        if (linkUART->begin(115200)) {
             link = linkUART;
             for (byte n = 0; n < 3 && !getDeviceType(); n++);
             if (devType) {
                 m_flags |= FLAG_USE_UART_LINK;
-                if (devType == 13 || devType == 14 || devType == 15) {
-                    m_flags |= FLAG_GNSS_USE_LINK;
-                } else if (devType == 12) {
+                if (devType == 12) {
                     m_pinGPSPower = PIN_GPS_POWER2;
                 }
                 break;

@@ -985,11 +985,12 @@ char* HTTPClientSIM5360::receive(int* pbytes, unsigned int timeout)
 
 void ClientSIM7600::end()
 {
-  sendCommand("AT+CRESET\r");
   setGPS(false);
-  delay(1000);
-  sendCommand("AT+CPOF\r");
-  delay(3000);
+  if (sendCommand("AT+CRESET\r")) {
+    m_device->xbTogglePower();
+  } else {
+    sendCommand("AT+CPOF\r");
+  }
 }
 
 bool ClientSIM7600::setup(const char* apn, unsigned int timeout)
@@ -1393,7 +1394,6 @@ void ClientSIM7070::checkGPS()
 
 std::string ClientSIM7070::getIP()
 {
-  uint32_t t = millis();
   for (int i = 0; i < 10; i++) {
     delay(500);
     if (sendCommand("AT+CNACT?\r", 1000)) {

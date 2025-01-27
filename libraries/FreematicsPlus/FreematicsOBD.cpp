@@ -314,6 +314,12 @@ int COBD::normalizeData(uint16_t id, char* data)
 	case PID_AIR_FUEL_EQUIV_RATIO_ID: // 0~200
 		result = getLargeValue(data); //(long)getLargeValue(data) * 200 / 65536;
 		break;
+	case PID_ODOMETER:
+		if (strlen(data) < 11)
+			result = -1;
+		else
+			result = (uint32_t)hex2uint8(data) << 24 | (uint32_t)hex2uint8(data + 3) << 16 | (uint32_t)hex2uint8(data + 6) << 8 | hex2uint8(data + 9);
+		break;
 	default:
 		result = getSmallValue(data);
 	}
@@ -564,7 +570,7 @@ success:
 			if (hex2uint8(p) == pid) {
 				p += 2;
 				for (byte n = 0; n < 4 && *(p + n * 3) == ' '; n++) {
-					pidmap[i * 4 + n] = hex2uint8(p + n * 3 + 1);
+					pidmap[i * 4 + n] |= hex2uint8(p + n * 3 + 1);
 				}
 			}
 		}

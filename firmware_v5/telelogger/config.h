@@ -376,7 +376,7 @@
 **************************************/
 #ifndef GNSS
 // change the following line to change GNSS setting
-#define GNSS                    GNSS_EXTERNAL
+#define GNSS                    GNSS_INTERNAL
 #endif
 #define GPS_SERIAL_BAUDRATE     115200L
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
