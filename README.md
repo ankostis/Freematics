@@ -66,7 +66,11 @@ Directories
 
 - **firmware_v4/** - Arduino sketches and libraries for ATmega328p based [Freematics ONE](https://freematics.com/products/freematics-one)
 
+<<<<<<< HEAD
 - **firmware_v5/** - Arduino sketches for ESP32 based [Freematics ONE+](https://freematics.com/products/freematics-one-plus)
+=======
+firmware_v5 - Arduino sketches for ESP32 based [Freematics ONE+](https://freematics.com/products/freematics-one-plus-model-b/)
+>>>>>>> upstream
 
 - **ESPRIT** - Arduino library and example sketches for ESP32 development board
   [Freematics Esprit](https://freematics.com/products/freematics-esprit) and

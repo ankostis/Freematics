@@ -27,6 +27,7 @@ class COBD
 {
 public:
 	void begin(CLink* link) { this->link = link; }
+<<<<<<< HEAD
 	/**
 	 * initialize OBD-II connection
 	 *
@@ -38,6 +39,10 @@ public:
 		OBD_PROTOCOLS protocol = PROTO_AUTO,
 		std::vector<std::vector<std::string>> obd_alt_init_cmds={}
 	);
+=======
+	// initialize OBD-II connection
+	bool init(OBD_PROTOCOLS protocol = PROTO_AUTO, bool quick = false);
+>>>>>>> upstream
 	// reset OBD-II connection
 	void reset();
 	// un-initialize OBD-II connection

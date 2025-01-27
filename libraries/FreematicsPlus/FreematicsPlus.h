@@ -18,7 +18,11 @@
 #include "FreematicsNetwork.h"
 #include "FreematicsMEMS.h"
 #include "FreematicsOBD.h"
+extern "C" {
+#include "utility/ble_spp_server.h"
+}
 
+<<<<<<< HEAD
 // ESP_IDF logging tags used
 inline constexpr const char TAG_LINK[] = "LINK";  // UART with STM32 --> OBD
 inline constexpr const char TAG_GSM[] = "GSM";  // UART with both GSM & GNSS
@@ -26,26 +30,42 @@ inline constexpr const char TAG_GNSS[] = "GNSS";
 inline constexpr const char TAG_SPI[] = "SPI";
 
 #define PIN_LED 4
+=======
+>>>>>>> upstream
 #define PIN_SD_CS 5
 
 #define PIN_LINK_SPI_CS 2
 #define PIN_LINK_SPI_READY 13
 #define SPI_FREQ 1000000
 
-#define LINK_UART_BAUDRATE 115200
-#define LINK_UART_NUM UART_NUM_2
-#define LINK_UART_BUF_SIZE 256
-#define PIN_LINK_UART_RX 13
-#define PIN_LINK_UART_TX 14
-#define PIN_LINK_RESET 15
+#if CONFIG_IDF_TARGET_ESP32C3 && !defined(ARDUINO_ESP32C3_DEV)
+#define ARDUINO_ESP32C3_DEV
+#endif
 
+#ifndef ARDUINO_ESP32C3_DEV
+// ESP32 variants with 3 hardware serial UART
+#define LINK_UART_NUM UART_NUM_2
+#define UART_COUNT 3
+#define PIN_LINK_RESET 15
+#define PIN_BUZZER 25
 #define PIN_BEE_PWR 27
 #define PIN_BEE_UART_RXD 35
 #define PIN_BEE_UART_TXD 2
-#define PIN_BEE_UART_RXD2 32
-#define PIN_BEE_UART_TXD2 33
-#define PIN_BEE_UART_RXD3 16
-#define PIN_BEE_UART_TXD3 17
+#define PIN_LED 4
+#else
+// ESP32-C3 has 2 hardware serial UART
+#define LINK_UART_NUM UART_NUM_1
+#define UART_COUNT 2
+#define PIN_BEE_PWR 8
+#define PIN_BEE_UART_RXD 18
+#define PIN_BEE_UART_TXD 19
+#endif
+#define LINK_UART_BAUDRATE 115200
+
+#define LINK_UART_BUF_SIZE 256
+#define PIN_LINK_UART_RX 13
+#define PIN_LINK_UART_TX 14
+
 #define BEE_UART_NUM UART_NUM_1
 #define BEE_BAUDRATE 115200L
 
@@ -58,7 +78,6 @@ inline constexpr const char TAG_SPI[] = "SPI";
 #define GPS_UART_NUM UART_NUM_1
 #define GPS_SOFT_BAUDRATE 38400L
 
-#define PIN_BUZZER 25
 #define PIN_MOLEX_2 34
 #define PIN_MOLEX_4 26
 #define PIN_MOLEX_VCC 12
@@ -81,7 +100,7 @@ public:
   void destroy();
   bool running();
 private:
-  void* xHandle = 0;
+  TaskHandle_t xHandle;
 };
 
 class Mutex
@@ -129,9 +148,11 @@ class FreematicsESP32 : public CFreematics
 public:
   bool begin(bool useCoProc = true, bool useCellular = true);
   // start GPS
-  bool gpsBegin(int baudrate = 115200);
+  bool gpsBegin();
+  // start GPS
+  bool gpsBeginExt(int baudrate = 115200);
   // turn off GPS
-  void gpsEnd();
+  void gpsEnd(bool powerOff = true);
   // get parsed GPS data (returns the number of data parsed since last invoke)
   bool gpsGetData(GPS_DATA** pgd);
   bool _gpsGetData_linkUart(GPS_DATA** pgd);
@@ -154,7 +175,13 @@ public:
   // purge xBee UART buffer
   void xbPurge();
   // toggle xBee module power
+<<<<<<< HEAD
   void xbTogglePower();
+=======
+  void xbTogglePower(unsigned int duration = 200);
+  // control internal buzzer (if present)
+  void buzzer(int freq);
+>>>>>>> upstream
   // reset co-processor
   void resetLink();
   // reactivate co-processor

@@ -1,4 +1,4 @@
-This Arduino sketch is designed for running on [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) to collect vehicle telemetry data from OBD-II, GPS and motion sensor and transmit the collected data to a remote server running [Freematics Hub](https://freematics.com/hub) software in realtime. It also has a mechansim for executing and responding to commands sent from serverside.
+This Arduino sketch is developed for [Freematics ONE+](https://freematics.com/products/freematics-one-plus/) to collect vehicle telemetry data from OBD, GPS, motion sensor, to log the data in local storage and to transmit the data to a remote server in real-time. It demonstrates most capabilities of Freematics ONE+ and works well with [Traccar](https://www.traccar.org) GPS tracking platform.
 
 Installation
 ============
@@ -103,6 +103,7 @@ Data Collection
 ===============
 
 The sketch collects following data.
+<<<<<<< HEAD
 * Vehicle OBD-II PIDs data (from OBD port)
 * Battery voltage (from OBD port)
 * Geolocation data (from cellular module's internal GNSS or external GNSS receiver)
@@ -111,15 +112,28 @@ The sketch collects following data.
 
 Data Transmissions
 ==================
+=======
 
-Data transmission over UDP and HTTP protocols are implemented with following hardware.
+* Vehicle OBD data (from OBD port)
+* Battery voltage (from OBD port)
+* Geolocation data (from internal or external GNSS) 
+* Accelerometer and gyroscope data (from internal MEMS motion sensor)
+* Device temperature
+
+Collected data are stored in a circular buffer in ESP32's IRAM or PSRAM. When PSRAM is enabled, hours of data can be buffered in case of temporary network outage and transmitted afterwards.
+  
+Data Transmission
+-----------------
+>>>>>>> upstream
+
+Data transmission over UDP and HTTP(s) protocols are implemented for the followings.
 
 * WiFi (ESP32 built-in)
-* WiFi Mesh (ESP-MDF for ESP32)
-* GSM/GPRS (SIM800)
 * 3G WCDMA (SIM5360)
-* 4G LTE (SIM7600)
+* 4G LTE CAT-4 (SIM7600)
+* 4G LTE CAT-M (SIM7070)
 
+<<<<<<< HEAD
 There two ways of sending data:
 
 1. UDP mode implements a full telemetry client for [Freematics Hub](https://freematics.com/hub/)
@@ -127,6 +141,11 @@ There two ways of sending data:
 2. HTTP/HTTPS mode implements a `osmand` protocol client for Traccar
    (sends only location data, [protocol's API](https://www.traccar.org/osmand/),
    uses 5055 port)
+=======
+UDP mode implements a full telemetry client for [Freematics Hub](https://hub.freematics.com) and [Traccar](https://www.traccar.org). HTTP mode implements [OsmAnd](https://www.traccar.org/osmand/) protocol.
+
+Seamless WiFi and cellular network co-working is implemented. When defined WiFi hotspot is available, data is transmitted via WiFi and cellular module is switched off. When no WiFi hotspot can be reached, cellular module is switched on for data transmission until WiFi hotspot available again. 
+>>>>>>> upstream
 
 Data Storage
 ============
@@ -136,6 +155,7 @@ Following types of data storage are supported.
 * MicroSD card storage
 * ESP32 built-in Flash memory storage (SPIFFS)
 
+<<<<<<< HEAD
 Buzzer notes & patterns
 =======================
 The device produces the following buzzing-sounds (when `ENABLE_BUZTICKS`):
@@ -221,3 +241,16 @@ Viewing Trip Data
 Once the sketch is running and data is being submitted to hub.freematics.com, you can open https://hub.freematics.com from any of your devices and enter your device ID (displayed in serial output) to view real-time data and history trip data.
 
 ![Freematics Hub Dashboard](https://freematics.com/pages/wp-content/uploads/2019/01/freematics_hub_dash-1024x576.png)
+=======
+BLE & App
+---------
+
+A BLE SPP server is implemented in [FreematicsPlus](https://github.com/stanleyhuangyc/Freematics/blob/master/libraries/FreematicsPlus) library. To enable BLE support, change ENABLE_BLE to 1 [config.h](config.h). This will enable remote control and data monitoring via [Freematics Controller App](https://freematics.com/software/freematics-controller/).
+
+Prerequisites
+-------------
+
+* Freematics ONE+ [Model A](https://freematics.com/products/freematics-one-plus/), [Model B](https://freematics.com/products/freematics-one-plus-model-b/), [Model H](https://freematics.com/products/freematics-one-plus-model-h/)
+* A micro SIM card if cellular network connectivity required
+* [PlatformIO](http://platformio.org/), [Arduino IDE](https://github.com/espressif/arduino-esp32#installation-instructions) or [Freematics Builder](https://freematics.com/software/arduino-builder) for compiling and uploading code
+>>>>>>> upstream

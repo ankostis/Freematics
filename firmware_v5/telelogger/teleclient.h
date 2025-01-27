@@ -40,13 +40,14 @@ public:
     uint8_t state;
 private:
     void setType(uint32_t dataType);
-    uint8_t data[BUFFER_LENGTH];
-    uint32_t types[(BUFFER_LENGTH / (sizeof(uint16_t) + sizeof(int)) + 15) / 16];
+    uint8_t* data;
+    uint32_t* types;
 };
 
 class CBufferManager
 {
 public:
+<<<<<<< HEAD
     CBufferManager()
     {
         for (int n = 0; n < BUFFER_SLOTS; n++) buffers[n] = new CBuffer;
@@ -123,6 +124,14 @@ public:
                     state);
         }
     }
+=======
+    void init();
+    void purge();
+    CBuffer* get(byte state = BUFFER_STATE_EMPTY);
+    CBuffer* getOldest();
+    CBuffer* getNewest();
+    void printStats();
+>>>>>>> upstream
     CBuffer* buffers[BUFFER_SLOTS];
 };
 
@@ -135,6 +144,7 @@ public:
         txBytes = 0;
         rxBytes = 0;
         login = false;
+        startTime = millis();
     }
     virtual bool notify(byte event, const char* payload = 0) { return true; }
     virtual bool connect() { return true; }
@@ -162,6 +172,7 @@ public:
     uint32_t lastSyncTime = 0;
     uint16_t feedid = 0;
     uint32_t startTime = 0;
+    uint8_t packets = 0;
     bool login = false;
 };
 
@@ -169,7 +180,7 @@ class TeleClientUDP : public TeleClient
 {
 public:
     bool notify(byte event, const char* payload = 0);
-    bool connect();
+    bool connect(bool quick = false);
     bool transmit(const char* packetBuffer, unsigned int packetSize);
     bool ping();
     /**
@@ -178,42 +189,22 @@ public:
     bool inbound();
     bool verifyChecksum(char* data);
     void shutdown();
-#if NET_DEVICE == NET_WIFI
-    UDPClientWIFI net;
-#elif NET_DEVICE == NET_SIM800
-    UDPClientSIM800 net;
-#elif NET_DEVICE == NET_SIM5360
-    UDPClientSIM5360 net;
-#elif NET_DEVICE == NET_SIM7600
-    UDPClientSIM7600 net;
-#elif NET_DEVICE == NET_SIM7070
-    UDPClientSIM7070 net;
-#elif NET_DEVICE == NET_WIFI_MESH
-    ClientWiFiMesh net;
-#else
-    ClientSerial net;
+#if ENABLE_WIFI
+    WifiUDP wifi;
 #endif
+    CellUDP cell;
 };
 
 class TeleClientHTTP : public TeleClient
 {
 public:
     bool notify(byte event, const char* payload = 0);
-    bool connect();
+    bool connect(bool quick = false);
     bool transmit(const char* packetBuffer, unsigned int packetSize);
     bool ping();
     void shutdown();
-#if NET_DEVICE == NET_WIFI
-    HTTPClientWIFI net;
-#elif NET_DEVICE == NET_SIM800
-    HTTPClientSIM800 net;
-#elif NET_DEVICE == NET_SIM5360
-    HTTPClientSIM5360 net;
-#elif NET_DEVICE == NET_SIM7600
-    HTTPClientSIM7600 net;
-#elif NET_DEVICE == NET_SIM7070
-    HTTPClientSIM7070 net;
+#if ENABLE_WIFI
+    WifiHTTP wifi;
 #endif
-private:
-    bool started = false;
+    CellHTTP cell;
 };

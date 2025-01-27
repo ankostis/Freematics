@@ -10,6 +10,7 @@
 
 #include "FreematicsBase.h"
 #include "utility/ICM_20948_C.h"	// The C backbone
+#include "utility/ICM_42627.h"
 
 inline constexpr const char TAG_MEMS[] = "MEMS";
 
@@ -245,7 +246,7 @@ class MEMS_I2C
 {
 public:
   MEMS_I2C() {};
-  virtual ~MEMS_I2C() {};
+  virtual ~MEMS_I2C() { uninitI2C(); };
   virtual byte begin(bool fusion = false) = 0;
   virtual void end() { uninitI2C(); }
   virtual bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0) = 0;
@@ -286,6 +287,21 @@ private:
   int16_t gyroCount[3] = {0};
   int16_t magCount[3] = {0};    // Stores the 16-bit signed magnetometer sensor output
   CQuaterion* quaterion = 0;
+};
+
+class ICM_42627 : public MEMS_I2C
+{
+public:
+  byte begin(bool fusion = false);
+  bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0);
+private:
+  void writeByte(uint8_t, uint8_t);
+  uint8_t readByte(uint8_t);
+  bool readBytes(uint8_t, uint8_t, uint8_t *);
+  void init();
+  void readAccelData(int16_t data[]);
+  void readGyroData(int16_t data[]);
+  int16_t readTempData();
 };
 
 #define ICM_20948_ARD_UNUSED_PIN 0xFF

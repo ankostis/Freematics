@@ -196,6 +196,7 @@ int COBD::readDTC(uint16_t codes[], byte maxCodes)
 	1: 01 11 01 15 00 00 00
 	*/
 	int codesRead = 0;
+	if (!link) return 0;
  	for (int n = 0; n < 6; n++) {
 		char buffer[128];
 		sprintf(buffer, n == 0 ? "03\r" : "03%02X\r", n);
@@ -328,6 +329,7 @@ int COBD::normalizeData(uint16_t id, char* data)
 
 char* COBD::getResponse(byte& pid, char* buffer, byte bufsize)
 {
+	if (!link) return 0;
 	while (link->receive(buffer, bufsize, OBD_TIMEOUT_SHORT) > 0) {
 		char *p = buffer;
 		while ((p = strstr(p, "41 "))) {
@@ -348,13 +350,14 @@ char* COBD::getResponse(byte& pid, char* buffer, byte bufsize)
 void COBD::enterLowPowerMode()
 {
   	char buf[32];
-	link->sendCommand("ATLP\r", buf, sizeof(buf), 1000);
+	if (link) link->sendCommand("ATLP\r", buf, sizeof(buf), 1000);
 }
 
 void COBD::leaveLowPowerMode()
 {
 	// send any command to wake up
 	char buf[32];
+	if (!link) return;
 	for (byte n = 0; n < 30 && !link->sendCommand("ATI\r", buf, sizeof(buf), 1000); n++);
 }
 
@@ -375,7 +378,7 @@ char* COBD::getResultValue(char* buf)
 float COBD::getVoltage()
 {
     char buf[32];
-	if (link->sendCommand("ATRV\r", buf, sizeof(buf), 500) > 0) {
+	if (link && link->sendCommand("ATRV\r", buf, sizeof(buf), 500) > 0) {
 		char* p = getResultValue(buf);
 		if (p) return (float)atof(p);
     }
@@ -385,7 +388,7 @@ float COBD::getVoltage()
 bool COBD::getVIN(char* buffer, byte bufsize)
 {
 	for (byte n = 0; n < 2; n++) {
-		if (link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG)) {
+		if (link && link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG)) {
 			int len = hex2uint16(buffer);
 			char *p = strstr(buffer + 4, "0: 49 02 01");
 			if (p) {
@@ -479,6 +482,7 @@ bool COBD::isValidPID(byte pid)
 	return true || (pidmap[i] & b) != 0;
 }
 
+<<<<<<< HEAD
 bool COBD::init(
 	OBD_PROTOCOLS protocol,
 	std::vector<std::vector<std::string>> obd_alt_init_cmds
@@ -486,12 +490,20 @@ bool COBD::init(
 	ESP_LOGI(TAG_OBD, "<init> proto: %i", protocol);
 	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
 	char buffer[64];
+=======
+bool COBD::init(OBD_PROTOCOLS protocol, bool quick)
+{
+	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
+	char buffer[64];
+	bool success = false;
+>>>>>>> upstream
 
 	if (!link) {
 		return false;
 	}
 
 	m_state = OBD_DISCONNECTED;
+<<<<<<< HEAD
 
 	init_stage = 0;
 	for (byte n = 0; n < 10; n++) {
@@ -504,6 +516,16 @@ bool COBD::init(
 success_1:
 
 	for (byte i = 0; i < sizeof_array(initcmd); i++) {
+=======
+	for (byte n = 0; n < 3; n++) {
+		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
+			success = true;
+			break;
+		}
+	}
+	if (!success) return false;
+	for (byte i = 0; i < sizeof(initcmd) / sizeof(initcmd[0]); i++) {
+>>>>>>> upstream
 		link->sendCommand(initcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
 	init_stage += 1;
@@ -514,6 +536,7 @@ success_1:
 			// Bail-out, set-protocol  command must not fail.
 			return false;
 		}
+<<<<<<< HEAD
 		init_stage += 1;
 		if (protocol == PROTO_J1939) {
 			m_state = OBD_CONNECTED;
@@ -553,6 +576,26 @@ success:
 	if (link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
 		active_protocol = buffer;
 		init_stage += 1;
+=======
+	}
+	if (protocol == PROTO_J1939) {
+		m_state = OBD_CONNECTED;
+		errors = 0;
+		return true;
+	}
+
+	success = false;
+	for (byte n = 0; n < 2; n++) {
+		int value;
+		if (readPID(PID_SPEED, value)) {
+			success = true;
+			break;
+		}
+	}
+
+	if (!success && quick) {
+		return false;
+>>>>>>> upstream
 	}
 
 	// load pid map
@@ -572,26 +615,30 @@ success:
 				for (byte n = 0; n < 4 && *(p + n * 3) == ' '; n++) {
 					pidmap[i * 4 + n] |= hex2uint8(p + n * 3 + 1);
 				}
+				success = true;
 			}
 		}
 	}
-	m_state = OBD_CONNECTED;
-	errors = 0;
-	return true;
+
+	if (success) {
+		m_state = OBD_CONNECTED;
+		errors = 0;
+	}
+	return success;
 }
 
 void COBD::reset()
 {
 	ESP_LOGD(TAG_OBD, "<reset>");
 	char buf[32];
-	link->sendCommand("ATR\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
+	if (link) link->sendCommand("ATR\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
 }
 
 void COBD::uninit()
 {
 	ESP_LOGI(TAG_OBD, "<down>");
 	char buf[32];
-	link->sendCommand("ATPC\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
+	if (link) link->sendCommand("ATPC\r", buf, sizeof(buf), OBD_TIMEOUT_SHORT);
 }
 
 byte COBD::checkErrorMessage(const char* buffer)
@@ -625,35 +672,44 @@ int16_t COBD::getTemperatureValue(char* data)
 
 void COBD::setHeaderID(uint32_t num)
 {
-	char buf[32];
-	sprintf(buf, "ATSH %X\r", num & 0xffffff);
-	link->sendCommand(buf, buf, sizeof(buf), 1000);
-	sprintf(buf, "ATCP %X\r", num & 0x1f);
-	link->sendCommand(buf, buf, sizeof(buf), 1000);
+	if (link) {
+		char buf[32];
+		sprintf(buf, "ATSH %X\r", num & 0xffffff);
+		link->sendCommand(buf, buf, sizeof(buf), 1000);
+		sprintf(buf, "ATCP %X\r", num & 0x1f);
+		link->sendCommand(buf, buf, sizeof(buf), 1000);
+	}
 }
 
 void COBD::sniff(bool enabled)
 {
-	char buf[32];
-	link->sendCommand(enabled ? "ATM1\r" : "ATM0\r", buf, sizeof(buf), 1000);
+	if (link) {
+		char buf[32];
+		link->sendCommand(enabled ? "ATM1\r" : "ATM0\r", buf, sizeof(buf), 1000);
+	}
 }
 
 void COBD::setHeaderFilter(uint32_t num)
 {
-	char buf[32];
-	sprintf(buf, "ATCF %X\r", num);
-	link->sendCommand(buf, buf, sizeof(buf), 1000);
+	if (link) {
+		char buf[32];
+		sprintf(buf, "ATCF %X\r", num);
+		link->sendCommand(buf, buf, sizeof(buf), 1000);
+	}
 }
 
 void COBD::setHeaderMask(uint32_t bitmask)
 {
-	char buf[32];
-	sprintf(buf, "ATCM %X\r", bitmask);
-	link->sendCommand(buf, buf, sizeof(buf), 1000);
+	if (link) {
+		char buf[32];
+		sprintf(buf, "ATCM %X\r", bitmask);
+		link->sendCommand(buf, buf, sizeof(buf), 1000);
+	}
 }
 
 int COBD::receiveData(byte* buf, int len)
 {
+	if (!link) return 0;
 	int n = 0;
 	for (n = 0; n < len; ) {
 		int c = link->read();

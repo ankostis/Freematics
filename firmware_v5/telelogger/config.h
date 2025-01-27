@@ -36,9 +36,23 @@
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
+#ifdef CONFIG_BOARD_HAS_PSRAM
+#define BOARD_HAS_PSRAM CONFIG_BOARD_HAS_PSRAM
+#endif
+#ifdef CONFIG_ENABLE_WIFI
+#define ENABLE_WIFI CONFIG_ENABLE_WIFI
+#endif
+#ifdef CONFIG_ENABLE_BLE
+#define ENABLE_BLE CONFIG_ENABLE_BLE
+#endif
+#ifdef CONFIG_ENABLE_HTTPD
+#define ENABLE_HTTPD CONFIG_ENABLE_HTTPD
+#endif
+
 /**************************************
 * Circular Buffer Configuration
 **************************************/
+<<<<<<< HEAD
 /**
  * Max number of buffers
  * If limit reached, the oldest slot is purged and re-populated,
@@ -51,10 +65,22 @@
  */
 #define BUFFER_LENGTH           180
 #define SERIALIZE_BUFFER_SIZE   1024 /* bytes */
+=======
+#if BOARD_HAS_PSRAM
+#define BUFFER_SLOTS 4096 /* max number of buffer */
+#define BUFFER_LENGTH 256 /* bytes per slot */
+#define SERIALIZE_BUFFER_SIZE 4096 /* bytes */
+#else
+#define BUFFER_SLOTS 32 /* max number of buffer */
+#define BUFFER_LENGTH 128 /* bytes per slot */
+#define SERIALIZE_BUFFER_SIZE 1024 /* bytes */
+#endif
+>>>>>>> upstream
 
 /**************************************
 * Configuration Definitions
 **************************************/
+<<<<<<< HEAD
 #define NET_WIFI                1
 #define NET_WIFI_MESH           2
 #define NET_SERIAL              3
@@ -74,6 +100,11 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html#notes
  */
 #define LOG_SINK_SPIFFS         0x4
+=======
+#define STORAGE_NONE 0
+#define STORAGE_SPIFFS 1
+#define STORAGE_SD 2
+>>>>>>> upstream
 
 #define STORAGE_NONE            0
 /**
@@ -223,6 +254,7 @@
 #define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
 
 /**************************************
+<<<<<<< HEAD
  * Networking configurations
  **************************************
  * Don't modify per-device network settings & secrets here,
@@ -255,6 +287,21 @@
  */
 #define SERVER_HOST             "hub.freematics.com"
 #define SERVER_PROTOCOL         PROTOCOL_UDP
+=======
+* Networking configurations
+**************************************/
+#ifndef ENABLE_WIFI
+#define ENABLE_WIFI 0
+// WiFi settings
+#define WIFI_SSID "FREEMATICS"
+#define WIFI_PASSWORD "PASSWORD"
+// cellular network settings
+#define CELL_APN "hologram"
+// Freematics Hub server settings
+#define SERVER_HOST "hub.freematics.com"
+#define SERVER_PROTOCOL PROTOCOL_UDP
+#endif 
+>>>>>>> upstream
 
 /**
  * SIM card setting
@@ -272,6 +319,7 @@
 
 /** (json-config default) */
 #if !SERVER_PORT
+#undef SERVER_PORT
 #if SERVER_PROTOCOL == PROTOCOL_UDP
 #define SERVER_PORT             8081
 #elif SERVER_PROTOCOL == PROTOCOL_HTTP
@@ -289,6 +337,7 @@
 #define WIFI_AP_SSID            "TELELOGGER"
 #define WIFI_AP_PASSWORD        "PASSWORD"
 
+<<<<<<< HEAD
 /**
  * How many times to attempt opening net-connection before reporting error.
  * (json-config default)
@@ -354,6 +403,21 @@
  * (json-config default)
  */
 #define STATS_INTERVAL_SEC          12
+=======
+// maximum consecutive communication errors before resetting network
+#define MAX_CONN_ERRORS_RECONNECT 5
+// maximum allowed connecting time
+#define MAX_CONN_TIME 10000 /* ms */
+// data receiving timeout
+#define DATA_RECEIVING_TIMEOUT 5000 /* ms */
+// expected maximum server sync signal interval
+#define SERVER_SYNC_INTERVAL 120 /* seconds, 0 to disable */
+// data interval settings
+#define STATIONARY_TIME_TABLE {30, 60, 180} /* seconds */
+#define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
+#define PING_BACK_INTERVAL 900 /* seconds */
+#define SIGNAL_CHECK_INTERVAL 10 /* seconds */
+>>>>>>> upstream
 
 /**************************************
 * Data storage configurations
@@ -378,12 +442,18 @@
 // change the following line to change GNSS setting
 #define GNSS                    GNSS_INTERNAL
 #endif
+<<<<<<< HEAD
 #define GPS_SERIAL_BAUDRATE     115200L
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
+=======
+// keeping GNSS power on during standby 
+#define GNSS_ALWAYS_ON 0
+>>>>>>> upstream
 
 /**************************************
 * Standby/wakeup
 **************************************/
+<<<<<<< HEAD
 /**
  * Whether to reset the device after waking up from "sleep".
  * (json-config default)
@@ -395,10 +465,19 @@
 #define THR_VOLTAGE             13.6 /* V */
 // engine jumpstart voltage gradient
 #define THR_GRAD                1 /* V */
+=======
+// motion threshold for waking up
+#define MOTION_THRESHOLD 0.4f /* moving vehicle motion threshold in G */
+// engine jumpstart voltage for waking up (when MEMS unavailable) 
+#define JUMPSTART_VOLTAGE 14 /* V */
+// reset device after waking up
+#define RESET_AFTER_WAKEUP 1
+>>>>>>> upstream
 
 /**************************************
 * Additional features
 **************************************/
+<<<<<<< HEAD
 /**
  * Enable filesystem access commands?
  * The respective filesystem is implicitly enabled when
@@ -408,6 +487,9 @@
 #define ENABLE_SPIFFS           0
 #define FORMAT_SD_IF_FAILED     true
 #define FORMAT_SPIFFS_IF_FAILED true
+=======
+#define CONFIG_MODE_TIMEOUT 0
+>>>>>>> upstream
 
 /** How long commands read from the serial can be? */
 #define CMD_SERIAL_MAX_LEN      128
@@ -416,6 +498,7 @@
 /** How many bytes the `TAIL` command to backtrack from the end-of-file? */
 #define CMD_TAIL_NBYTES         -4096
 
+<<<<<<< HEAD
 /**
  * Over-the-air firmware-upgrade from HTTPS enabled?
  * Performed with "OTA[ url]" command,
@@ -485,5 +568,19 @@ extern const char ota_url2log[];
 #endif
 
 #define _CHECK_BUZTICKS          (node_info.macroflags & (1 << 4))
+=======
+#define COOLING_DOWN_TEMP 75 /* celsius degrees */
+
+// enable(1)/disable(0) http server
+#ifndef ENABLE_HTTPD
+#define ENABLE_HTTPD 0
+#endif
+
+// enable(1)/disable(0) BLE SPP server (for Freematics Controller App).
+#ifndef ENABLE_BLE
+#define ENABLE_BLE 0
+#endif
+
+>>>>>>> upstream
 
 #endif // CONFIG_H_INCLUDED
