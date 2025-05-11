@@ -31,6 +31,7 @@ flags = {
     0x0400: "HIDE_SECRETS_IN_LOGS",
     0x0800: "BOARD_HAS_PSRAM",
     0x1000: "BOARD_HAS_PSRAM_HIGH",
+    0x2000: "ENABLE_WIFI",
 }
 
 

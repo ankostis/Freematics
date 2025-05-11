@@ -22,16 +22,12 @@ extern "C" {
 #include "utility/ble_spp_server.h"
 }
 
-<<<<<<< HEAD
 // ESP_IDF logging tags used
 inline constexpr const char TAG_LINK[] = "LINK";  // UART with STM32 --> OBD
 inline constexpr const char TAG_GSM[] = "GSM";  // UART with both GSM & GNSS
 inline constexpr const char TAG_GNSS[] = "GNSS";
 inline constexpr const char TAG_SPI[] = "SPI";
 
-#define PIN_LED 4
-=======
->>>>>>> upstream
 #define PIN_SD_CS 5
 
 #define PIN_LINK_SPI_CS 2
@@ -175,13 +171,7 @@ public:
   // purge xBee UART buffer
   void xbPurge();
   // toggle xBee module power
-<<<<<<< HEAD
-  void xbTogglePower();
-=======
   void xbTogglePower(unsigned int duration = 200);
-  // control internal buzzer (if present)
-  void buzzer(int freq);
->>>>>>> upstream
   // reset co-processor
   void resetLink();
   // reactivate co-processor

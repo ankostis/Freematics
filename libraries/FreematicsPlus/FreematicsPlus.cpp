@@ -25,18 +25,12 @@
 #include "FreematicsPlus.h"
 #include "FreematicsGPS.h"
 
-<<<<<<< HEAD
-// TODO: merge device-temp from upstream(202204)
-=======
 #ifdef ARDUINO_ESP32C3_DEV
 #include "driver/temp_sensor.h"
 #else
 #include "soc/sens_reg.h"
 #endif
-
-#define VERBOSE_LINK 0
-#define VERBOSE_XBEE 0
->>>>>>> upstream
+// TODO: merge device-temp from upstream(202204)
 
 static TinyGPS gps;
 static bool gpsHasDecodedData = false;
@@ -177,11 +171,7 @@ int readChipTemperature()
 
 int readChipHallSensor()
 {
-<<<<<<< HEAD
-  return hall_sens_read();
-=======
     return 0; // FIXME
->>>>>>> upstream
 }
 
 bool Task::create(void (*task)(void*), const char* name, int priority, int stacksize)
@@ -442,22 +432,10 @@ int CLink_SPI::sendCommand(const char* cmd, char* buf, int bufsize, unsigned int
 
 void FreematicsESP32::gpsEnd(bool powerOff)
 {
-<<<<<<< HEAD
-    // uninitialize
-    ESP_LOGI(TAG_GNSS, "<END>");
-    if ((m_flags & FLAG_GNSS_USE_LINK)) {
-        char buf[16];
-        link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 0);
-    } else {
-        taskGPS.destroy();
-        if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) {
-            ESP_LOGD(TAG_GNSS, "<END> UART-%i", gpsUARTNum);
-            uart_driver_delete(gpsUARTNum);
-        }
-        digitalWrite(m_pinGPSPower, LOW);
-=======
+    ESP_LOGI(TAG_GNSS, "<END> %i", m_flags);
     if (m_flags & FLAG_GNSS_USE_LINK) {
         if (powerOff) {
+            ESP_LOGD(TAG_GNSS, "<END> ATcmd");
             char buf[16];
             link->sendCommand("ATGPSOFF\r", buf, sizeof(buf), 0);
         }
@@ -465,62 +443,20 @@ void FreematicsESP32::gpsEnd(bool powerOff)
         taskGPS.destroy();
         if (m_flags & FLAG_GNSS_SOFT_SERIAL) {
 #ifndef ARDUINO_ESP32C3_DEV
+            ESP_LOGD(TAG_GNSS, "<END> LOWpin");
             setTxPinLow();
 #endif
         } else {
+            ESP_LOGD(TAG_GNSS, "<END> UART-%i", gpsUARTNum);
             uart_driver_delete(gpsUARTNum);
         }
         if (powerOff && m_pinGPSPower) digitalWrite(m_pinGPSPower, LOW);
->>>>>>> upstream
     }
 }
 
 bool FreematicsESP32::gpsBeginExt(int baudrate)
 {
-<<<<<<< HEAD
     ESP_LOGV(TAG_GNSS, "<BEGIN>");
-    // TODO: merge upstream(202204) `gpsBegin()` for set-baud/Link-GNSS/C3 enhancements.
-
-    if (baudrate) {
-        // switch on GNSS power
-        if (m_pinGPSPower) pinMode(m_pinGPSPower, OUTPUT);
-        if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) {
-            uart_config_t uart_config = {
-                .baud_rate = baudrate,
-                .data_bits = UART_DATA_8_BITS,
-                .parity = UART_PARITY_DISABLE,
-                .stop_bits = UART_STOP_BITS_1,
-                .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
-                .rx_flow_ctrl_thresh = 122,
-            };
-            bool legacy = devType <= 13;
-            ESP_LOGD(
-                TAG_GNSS,
-                "<BEGIN?> UART-%i(legacy: %i, txpin: %i, rxpin: %i, baud: %i)",
-                gpsUARTNum,
-                legacy,
-                legacy ? PIN_GPS_UART_TXD2 : PIN_GPS_UART_TXD,
-                legacy ? PIN_GPS_UART_RXD2 : PIN_GPS_UART_RXD,
-                baudrate);
-            // configure UART parameters
-            uart_param_config(gpsUARTNum, &uart_config);
-            // set UART pins
-            uart_set_pin(gpsUARTNum, legacy ? PIN_GPS_UART_TXD2 : PIN_GPS_UART_TXD, legacy ? PIN_GPS_UART_RXD2 : PIN_GPS_UART_RXD, UART_PIN_NO_CHANGE, UART_PIN_NO_CHANGE);
-            // install UART driver
-            uart_driver_install(gpsUARTNum, UART_BUF_SIZE, 0, 0, NULL, 0);
-            // turn on GPS power
-            if (m_pinGPSPower) digitalWrite(m_pinGPSPower, HIGH);
-            delay(100);
-            // start decoding task
-            taskGPS.create(gps_decode_task, "GPS", 1);
-        } else {
-            ESP_LOGD(
-                TAG_GNSS, "<BEGIN?> UART-soft(%i, %i)",
-                PIN_GPS_UART_RXD, PIN_GPS_UART_TXD);
-            pinMode(PIN_GPS_UART_RXD, INPUT);
-            pinMode(PIN_GPS_UART_TXD, OUTPUT);
-            setTxPinHigh();
-=======
     if (devType <= 13) {
 #ifdef ARDUINO_ESP32C3_DEV
         pinGPSRx = 18;
@@ -537,6 +473,9 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
     // switch on GNSS power
     if (m_pinGPSPower) pinMode(m_pinGPSPower, OUTPUT);
     if (!(m_flags & FLAG_GNSS_SOFT_SERIAL)) {
+        ESP_LOGD(
+            TAG_GNSS, "<BEGIN?> UART-soft(%i, %i, %i)",
+            pinGPSRx, pinGPSTx, m_pinGPSPower);
         uart_config_t uart_config = {
             .baud_rate = baudrate,
             .data_bits = UART_DATA_8_BITS,
@@ -561,66 +500,11 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
         pinMode(PIN_GPS_UART_RXD, INPUT);
         pinMode(PIN_GPS_UART_TXD, OUTPUT);
         setTxPinHigh();
->>>>>>> upstream
 
         // turn on GPS power
         if (m_pinGPSPower) digitalWrite(m_pinGPSPower, HIGH);
         delay(100);
 
-<<<<<<< HEAD
-            // start GPS decoding task (soft serial)
-            taskGPS.create(gps_soft_decode_task, "GPS", 1);
-        }
-
-        // test run for a while to see if there is data decoded
-        uint16_t s1 = 0, s2 = 0;
-        gps.stats(&s1, 0);
-        for (int i = 0; i < 10; i++) {
-            if (m_flags & FLAG_GNSS_SOFT_SERIAL) {
-                // switch M8030 GNSS to 38400bps
-                const uint8_t packet1[] = {0x0, 0x0, 0xB5, 0x62, 0x06, 0x0, 0x14, 0x0, 0x01, 0x0, 0x0, 0x0, 0xD0, 0x08, 0x0, 0x0, 0x0, 0x96, 0x0, 0x0, 0x7, 0x0, 0x3, 0x0, 0x0, 0x0, 0x0, 0x0, 0x93, 0x90};
-                const uint8_t packet2[] = {0xB5, 0x62, 0x06, 0x0, 0x1, 0x0, 0x1, 0x8, 0x22};
-                for (int i = 0; i < sizeof(packet1); i++) softSerialTx(baudrate, packet1[i]);
-                delay(20);
-                for (int i = 0; i < sizeof(packet2); i++) softSerialTx(baudrate, packet2[i]);
-            }
-            delay(200);
-            gps.stats(&s2, 0);
-            if (s1 != s2) {
-                // data is coming in
-                if (!gpsData) gpsData = new GPS_DATA;
-                memset(gpsData, 0, sizeof(GPS_DATA));
-
-                ESP_LOGI(
-                    TAG_GNSS, "<BEGIN> using UART-%i(99=soft)",
-                    (m_flags & FLAG_GNSS_SOFT_SERIAL) ? 99 : gpsUARTNum);
-                return true;
-            }
-        }
-        // turn off GNSS power if no data in
-        gpsEnd();
-    }
-
-    // try co-processor GNSS
-    if (link) {
-        char buf[128];
-        link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
-        m_flags |= FLAG_GNSS_USE_LINK;
-        uint32_t t = millis();
-        bool success = false;
-        do {
-            if (gpsGetNMEA(buf, sizeof(buf)) > 0 && strstr(buf, ("$G"))) {
-                success = true;
-                break;
-            }
-        } while (millis() - t < 1000);
-        if (success) {
-            gpsData = new GPS_DATA;
-            memset(gpsData, 0, sizeof(GPS_DATA));
-            m_pinGPSPower = 0;
-
-            ESP_LOGI(TAG_GNSS, "<BEGIN> through LINK");
-=======
         // start GPS decoding task (soft serial)
         taskGPS.create(gps_soft_decode_task, "GPS", 1);
         delay(100);
@@ -628,6 +512,7 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
     }
 
     // test run for a while to see if there is data decoded
+    ESP_LOGD(TAG_GNSS, "<BEGIN> test data");
     uint16_t s1 = 0, s2 = 0;
     gps.stats(&s1, 0);
     for (int i = 0; i < 10; i++) {
@@ -648,7 +533,6 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
         gps.stats(&s2, 0);
         if (s1 != s2) {
             // data is coming in
->>>>>>> upstream
             return true;
         }
         Serial.print('.');
@@ -661,7 +545,7 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
 bool FreematicsESP32::gpsBegin()
 {
     if (!link) return false;
-    
+
     char buf[256];
     link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
     m_flags |= FLAG_GNSS_USE_LINK;
@@ -685,98 +569,21 @@ bool FreematicsESP32::gpsBegin()
 
 bool FreematicsESP32::gpsGetData(GPS_DATA** pgd)
 {
-<<<<<<< HEAD
     bool ret;
     ESP_LOGV(TAG_GNSS, "<READ ASKED>");
-    if (!gpsData) return false;
-    if (pgd) *pgd = gpsData;
+    if (pgd) *pgd = &gpsData;
     if (m_flags & FLAG_GNSS_USE_LINK) {
         ret = _gpsGetData_linkUart(pgd);
     } else {
         ret = _gpsGetData_tinyGps(pgd);
-=======
-    if (pgd) *pgd = &gpsData;
-    if (m_flags & FLAG_GNSS_USE_LINK) {
-        char buf[160];
-        if (!link || link->sendCommand("ATGPS\r", buf, sizeof(buf), 100) == 0) {
-            return false;
-        }
-        char *s = strstr(buf, "$GNIFO,");
-        if (!s) return false;
-        s += 7;
-        float lat = 0;
-        float lng = 0;
-        float alt = 0;
-        bool good = false;
-        do {
-            uint32_t date = atoi(s);
-            if (!(s = strchr(s, ','))) break;
-            uint32_t time = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            if (!date) break;
-            gpsData.date = date;
-            gpsData.time = time;
-            lat = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            lng = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            alt = (float)atoi(++s) / 100;
-            good = true;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.speed = (float)atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.heading = atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.sat = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            gpsData.hdop = atoi(++s);
-        } while(0);
-        if (good && (gpsData.lat || gpsData.lng)) {
-            // filter out invalid coordinates
-            good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
-        }
-        if (!good) return false;
-        gpsData.lat = lat;
-        gpsData.lng = lng;
-        gpsData.alt = alt;
-        gpsData.ts = millis();
-        return true;
-    } else {
-        gps.stats(&gpsData.sentences, &gpsData.errors);
-        if (!gpsHasDecodedData) return false;
-        long lat, lng;
-        bool good = true;
-        gps.get_position(&lat, &lng, 0);
-        if (gpsData.lat || gpsData.lng) {
-            // filter out invalid coordinates
-            good = (abs(lat - gpsData.lat * 1000000) < 100000 && abs(lng - gpsData.lng * 1000000) < 100000);
-        }
-        if (!good) return false;
-        gpsData.ts = millis();
-        gpsData.lat = (float)lat / 1000000;
-        gpsData.lng = (float)lng / 1000000;
-        gps.get_datetime((unsigned long*)&gpsData.date, (unsigned long*)&gpsData.time, 0);
-        long alt = gps.altitude();
-        if (alt != TinyGPS::GPS_INVALID_ALTITUDE) gpsData.alt = (float)alt / 100;
-        unsigned long knot = gps.speed();
-        if (knot != TinyGPS::GPS_INVALID_SPEED) gpsData.speed = (float)knot / 100;
-        unsigned long course = gps.course();
-        if (course < 36000) gpsData.heading = course / 100;
-        unsigned short sat = gps.satellites();
-        if (sat != TinyGPS::GPS_INVALID_SATELLITES) gpsData.sat = sat;
-        unsigned long hdop = gps.hdop();
-        gpsData.hdop = hdop > 2550 ? 255 : hdop / 10;
-        gpsHasDecodedData = false;
-        return true;
->>>>>>> upstream
     }
     ESP_LOGD(
             TAG_GNSS, "[READ %s] %s: sat: %u, err: %u, hdop: %u",
             m_flags & FLAG_GNSS_USE_LINK? "LINK": "TinyGPS",
             ret? "OK": "fail",
-            gpsData->sat,
-            gpsData->errors,
-            gpsData->hdop);
+            gpsData.sat,
+            gpsData.errors,
+            gpsData.hdop);
     return ret;
 }
 
@@ -799,8 +606,8 @@ bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
         uint32_t time = atoi(++s);
         if (!(s = strchr(s, ','))) break;
         if (!date) break;
-        gpsData->date = date;
-        gpsData->time = time;
+        gpsData.date = date;
+        gpsData.time = time;
         lat = (float)atoi(++s) / 1000000;
         if (!(s = strchr(s, ','))) break;
         lng = (float)atoi(++s) / 1000000;
@@ -808,52 +615,52 @@ bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
         alt = (float)atoi(++s) / 100;
         good = true;
         if (!(s = strchr(s, ','))) break;
-        gpsData->speed = (float)atoi(++s) / 100;
+        gpsData.speed = (float)atoi(++s) / 100;
         if (!(s = strchr(s, ','))) break;
-        gpsData->heading = atoi(++s) / 100;
+        gpsData.heading = atoi(++s) / 100;
         if (!(s = strchr(s, ','))) break;
-        gpsData->sat = atoi(++s);
+        gpsData.sat = atoi(++s);
         if (!(s = strchr(s, ','))) break;
-        gpsData->hdop = atoi(++s);
+        gpsData.hdop = atoi(++s);
     } while(0);
-    if (good && (gpsData->lat || gpsData->lng)) {
+    if (good && (gpsData.lat || gpsData.lng)) {
         // filter out invalid coordinates
-        good = (abs(lat * 1000000 - gpsData->lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData->lng * 1000000) < 100000);
+        good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
     }
     if (!good) return false;
-    gpsData->lat = lat;
-    gpsData->lng = lng;
-    gpsData->alt = alt;
-    gpsData->ts = millis();
+    gpsData.lat = lat;
+    gpsData.lng = lng;
+    gpsData.alt = alt;
+    gpsData.ts = millis();
     return true;
 }
 
 bool FreematicsESP32::_gpsGetData_tinyGps(GPS_DATA** pgd)
 {
-    gps.stats(&gpsData->sentences, &gpsData->errors);
+    gps.stats(&gpsData.sentences, &gpsData.errors);
     if (!gpsHasDecodedData) return false;
     long lat, lng;
     bool good = true;
     gps.get_position(&lat, &lng, 0);
-    if (gpsData->lat || gpsData->lng) {
+    if (gpsData.lat || gpsData.lng) {
         // filter out invalid coordinates
-        good = (abs(lat - gpsData->lat * 1000000) < 100000 && abs(lng - gpsData->lng * 1000000) < 100000);
+        good = (abs(lat - gpsData.lat * 1000000) < 100000 && abs(lng - gpsData.lng * 1000000) < 100000);
     }
     if (!good) return false;
-    gpsData->ts = millis();
-    gpsData->lat = (float)lat / 1000000;
-    gpsData->lng = (float)lng / 1000000;
-    gps.get_datetime((unsigned long*)&gpsData->date, (unsigned long*)&gpsData->time, 0);
+    gpsData.ts = millis();
+    gpsData.lat = (float)lat / 1000000;
+    gpsData.lng = (float)lng / 1000000;
+    gps.get_datetime((unsigned long*)&gpsData.date, (unsigned long*)&gpsData.time, 0);
     long alt = gps.altitude();
-    if (alt != TinyGPS::GPS_INVALID_ALTITUDE) gpsData->alt = (float)alt / 100;
+    if (alt != TinyGPS::GPS_INVALID_ALTITUDE) gpsData.alt = (float)alt / 100;
     unsigned long knot = gps.speed();
-    if (knot != TinyGPS::GPS_INVALID_SPEED) gpsData->speed = (float)knot / 100;
+    if (knot != TinyGPS::GPS_INVALID_SPEED) gpsData.speed = (float)knot / 100;
     unsigned long course = gps.course();
-    if (course < 36000) gpsData->heading = course / 100;
+    if (course < 36000) gpsData.heading = course / 100;
     unsigned short sat = gps.satellites();
-    if (sat != TinyGPS::GPS_INVALID_SATELLITES) gpsData->sat = sat;
+    if (sat != TinyGPS::GPS_INVALID_SATELLITES) gpsData.sat = sat;
     unsigned long hdop = gps.hdop();
-    gpsData->hdop = hdop > 2550 ? 255 : hdop / 10;
+    gpsData.hdop = hdop > 2550 ? 255 : hdop / 10;
     gpsHasDecodedData = false;
     return true;
 }
@@ -923,26 +730,7 @@ void FreematicsESP32::xbWrite(const char* data, int len)
 
 int FreematicsESP32::xbRead(char* buffer, int bufsize, unsigned int timeout)
 {
-<<<<<<< HEAD
-    int recv = 0;
-    uint32_t t = millis();
-    do {
-        uint8_t c;
-        int len = uart_read_bytes(BEE_UART_NUM, &c, 1, 0);
-        if (len == 1) {
-            if (c >= 0xA && c <= 0x7E) {
-                buffer[recv++] = c;
-            }
-        } else if (recv > 0) {
-            break;
-        }
-    } while (recv < bufsize && millis() - t < timeout);
-
-    ESP_LOGV(TAG_GSM, "<RECV> x%i |%.*s|", recv, recv, buffer);
-    return recv;
-=======
     return uart_read_bytes(BEE_UART_NUM, buffer, bufsize, timeout / portTICK_RATE_MS);
->>>>>>> upstream
 }
 
 int FreematicsESP32::xbReceive(char* buffer, int bufsize, unsigned int timeout, const char** expected, byte expectedCount)
@@ -982,44 +770,12 @@ void FreematicsESP32::xbPurge()
 void FreematicsESP32::xbTogglePower(unsigned int duration)
 {
 #ifdef PIN_BEE_PWR
-    ESP_LOGD(TAG_GNSS, "Toggle GSM POWER pin %i x2 times...", PIN_BEE_PWR);
+    ESP_LOGD(TAG_GNSS, "Toggling GSM power pin(%i)...", PIN_BEE_PWR);
     digitalWrite(PIN_BEE_PWR, HIGH);
-<<<<<<< HEAD
-    delay(100);
-	digitalWrite(PIN_BEE_PWR, LOW);
-	delay(2000);
-    digitalWrite(PIN_BEE_PWR, HIGH);
-#endif
-    delay(100);
-    digitalWrite(PIN_BEE_PWR, LOW);
-    ESP_LOGV(TAG_GNSS, "Finished toggling GSM power");
-=======
-#if VERBOSE_XBEE
-    Serial.print("Pin ");
-    Serial.print(PIN_BEE_PWR);
-	Serial.println(" pull up");
-#endif
     delay(duration);
 	digitalWrite(PIN_BEE_PWR, LOW);
-#if VERBOSE_XBEE
-    Serial.print("Pin ");
-    Serial.print(PIN_BEE_PWR);
-	Serial.println(" pull down");
 #endif
-#endif
-}
-
-void FreematicsESP32::buzzer(int freq)
-{
-#ifdef PIN_BUZZER
-    if (freq) {
-        ledcWriteTone(0, 2000);
-        ledcWrite(0, 255);
-    } else {
-        ledcWrite(0, 0);
-    }
-#endif
->>>>>>> upstream
+    ESP_LOGV(TAG_GNSS, "Toggled GSM power pin(%i)", PIN_BEE_PWR);
 }
 
 byte FreematicsESP32::getDeviceType()
@@ -1084,15 +840,6 @@ bool FreematicsESP32::begin(bool useCoProc, bool useCellular)
     m_flags = 0;
     m_pinGPSPower = PIN_GPS_POWER;
 
-<<<<<<< HEAD
-=======
-#if PIN_BUZZER
-    // set up buzzer
-    ledcSetup(0, 2000, 8);
-    ledcAttachPin(PIN_BUZZER, 0);
-#endif
-
->>>>>>> upstream
     if (useCoProc) do {
         CLink_UART *linkUART = new CLink_UART;
 #if 0

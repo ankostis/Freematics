@@ -294,6 +294,7 @@ class ICM_42627 : public MEMS_I2C
 public:
   byte begin(bool fusion = false);
   bool read(float* acc, float* gyr = 0, float* mag = 0, float* temp = 0, ORIENTATION* ori = 0);
+  virtual const char* name() { return "ICM-42627";  }
 private:
   void writeByte(uint8_t, uint8_t);
   uint8_t readByte(uint8_t);

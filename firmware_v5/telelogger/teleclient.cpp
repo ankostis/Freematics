@@ -21,12 +21,9 @@
 #include "telemesh.h"
 #include "teleclient.h"
 
-<<<<<<< HEAD
 bool processCommand(char* data);
 
 extern node_info_t node_info;
-=======
->>>>>>> upstream
 extern int16_t rssi;
 extern GPS_DATA* gd;
 extern char isoTime[];
@@ -158,7 +155,13 @@ void CBufferManager::init()
 
 void CBufferManager::purge()
 {
-  for (int n = 0; n < BUFFER_SLOTS; n++) buffers[n]->purge();
+  int purged = 0;
+  for (auto *buf: buffers) {
+      if (buf->count) purged++;
+      buf->purge();
+  }
+  ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
+
 }
 
 CBuffer* CBufferManager::get(byte state)
@@ -195,7 +198,7 @@ CBuffer* CBufferManager::getNewest()
   return m >= 0 ? buffers[m] : 0;
 }
 
-void CBufferManager::printStats()
+void CBufferManager::showCacheStats(uint16_t state)
 {
   int bytes = 0;
   int slots = 0;
@@ -205,16 +208,26 @@ void CBufferManager::printStats()
       bytes += buffers[n]->offset;
       samples += buffers[n]->count;
       slots++;
+      ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n,
+              buffers[n]->count, buffers[n]->offset);
   }
   if (slots) {
-      Serial.print("[BUF] ");
-      Serial.print(samples);
-      Serial.print(" samples | ");
-      Serial.print(bytes);
-      Serial.print(" bytes | ");
-      Serial.print(slots);
-      Serial.print('/');
-      Serial.println(BUFFER_SLOTS);
+      constexpr const uint RAM_SIZE_KiB = 320;
+      uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
+      ESP_LOG_LEVEL(
+              (slots > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
+              TAG_BUF,
+              "PIDs: %u(%u b/PID)"
+              ", slots: %u/%u(%u%%)"
+              ", filled: %u/%u bytes (%u%%)"
+              ", RAM: %u/%u KiB(%u%%)"
+              ", state: %X",
+              samples, samples ? bytes / samples : 0,
+              slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
+              bytes, BUFFER_SLOTS * BUFFER_LENGTH,
+              100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
+              ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
+              state);
   }
 }
 
@@ -253,16 +266,10 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     netbuf.dispatch(payload, strlen(payload));
   }
   netbuf.tailer();
-  ESP_LOGD(TAG_NET, "TeleClientUDP notify: |%s|", netbuf.buffer());
+  ESP_LOGD(TAG_UDP, "notify: |%s|", netbuf.buffer());
   for (byte attempts = 0; attempts < 3; attempts++) {
     // send notification datagram
-<<<<<<< HEAD
-    ESP_LOGV(TAG_NET, "notify x%i...", attempts);
-    if (!net.send(netbuf.buffer(), netbuf.length()))
-    {
-      // error sending data
-      break;
-=======
+    ESP_LOGV(TAG_UDP, "notify x%i...", attempts);
 #if ENABLE_WIFI
     if (wifi.connected())
     {
@@ -272,22 +279,11 @@ bool TeleClientUDP::notify(byte event, const char* payload)
 #endif
     {
       if (!cell.send(netbuf.buffer(), netbuf.length())) break;
->>>>>>> upstream
     }
     if (event == EVENT_ACK) return true; // no reply for ACK
     char *data = 0;
     int bytesRecv = 0;
     // receive reply
-<<<<<<< HEAD
-    uint32_t t = millis();
-    do {
-      if ((data = net.receive())) break;
-      // no reply yet
-      delay(100);
-    } while (millis() - t < node_info.net_recv_timeout_ms);
-    if (!data) {
-      ESP_LOGW(TAG_NET, "RECV timeout for event(%i)", event);
-=======
 #if ENABLE_WIFI
     if (wifi.connected())
     {
@@ -300,32 +296,22 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     else
 #endif
     {
-      data = cell.receive(&bytesRecv); 
+      data = cell.receive(&bytesRecv);
     }
     if (!data || bytesRecv == 0) {
-      Serial.println("[UDP] Timeout");
->>>>>>> upstream
+      ESP_LOGW(TAG_UDP, "RECV timeout for event(%i)", event);
       continue;
     }
     rxBytes += bytesRecv;
     // verify checksum
     if (!verifyChecksum(data)) {
-<<<<<<< HEAD
-      ESP_LOGE(TAG_NET, "Checksum mismatch: %s", data);
-=======
-      Serial.print("[UDP] Checksum mismatch:");
-      Serial.println(data);
->>>>>>> upstream
+      ESP_LOGE(TAG_UDP, "RECV checksum mismatch: %s", data);
       continue;
     }
     char pattern[16];
     sprintf(pattern, "EV=%u", event);
     if (!strstr(data, pattern)) {
-<<<<<<< HEAD
-      ESP_LOGE(TAG_NET, "Invalid reply: %s, expected event: %i", data, event);
-=======
-      Serial.println("[UDP] Invalid reply");
->>>>>>> upstream
+      ESP_LOGE(TAG_UDP, "RECV invalid reply: %s, expected event: %i", data, event);
       continue;
     }
     if (event == EVENT_LOGIN) {
@@ -355,12 +341,18 @@ bool TeleClientUDP::notify(byte event, const char* payload)
 
 bool TeleClientUDP::connect(bool quick)
 {
-  byte event = login ? EVENT_RECONNECT : EVENT_LOGIN;
+  const byte event = login ? EVENT_RECONNECT : EVENT_LOGIN;
+  const char *event_name = login ? "LOGIN" : "RECONNECT";
+  const char *srv_host = node_info.srv_host;
+  const uint16_t srv_port = node_info.srv_port;
+  const uint16_t net_retries = node_info.net_retries;
+  const uint16_t delay_ms = node_info.net_udp_reconnect_delay_ms;
   bool success = false;
+
 #if ENABLE_WIFI
   if (wifi.connected())
   {
-    if (quick) return wifi.open(SERVER_HOST, SERVER_PORT);
+    if (quick) return wifi.open(srv_host, srv_port);
   }
   else
 #endif
@@ -374,83 +366,61 @@ bool TeleClientUDP::connect(bool quick)
   packets = 0;
 
   // connect to telematics server
-<<<<<<< HEAD
-  for (byte attempts = 0; attempts < node_info.net_retries; attempts++) {
-    ESP_LOGD(TAG_NET, "Connecting to %s:%i...", host2log, port2log);
-    if (!net.open(node_info.srv_host, node_info.srv_port)) {
-      ESP_LOGW(TAG_NET, "Fail no-%i to connect to %s:%i, wait %isec...",
-               attempts, host2log, port2log, node_info.net_udp_reconnect_delay_ms);
-      delay(node_info.net_udp_reconnect_delay_ms);
-      continue;
-    }
-    // log in or reconnect to Freematics Hub
-    success = notify(event);
-    ESP_LOG_LEVEL(
-      (success? ESP_LOG_INFO : ESP_LOG_ERROR),
-      TAG_NET,
-      "%s to %s:%i (attempt no-%i) %s",
-      (event == EVENT_LOGIN ? "LOGIN" : "RECONNECT"),
-      host2log,
-      port2log,
-      attempts,
-      success? "OK" : "FAILED!");
-
-    if (success) break;
-
-    net.close();
-  }  // connect attempts loop
-
-  startTime = millis();
-=======
-  for (byte attempts = 0; attempts < 3; attempts++) {
-    Serial.print(event == EVENT_LOGIN ? "LOGIN(" : "RECONNECT(");
-    Serial.print(SERVER_HOST);
-    Serial.print(':');
-    Serial.print(SERVER_PORT);
-    Serial.println(")...");
+  for (byte attempts = 0; attempts < net_retries; attempts++) {
+    ESP_LOGD(TAG_UDP, "%s(%s:%i)...", event_name, host2log, port2log);
 #if ENABLE_WIFI
     if (wifi.connected())
     {
-      if (!wifi.open(SERVER_HOST, SERVER_PORT)) {
-        Serial.println("[WIFI] Unable to connect");
-        delay(1000);
+      if (!wifi.open(srv_host, srv_port)) {
+        ESP_LOGW(TAG_AWIFI, "WIFI fail no-%i to connect to %s:%i, wait %isec...",
+                attempts, host2log, port2log, delay_ms);
+        delay(delay_ms);
         continue;
       }
     }
     else
 #endif
     {
-      if (!cell.open(SERVER_HOST, SERVER_PORT)) {
+      if (!cell.open(srv_host, srv_port)) {
         if (!cell.check()) break;
-        Serial.println("[NET] Unable to connect");
-        delay(3000);
+          ESP_LOGW(TAG_UDP, "CELL Fail no-%i to connect to %s:%i, wait %isec...",
+               attempts, host2log, port2log, 3 * delay_ms);
+        delay(3 * delay_ms);
         continue;
       }
     }
     // log in or reconnect to Freematics Hub
-    if (!notify(event)) {
-#if ENABLE_WIFI
-      if (wifi.connected())
-      {
-        wifi.close();
-      }
-      else
-#endif
-      {
-        if (!cell.check()) break;
-        cell.close();
-      }
-      Serial.println("[NET] Server timeout");
-      continue;
+    success = notify(event);
+    ESP_LOG_LEVEL(
+      (success? ESP_LOG_INFO : ESP_LOG_ERROR),
+      TAG_UDP,
+      "%s to %s:%i (attempt no-%i) %s",
+      event_name,
+      host2log,
+      port2log,
+      attempts,
+      success? "OK" : "FAILED!");
+
+    if (success) {
+        lastSyncTime = millis();
+        if (event == EVENT_LOGIN) startTime = lastSyncTime;
+
+        break;
     }
-    success = true;
-    break;
+
+#if ENABLE_WIFI
+    if (wifi.connected())
+    {
+      wifi.close();
+    }
+    else
+#endif
+    {
+      if (!cell.check()) break;
+      cell.close();
+    }
   }
-  if (event == EVENT_LOGIN) startTime = millis();
->>>>>>> upstream
-  if (success) {
-    lastSyncTime = millis();
-  }
+
   return success;
 }
 
@@ -458,20 +428,16 @@ bool TeleClientUDP::ping()
 {
   bool success = false;
   for (byte n = 0; n < 2 && !success; n++) {
-<<<<<<< HEAD
-    success = net.open(node_info.srv_host, node_info.srv_port);
-=======
 #if ENABLE_WIFI
     if (wifi.connected())
     {
-      success = wifi.open(SERVER_HOST, SERVER_PORT);
+      success = wifi.open(node_info.srv_host, node_info.srv_port);
     }
     else
 #endif
     {
-      success = cell.open(SERVER_HOST, SERVER_PORT);
+      success = cell.open(node_info.srv_host, node_info.srv_port);
     }
->>>>>>> upstream
     if (success) success = notify(EVENT_PING);
   }
   if (success) lastSyncTime = millis();
@@ -486,10 +452,8 @@ bool TeleClientUDP::transmit(const char* packetBuffer, unsigned int packetSize)
     if (wifi.send(packetBuffer, packetSize)) {
       txBytes += packetSize;
       txCount++;
-      Serial.print("[WIFI] ");
-      Serial.print(packetSize);
-      Serial.println(" bytes sent");
-      return true;  
+      ESP_LOGD(TAG_AWIFI, "TX %u bytes", packetSize);
+      return true;
     }
     return false;
   }
@@ -501,9 +465,7 @@ bool TeleClientUDP::transmit(const char* packetBuffer, unsigned int packetSize)
     cell.open(0, 0);
     packets = 0;
   }
-  Serial.print("[CELL] ");
-  Serial.print(packetSize);
-  Serial.println(" bytes being sent");
+  ESP_LOGD(TAG_ACELL, "TX %u bytes", packetSize);
   if (cell.send(packetBuffer, packetSize)) {
     txBytes += packetSize;
     txCount++;
@@ -512,19 +474,12 @@ bool TeleClientUDP::transmit(const char* packetBuffer, unsigned int packetSize)
   return false;
 }
 
-bool TeleClientUDP::inbound()
+void TeleClientUDP::inbound()
 {
   // check incoming datagram
   const char *err;
   do {
     int len = 0;
-<<<<<<< HEAD
-    char *data = net.receive(&len, 0);
-    if (!data) {
-      err = "timeout";
-      break;
-    }
-=======
     char *data = 0;
 #if ENABLE_WIFI
     if (wifi.connected())
@@ -537,19 +492,16 @@ bool TeleClientUDP::inbound()
     {
       data = cell.receive(&len, 50);
     }
-    if (!data || len == 0) break;
->>>>>>> upstream
+    if (!data) {
+      err = "timeout";
+      break;
+    }
     data[len] = 0;
-    Serial.print("[UDP] ");
-    Serial.println(data);
+    ESP_LOGD(TAG_UDP, "Inbound: %s", data);
     rxBytes += len;
     if (!verifyChecksum(data)) {
-<<<<<<< HEAD
       err = "bad checksum";
-=======
-      Serial.print("[UDP] Checksum mismatch:");
-      Serial.println(data);
->>>>>>> upstream
+      ESP_LOGE(TAG_UDP, "Inbound Checksum mismatch: %s", data);
       break;
     }
     char *p = strstr(data, "EV=");
@@ -563,38 +515,29 @@ bool TeleClientUDP::inbound()
 
     int eventID = atoi(p + 3);
     switch (eventID) {
-<<<<<<< HEAD
       case EVENT_COMMAND:
         processCommand(data);
-=======
-    case EVENT_SYNC:
-        feedid = hex2uint16(data);
-        Serial.print("[UDP] FEED ID:");
-        Serial.println(feedid);
->>>>>>> upstream
         break;
 
-      case EVENT_SYNC: {
-        uint16_t id = hex2uint16(data);
-        if (id && id != feedid) {
-          feedid = id;
-          ESP_LOGI(TAG_NET, "FEED ID: %i", feedid);
+      case EVENT_SYNC:
+        {
+          uint16_t id = hex2uint16(data);
+          if (id && id != feedid) {
+            feedid = id;
+            ESP_LOGI(TAG_UDP, "FEED ID: %i", feedid);
+          }
         }
-      } break;
+        break;
 
       default:
-        ESP_LOGW(TAG_NET, "Unknown inbound event: %i", eventID);
+        ESP_LOGW(TAG_UDP, "Unknown inbound event: %i", eventID);
     }  // switch eventID
 
-    return true;
+    return;
 
   } while (0);
 
-  ESP_LOGW(TAG_NET, "Inbound error: %s", err);
-  auto timeout = node_info.srv_sync_timeout_ms;
-  auto ok = timeout == 0 || (millis() - lastSyncTime) < timeout;
-
-  return ok;
+  ESP_LOGW(TAG_UDP, "Inbound error: %s", err);
 }
 
 void TeleClientUDP::shutdown()
@@ -602,19 +545,14 @@ void TeleClientUDP::shutdown()
   if (login) {
     notify(EVENT_LOGOUT);
     login = false;
-    Serial.println("[NET] Logout");
+    ESP_LOGI(TAG_UDP, "<LOGOUT>");
   }
-<<<<<<< HEAD
-  net.end();
-  ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
-=======
 #if ENABLE_WIFI
   wifi.end();
-  Serial.println("[WIFI] Deactivated");
+  ESP_LOGI(TAG_AWIFI, "<SHUTDOWN>");
 #endif
   cell.end();
-  Serial.println("[CELL] Deactivated");
->>>>>>> upstream
+  ESP_LOGI(TAG_ACELL, "<SHUTDOWN> %s", cell.deviceName());
 }
 
 bool TeleClientHTTP::notify(byte event, const char* payload)
@@ -639,7 +577,7 @@ bool TeleClientHTTP::notify(byte event, const char* payload)
 bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 {
 #if ENABLE_WIFI
-  if (wifi.connected() && wifi.state() != HTTP_CONNECTED || cell.state() != HTTP_CONNECTED) {
+  if (wifi.connected() && (wifi.state() != HTTP_CONNECTED || cell.state() != HTTP_CONNECTED)) {
 #else
   if (cell.state() != HTTP_CONNECTED) {
 #endif
@@ -653,8 +591,8 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   char url[256];
   bool success = false;
   int len;
-  auto srv_path = node_info.srv_path;
 #if SERVER_METHOD == PROTOCOL_METHOD_GET
+  auto srv_path = node_info.srv_path;
   if (gd && gd->ts) {
     len = snprintf(url, sizeof(url), "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
       srv_path, devid, isoTime,
@@ -664,43 +602,22 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   }
   success = cell.send(METHOD_GET, url, true);
 #else
-<<<<<<< HEAD
-  len = snprintf(url, sizeof(url), "%s/post/%s", srv_path, devid);
-  ESP_LOGD(TAG_NET,
-      "TeleClientHTTP sending %i bytes to URL: %s",
-      packetSize,
-#if HIDE_SECRETS_IN_LOGS
-      host2log
-#else
-      url
-#endif
-  );
-  success = net.send(METHOD_POST, url, true, packetBuffer, packetSize);
-  len += packetSize;
-#endif
-  if (!success) {
-    ESP_LOGE(TAG_NET, "Transmit failed. Closing net");
-    net.close();
-=======
   len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
 #if ENABLE_WIFI
   if (wifi.connected()) {
-    Serial.print("[WIFI] ");
-    Serial.println(url);
+    ESP_LOGD(TAG_AWIFI, "Transmit %i bytes: %s", packetSize, host2log);
     success = wifi.send(METHOD_POST, url, true, packetBuffer, packetSize);
   }
   else
 #endif
   {
-    Serial.print("[CELL] ");
-    Serial.println(url);
+    ESP_LOGD(TAG_ACELL, "Transmit %i bytes: %s", packetSize, host2log);
     success = cell.send(METHOD_POST, url, true, packetBuffer, packetSize);
   }
   len += packetSize;
 #endif
   if (!success) {
-    Serial.println("Connection closed");
->>>>>>> upstream
+    ESP_LOGE(TAG_HTTP, "Transmit failed.");
     return false;
   } else {
     txBytes += len;
@@ -722,26 +639,16 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   }
   if (!content) {
     // close connection on receiving timeout
-<<<<<<< HEAD
-    ESP_LOGE(TAG_NET, "No HTTP response.  Closing net.");
-    net.close();
+    ESP_LOGE(TAG_HTTP, "No response");
     return false;
   }
-  ESP_LOGD(TAG_NET, "tx-reply: %s", response);
-  if (net.code() == 200) {
-=======
-    Serial.println("No HTTP response");
-    return false;
-  }
-  Serial.print("[HTTP] ");
-  Serial.println(content);
+  ESP_LOGD(TAG_HTTP, "tx-reply: %s", content);
 #if ENABLE_WIFI
   if ((wifi.connected() && wifi.code() == 200) || cell.code() == 200) {
 #else
   if (cell.code() == 200) {
 #endif
     // successful
->>>>>>> upstream
     lastSyncTime = millis();
     rxBytes += recvBytes;
   }
@@ -761,26 +668,15 @@ bool TeleClientHTTP::connect(bool quick)
 
   // connect to HTTP server
   bool success = false;
-<<<<<<< HEAD
-  for (byte attempts = 0; !success && attempts < node_info.net_retries;
-       attempts++) {
-    success = net.open(node_info.srv_host, node_info.srv_port);
-    if (!success) {
-      net.close();
-      delay(1000);
-    }
-  }
-  if (!success) {
-    ESP_LOGE(TAG_NET, "Error connecting to server");
-=======
-
 
 #if ENABLE_WIFI
-  if (wifi.connected()) success = wifi.open(SERVER_HOST, SERVER_PORT);
+  if (wifi.connected())
+    success = wifi.open(node_info.srv_host, node_info.srv_port);
 #endif
   if (!success) {
-    for (byte attempts = 0; !success && attempts < 3; attempts++) {
-      success = cell.open(SERVER_HOST, SERVER_PORT);
+    for (byte attempts = 0; !success && attempts < node_info.net_retries;
+        attempts++) {
+      success = cell.open(node_info.srv_host, node_info.srv_port);
       if (!success) {
         if (!cell.check()) break;
         cell.close();
@@ -789,8 +685,7 @@ bool TeleClientHTTP::connect(bool quick)
     }
   }
   if (!success) {
-    Serial.println("[CELL] Unable to connect");
->>>>>>> upstream
+    ESP_LOGE(TAG_HTTP, "Error connecting to server");
     return false;
   }
   if (quick) return true;
@@ -801,7 +696,7 @@ bool TeleClientHTTP::connect(bool quick)
     }
     ESP_LOG_LEVEL(
       (login? ESP_LOG_INFO : ESP_LOG_ERROR),
-      TAG_NET,
+      TAG_HTTP,
       "LOGIN to %s:%i %s",
       host2log,
       port2log,
@@ -818,23 +713,15 @@ bool TeleClientHTTP::ping()
 void TeleClientHTTP::shutdown()
 {
   if (login) {
+    ESP_LOGI(TAG_HTTP, "<LOGOUT>");
     notify(EVENT_LOGOUT);
     login = false;
-    Serial.println("[NET] Logout");
   }
-<<<<<<< HEAD
-  net.close();
-  net.end();
-  Serial.println(" OFF");
-  started = false;
-  ESP_LOGI(TAG_NET, "<SHUTDOWN> %s", net.deviceName());
-=======
 #if ENABLE_WIFI
   wifi.end();
-  Serial.println("[WIFI] Deactivated");
+  ESP_LOGI(TAG_AWIFI, "<SHUTDOWN> %s", wifi.deviceName());
 #endif
   cell.close();
   cell.end();
-  Serial.println("[CELL] Deactivated");
->>>>>>> upstream
+  ESP_LOGI(TAG_ACELL, "<SHUTDOWN> %s", cell.deviceName());
 }

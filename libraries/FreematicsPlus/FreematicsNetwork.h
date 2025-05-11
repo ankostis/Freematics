@@ -25,8 +25,9 @@
 
 // ESP_IDF logging tags used
 inline constexpr const char TAG_WIFI[] = "WIFI";
-inline constexpr const char TAG_SIM800[] = "SIM800";
-inline constexpr const char TAG_SIM5360[] = "SIM5360";
+inline constexpr const char TAG_CELL[] = "CELL";
+inline constexpr const char TAG_CELLHTTP[] = "CELLHTTP";
+inline constexpr const char TAG_CELLUDP[] = "CELLUDP";
 inline constexpr const char TAG_SIM7600[] = "SIM7600";
 inline constexpr const char TAG_SIM7070[] = "SIM7070";
 inline constexpr const char TAG_HTTP[] = "NetHTTP";
@@ -67,13 +68,8 @@ public:
 protected:
     std::string genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
     HTTP_STATES m_state = HTTP_DISCONNECTED;
-<<<<<<< HEAD
-    byte m_code = 0;
-    std::string m_host;
-=======
     uint16_t m_code = 0;
-    String m_host;
->>>>>>> upstream
+    std::string m_host;
 };
 
 class ClientWIFI
@@ -86,7 +82,6 @@ public:
     std::string getIP();
     int getSignal() { return 0; }
     const char* deviceName() { return "WiFi"; }
-<<<<<<< HEAD
     /**
      * Dump (SSIDs, RSSI) in the log all WiFis in the area.
      *
@@ -97,11 +92,8 @@ public:
      *   so better call `WiFi.reconnect()` afterwards.
      */
     int listAPs();
-=======
-    void listAPs();
     bool connected() { return WiFi.isConnected(); }
     int RSSI() { return WiFi.RSSI(); }
->>>>>>> upstream
 protected:
 };
 
@@ -111,13 +103,8 @@ public:
     bool open(const char* host, uint16_t port);
     void close();
     bool send(const char* data, unsigned int len);
-<<<<<<< HEAD
-    char* receive(int* pbytes = 0, unsigned int timeout = 5000);
-    virtual std::string queryIP(const char* host);
-=======
     int receive(char* buffer, int bufsize, unsigned int timeout = 100);
-    String queryIP(const char* host);
->>>>>>> upstream
+    virtual std::string queryIP(const char* host);
 private:
     IPAddress udpIP;
     uint16_t udpPort;
@@ -135,53 +122,6 @@ private:
     WiFiClient client;
 };
 
-<<<<<<< HEAD
-class ClientSIM800
-{
-public:
-    bool begin(CFreematics* device);
-    void end();
-    bool setup(const char* apn, bool gps = false, unsigned int timeout = 60000);
-    std::string getIP();
-    int getSignal();
-    std::string getOperatorName();
-    bool checkSIM(const char* pin = 0);
-    bool getLocation(NET_LOCATION* loc);
-    virtual std::string queryIP(const char* host);
-    char* getBuffer() { return m_buffer; }
-    const char* deviceName() { return "SIM800"; }
-    const char* IMEI = "N/A";
-protected:
-    bool sendCommand(const char* cmd, unsigned int timeout = 1000, const char* expected = "\r\nOK");
-    char m_buffer[RECV_BUF_SIZE] = {0};
-    CFreematics* m_device = 0;
-};
-
-class UDPClientSIM800 : public ClientSIM800
-{
-public:
-    bool open(const char* host, uint16_t port);
-    bool send(const char* data, unsigned int len);
-    void close();
-    char* receive(int* pbytes = 0, unsigned int timeout = 5000);
-private:
-    char* checkIncoming(int* pbytes);
-};
-
-class HTTPClientSIM800 : public HTTPClient, public ClientSIM800
-{
-public:
-    bool open(const char* host, uint16_t port);
-    bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
-    char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
-    void close();
-protected:
-    std::string m_host;
-    uint16_t m_port;
-};
-
-class ClientSIM5360
-=======
 typedef enum {
     CELL_SIM7600 = 0,
     CELL_SIM7070 = 1,
@@ -189,39 +129,20 @@ typedef enum {
 } CELL_TYPE;
 
 class CellSIMCOM
->>>>>>> upstream
 {
 public:
     virtual bool begin(CFreematics* device);
     virtual void end();
     virtual bool setup(const char* apn, unsigned int timeout = 30000);
     virtual bool setGPS(bool on);
-<<<<<<< HEAD
     virtual std::string getIP();
-    int getSignal();
+    int RSSI();
     std::string getOperatorName();
     bool checkSIM(const char* pin = 0);
     virtual std::string queryIP(const char* host);
-    virtual bool getLocation(GPS_DATA** pgd)
-    {
-        if (m_gps) {
-            if (pgd) *pgd = m_gps;
-            return m_gps->ts != 0;
-        } else {
-            return false;
-        }
-    }
-    char* getBuffer() { return m_buffer; }
-=======
-    virtual String getIP();
-    int RSSI();
-    String getOperatorName();
-    bool checkSIM(const char* pin = 0);
-    virtual String queryIP(const char* host);
     virtual bool getLocation(GPS_DATA** pgd);
     bool check(unsigned int timeout = 0);
-    char* getBuffer();
->>>>>>> upstream
+    char* getBuffer() { return m_buffer; }
     const char* deviceName() { return m_model; }
     char IMEI[16] = {0};
 protected:

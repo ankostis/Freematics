@@ -16,9 +16,7 @@
  * #undef LOG_SINK
  * #define LOG_SINK    (LOG_SINK_SERIAL| LOG_SINK_SD)
 
- * #undef NET_DEVICE
- *
- * #define NET_DEVICE NET_XXX
+ * #undef ENABLE_WIFI
  *
  * #undef WIFI_SSIDS
  * #define WIFI_SSIDS {"ssid1", "pswd1"}, {"ssid2", "pswd2"}
@@ -52,43 +50,28 @@
 /**************************************
 * Circular Buffer Configuration
 **************************************/
-<<<<<<< HEAD
+#if BOARD_HAS_PSRAM
 /**
  * Max number of buffers
  * If limit reached, the oldest slot is purged and re-populated,
  * hence, gaps & out-of-order rows appear in the trace.
  */
-#define BUFFER_SLOTS            256
+#define BUFFER_SLOTS            4096
 /**
  * Bytes-per-slot
  * PID-samples not fitting in the current slot, they are dropped!
  */
-#define BUFFER_LENGTH           180
-#define SERIALIZE_BUFFER_SIZE   1024 /* bytes */
-=======
-#if BOARD_HAS_PSRAM
-#define BUFFER_SLOTS 4096 /* max number of buffer */
-#define BUFFER_LENGTH 256 /* bytes per slot */
-#define SERIALIZE_BUFFER_SIZE 4096 /* bytes */
+#define BUFFER_LENGTH           256
+#define SERIALIZE_BUFFER_SIZE   4096  /* bytes */
 #else
-#define BUFFER_SLOTS 32 /* max number of buffer */
-#define BUFFER_LENGTH 128 /* bytes per slot */
-#define SERIALIZE_BUFFER_SIZE 1024 /* bytes */
+#define BUFFER_SLOTS            256   /* see above */
+#define BUFFER_LENGTH           180   /* see above */
+#define SERIALIZE_BUFFER_SIZE   1024
 #endif
->>>>>>> upstream
 
 /**************************************
 * Configuration Definitions
 **************************************/
-<<<<<<< HEAD
-#define NET_WIFI                1
-#define NET_WIFI_MESH           2
-#define NET_SERIAL              3
-#define NET_SIM800              4
-#define NET_SIM5360             5
-#define NET_SIM7600             6
-#define NET_SIM7070             7
-
 #define LOG_SINK_NONE           0
 #define LOG_SINK_SERIAL         0x1
 #define LOG_SINK_SD             0x2
@@ -100,11 +83,6 @@
  * https://docs.espressif.com/projects/esp-idf/en/latest/esp32/api-reference/storage/spiffs.html#notes
  */
 #define LOG_SINK_SPIFFS         0x4
-=======
-#define STORAGE_NONE 0
-#define STORAGE_SPIFFS 1
-#define STORAGE_SD 2
->>>>>>> upstream
 
 #define STORAGE_NONE            0
 /**
@@ -213,9 +191,11 @@
  * - The timeout resets on any Rx/Tx chars.
  * - Reboots after the timeout has expired AND any chars have Rx/Tx,
  *   otherwise, proceeds with regular setup.
+ * - Old name: `CONFIG_MODE_TIMEOUT`
  * - (json-config default)
  */
 #define BOOT_OBD_PIPE_TIMEOUT_SEC    0
+
 
 #ifndef ENABLE_OBD
 #define ENABLE_OBD              1
@@ -254,19 +234,16 @@
 #define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
 
 /**************************************
-<<<<<<< HEAD
  * Networking configurations
  **************************************
  * Don't modify per-device network settings & secrets here,
  * do it in `secrets.h` overrides instead:
- *      #define NET_DEVICE            NET_xxx   //(default below)
  *      #define WIFI_SSIDS            {"ssid1", "pswd1"}, ...
  *      #define CELL_APN ""
  *      #define SIM_CARD_PIN          ""
  *      #define SERVER_HOST           "hub.freematics.com"
  */
-// change the following line to change network device
-#define NET_DEVICE              NET_WIFI
+#define ENABLE_WIFI             1
 /**
  * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
  * like:
@@ -287,21 +264,6 @@
  */
 #define SERVER_HOST             "hub.freematics.com"
 #define SERVER_PROTOCOL         PROTOCOL_UDP
-=======
-* Networking configurations
-**************************************/
-#ifndef ENABLE_WIFI
-#define ENABLE_WIFI 0
-// WiFi settings
-#define WIFI_SSID "FREEMATICS"
-#define WIFI_PASSWORD "PASSWORD"
-// cellular network settings
-#define CELL_APN "hologram"
-// Freematics Hub server settings
-#define SERVER_HOST "hub.freematics.com"
-#define SERVER_PROTOCOL PROTOCOL_UDP
-#endif 
->>>>>>> upstream
 
 /**
  * SIM card setting
@@ -337,7 +299,6 @@
 #define WIFI_AP_SSID            "TELELOGGER"
 #define WIFI_AP_PASSWORD        "PASSWORD"
 
-<<<<<<< HEAD
 /**
  * How many times to attempt opening net-connection before reporting error.
  * (json-config default)
@@ -352,7 +313,7 @@
  * Maximum consecutive communication errors before resetting network.
  * (json-config default)
  */
-#define MAX_CONN_ERRORS_RECONNECT   3
+#define MAX_CONN_ERRORS_RECONNECT   5
 /**
  * Timeout for receiving an event response.
  * (json-config default)
@@ -382,15 +343,21 @@
  * (json-config default)
  */
 #define STATIONARY_TRANSMISSION_INTERVALS \
-        {20, 1000}, \
-        {40, 2000}, \
-        {60, 5000},
+        {30, 1000}, \
+        {60, 2000}, \
+        {180, 5000},
 
 /**
  * How often to ping the server?
  * (json-config default)
  */
 #define PING_BACK_INTERVAL_SEC      900
+/**
+ * How often to check RSSI & reconnect WiFi?
+ * (TODO: `SIGNAL_CHECK_INTERVAL_sec` -> nodeinfo.json-config default)
+ */
+#define SIGNAL_CHECK_INTERVAL       10
+
 
 /**
  * How often to send PIDs form the on-board fuel-consumption monitoring device.
@@ -403,21 +370,6 @@
  * (json-config default)
  */
 #define STATS_INTERVAL_SEC          12
-=======
-// maximum consecutive communication errors before resetting network
-#define MAX_CONN_ERRORS_RECONNECT 5
-// maximum allowed connecting time
-#define MAX_CONN_TIME 10000 /* ms */
-// data receiving timeout
-#define DATA_RECEIVING_TIMEOUT 5000 /* ms */
-// expected maximum server sync signal interval
-#define SERVER_SYNC_INTERVAL 120 /* seconds, 0 to disable */
-// data interval settings
-#define STATIONARY_TIME_TABLE {30, 60, 180} /* seconds */
-#define DATA_INTERVAL_TABLE {1000, 2000, 5000} /* ms */
-#define PING_BACK_INTERVAL 900 /* seconds */
-#define SIGNAL_CHECK_INTERVAL 10 /* seconds */
->>>>>>> upstream
 
 /**************************************
 * Data storage configurations
@@ -442,42 +394,32 @@
 // change the following line to change GNSS setting
 #define GNSS                    GNSS_INTERNAL
 #endif
-<<<<<<< HEAD
-#define GPS_SERIAL_BAUDRATE     115200L
+#define GPS_SERIAL_BAUDRATE     115200L  // TODO: drop unused `GPS_SERIAL_BAUDRATE`.
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
-=======
-// keeping GNSS power on during standby 
+/**
+ * keeping GNSS power on during standby.
+  * (TODO: `GNSS_ALWAYS_ON` -> nodeinfo.json-config default)
+*/
 #define GNSS_ALWAYS_ON 0
->>>>>>> upstream
 
 /**************************************
 * Standby/wakeup
 **************************************/
-<<<<<<< HEAD
 /**
  * Whether to reset the device after waking up from "sleep".
  * (json-config default)
  */
-#define REBOOT_ON_WAKEUP        0
+#define REBOOT_ON_WAKEUP        1
  /* moving vehicle motion threshold in G */
 #define MOTION_THRESHOLD        0.4f
 // engine jumpstart voltage for waking up (when ENABLE_MEMS)
 #define THR_VOLTAGE             13.6 /* V */
 // engine jumpstart voltage gradient
 #define THR_GRAD                1 /* V */
-=======
-// motion threshold for waking up
-#define MOTION_THRESHOLD 0.4f /* moving vehicle motion threshold in G */
-// engine jumpstart voltage for waking up (when MEMS unavailable) 
-#define JUMPSTART_VOLTAGE 14 /* V */
-// reset device after waking up
-#define RESET_AFTER_WAKEUP 1
->>>>>>> upstream
 
 /**************************************
 * Additional features
 **************************************/
-<<<<<<< HEAD
 /**
  * Enable filesystem access commands?
  * The respective filesystem is implicitly enabled when
@@ -487,9 +429,6 @@
 #define ENABLE_SPIFFS           0
 #define FORMAT_SD_IF_FAILED     true
 #define FORMAT_SPIFFS_IF_FAILED true
-=======
-#define CONFIG_MODE_TIMEOUT 0
->>>>>>> upstream
 
 /** How long commands read from the serial can be? */
 #define CMD_SERIAL_MAX_LEN      128
@@ -498,7 +437,6 @@
 /** How many bytes the `TAIL` command to backtrack from the end-of-file? */
 #define CMD_TAIL_NBYTES         -4096
 
-<<<<<<< HEAD
 /**
  * Over-the-air firmware-upgrade from HTTPS enabled?
  * Performed with "OTA[ url]" command,
@@ -568,8 +506,6 @@ extern const char ota_url2log[];
 #endif
 
 #define _CHECK_BUZTICKS          (node_info.macroflags & (1 << 4))
-=======
-#define COOLING_DOWN_TEMP 75 /* celsius degrees */
 
 // enable(1)/disable(0) http server
 #ifndef ENABLE_HTTPD
@@ -581,6 +517,5 @@ extern const char ota_url2log[];
 #define ENABLE_BLE 0
 #endif
 
->>>>>>> upstream
 
 #endif // CONFIG_H_INCLUDED

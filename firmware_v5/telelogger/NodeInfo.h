@@ -96,7 +96,6 @@
    *     "serialize_len": 1024,
    *     "ota_url": "<len: 37>",
    *     "ota_update_cert_pem_len": 3749,
-   *     "net_dev": 4,
    *     "wifi_ssids": "***",
    *     "cell_apn": "<len: 19>",
    *     "sim_card_pin": "***",
@@ -267,6 +266,7 @@ struct node_info_t {
     | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
     | ((BOARD_HAS_PSRAM && 1) << 11)
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
+    | ((ENABLE_WIFI && 1) << 13)
   };
   const uint8_t log_level_build{CORE_DEBUG_LEVEL};
   const int nslots{BUFFER_SLOTS};
@@ -294,7 +294,6 @@ struct node_info_t {
   int32_t log_sink_sync_interval_ms{LOG_SINK_SYNC_INTERVAL_MS};
   const char *ota_url{OTA_UPDATE_URL};
   const char *ota_update_cert_pem{OTA_UPDATE_CERT_PEM};
-  const uint8_t net_dev{NET_DEVICE};  // TODO: reconfigurable
   std::map<std::string, std::string> wifi_ssids{WIFI_SSIDS};
   const char *cell_apn{CELL_APN};
   const char *sim_card_pin{SIM_CARD_PIN};

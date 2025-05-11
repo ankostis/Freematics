@@ -30,7 +30,6 @@
 #include "NodeInfo.h"
 #include "telemesh.h"
 #include "teleclient.h"
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 #if _NEED_SD
 #include "SD.h"
 #endif  // _NEED_SD
@@ -43,12 +42,10 @@
 #if ENABLE_MULTILOG && USE_ESP_IDF_LOG
 #include "multilog.h"
 #endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
-=======
 #if BOARD_HAS_PSRAM
 #include "esp32/himem.h"
 #endif
 #include "driver/adc.h"
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -174,11 +171,7 @@ float deviceTemp = 0;
 
 // live data
 int16_t rssi = 0;
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-=======
 int16_t rssiLast = 0;
-char vin[18] = {0};
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 uint16_t dtc[6] = {0};
 float batteryVoltage = 0;
 GPS_DATA* gd = 0;
@@ -207,12 +200,9 @@ std::string serialCommand;
 
 byte ledMode = 0;
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 bool processCommand(char* data);
-=======
 bool serverSetup(IPAddress& ip);
 void serverProcess(int timeout);
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 void processMEMS(CBuffer* buffer);
 bool processGPS(CBuffer* buffer);
 void processBLE(int timeout);
@@ -288,34 +278,23 @@ State state;
 
 void printTimeoutStats()
 {
-  ESP_LOGI(TAG_NET, "Timeouts: OBD: %i, network: %i", timeoutsOBD, timeoutsNet);
+  ESP_LOGI(TAG_TELE, "Timeouts: OBD: %i, network: %i", timeoutsOBD, timeoutsNet);
 }
 
 #if LOG_EXT_SENSORS
 void processExtInputs(CBuffer* buffer)
 {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-  int pins[] = {node_info.pin_sensor1, node_info.pin_sensor2};
   int pids[] = {PID_EXT_SENSOR1, PID_EXT_SENSOR2};
 #if LOG_EXT_SENSORS == LOG_EXT_SENSORS_DIGITAL
+  int pins[] = {node_info.pin_sensor1, node_info.pin_sensor2};
   for (int i = 0; i < 2; i++) {
     buffer->add(pids[i], digitalRead(pins[i]));
   }
 #elif LOG_EXT_SENSORS == LOG_EXT_SENSORS_ANALOG
-=======
-  int pids[] = {PID_EXT_SENSOR1, PID_EXT_SENSOR2};
-#if LOG_EXT_SENSORS == 1
-  int pins[] = {PIN_SENSOR1, PIN_SENSOR2};
-  for (int i = 0; i < 2; i++) {
-    buffer->add(pids[i], digitalRead(pins[i]));
-  }
-#elif LOG_EXT_SENSORS == 2
   int reading[] = {adc1_get_raw(ADC1_CHANNEL_0), adc1_get_raw(ADC1_CHANNEL_1)};
-  Serial.print("GPIO0:");
-  Serial.print((float)reading[0] * 3.15 / 4095 - 0.01);
-  Serial.print(" GPIO1:");
-  Serial.println((float)reading[1] * 3.15 / 4095 - 0.01);
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+  ESP_LOGI(TAG_PROC, "GPIO0: %f, GPIO1: %f",
+      (float)reading[1] * 3.15 / 4095 - 0.01,
+      (float)reading[1] * 3.15 / 4095 - 0.01);
   for (int i = 0; i < 2; i++) {
     buffer->add(pids[i], reading[i]);
   }
@@ -324,8 +303,6 @@ void processExtInputs(CBuffer* buffer)
 #endif
 
 /*******************************************************************************
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-=======
   HTTP API
 *******************************************************************************/
 #if ENABLE_HTTPD
@@ -360,7 +337,6 @@ int handlerLiveData(UrlHandlerParam* param)
 #endif
 
 /*******************************************************************************
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
   Reading and processing OBD data
 *******************************************************************************/
 #if ENABLE_OBD
@@ -517,20 +493,9 @@ void processMEMS(CBuffer* buffer)
       value[0] = accSum[0] / accCount - accBias[0];
       value[1] = accSum[1] / accCount - accBias[1];
       value[2] = accSum[2] / accCount - accBias[2];
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
       // buffer->add(PID_ACC, value);
+      ESP_LOGD(TAG_PROC, "ACC: %.4f/%.4f/%.4f", value[0], value[1], value[2]);
 #endif
-=======
-      buffer->add(PID_ACC, value);
-/*
-      Serial.print("[ACC] ");
-      Serial.print(value[0]);
-      Serial.print('/');
-      Serial.print(value[1]);
-      Serial.print('/');
-      Serial.println(value[2]);
-*/
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 #if ENABLE_ORIENTATION
       value[0] = ori.yaw;
       value[1] = ori.pitch;
@@ -642,7 +607,7 @@ void initialize()
   // initialize OBD communication
   if (!state.check(STATE_OBD_READY)) {
     timeoutsOBD = 0;
-    if (obd.init(PROTO_AUTO, node_info.obd_alt_init_cmds)) {
+    if (obd.init(PROTO_AUTO, false, node_info.obd_alt_init_cmds)) {
       state.set(STATE_OBD_READY | STATE_GET_OBFCM);
       ESP_LOGI(TAG_INIT, "OBD: OK(%i), %s\n  state: %X", obd.init_stage,
                obd.active_protocol.c_str(), state.m_state);
@@ -655,21 +620,7 @@ void initialize()
   }
 #endif
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-#if 0
-  if (!state.check(STATE_OBD_READY) && state.check(STATE_GPS_READY)) {
-    // wait for movement from GPS when OBD not connected
-    Serial.println("Waiting...");
-    if (!waitMotionGPS(GPS_MOTION_TIMEOUT * 1000)) {
-      return false;
-    }
-  }
-#endif
-
 #if STORAGE
-=======
-#if STORAGE != STORAGE_NONE
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
   if (!state.check(STATE_STORAGE_READY)) {
     // init storage
     if (logger.init()) {
@@ -688,14 +639,11 @@ void initialize()
   if (state.check(STATE_OBD_READY)) {
     char buf[128];
     if (obd.getVIN(buf, sizeof(buf))) {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
+      // Copy  new vin's x17(-1) chars into `node_info.vin`
+      // (-1 to preserve last destination's \0 byte is not really needed,
+      // `obd.getVIN()` does terminate `buf` with \0).
       memcpy(vin, buf, sizeof(node_info.vin) - 1);
       ESP_LOGI(TAG_INIT, "VIN: %s", vin);
-=======
-      memcpy(vin, buf, sizeof(vin) - 1);
-      Serial.print("VIN:");
-      Serial.println(vin);
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
     }
     int dtcCount = obd.readDTC(dtc, sizeof_array(dtc));
     if (dtcCount > 0) {
@@ -710,6 +658,7 @@ void initialize()
 
     OLED_PRINTF("VIN: %s\n", vin);
   }
+  // FIXME: should delete VIN when cannot read it (eg obd switched out)?
 #endif
 
   // Notify server early that the device for some VIN has waken up.
@@ -736,7 +685,6 @@ void initialize()
   ESP_LOGI(TAG_INIT, "completed");
 }
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 /*******************************************************************************
   Executing a remote command
 *******************************************************************************/
@@ -960,68 +908,13 @@ bool processCommand(char* data)
     }
   }
   return true;
-=======
-void showStats()
-{
-  uint32_t t = millis() - teleClient.startTime;
-  char buf[32];
-  sprintf(buf, "%02u:%02u.%c ", t / 60000, (t % 60000) / 1000, (t % 1000) / 100 + '0');
-  Serial.print("[NET] ");
-  Serial.print(buf);
-  Serial.print("| Packet #");
-  Serial.print(teleClient.txCount);
-  Serial.print(" | Out: ");
-  Serial.print(teleClient.txBytes >> 10);
-  Serial.print(" KB | In: ");
-  Serial.print(teleClient.rxBytes);
-  Serial.print(" bytes");
-  Serial.println();
-#if ENABLE_OLED
-  oled.setCursor(0, 2);
-  oled.println(timestr);
-  oled.setCursor(0, 5);
-  oled.printInt(teleClient.txCount, 2);
-  oled.setCursor(80, 5);
-  oled.printInt(teleClient.txBytes >> 10, 3);
-#endif
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 }
 
 bool waitMotion(long timeout)
 {
 #if ENABLE_MEMS
-  // unsigned long t = millis();
+  unsigned long t = millis();
   if (state.check(STATE_MEMS_READY)) {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-
-    // calculate relative movement
-    float motion = 0;
-    float acc[3];
-    if (!mems->read(acc)) {
-      return false;
-    }
-    if (accCount == 10) {
-      accCount = 0;
-      accSum[0] = 0;
-      accSum[1] = 0;
-      accSum[2] = 0;
-    }
-    accSum[0] += acc[0];
-    accSum[1] += acc[1];
-    accSum[2] += acc[2];
-    accCount++;
-    for (byte i = 0; i < 3; i++) {
-      float m = (acc[i] - accBias[i]);
-      motion += m * m;
-    }
-    // check movement
-    if (motion >= node_info.wakeup_motion_thr * node_info.wakeup_motion_thr) {
-      //lastMotionTime = millis();
-      return true;
-    } else {
-      return false;
-    }
-=======
     do {
       // calculate relative movement
       float motion = 0;
@@ -1046,18 +939,17 @@ bool waitMotion(long timeout)
 #endif
       processBLE(100);
       // check movement
-      if (motion >= MOTION_THRESHOLD * MOTION_THRESHOLD) {
+      if (motion >= node_info.wakeup_motion_thr * node_info.wakeup_motion_thr) {
         //lastMotionTime = millis();
-        Serial.println(motion);
+        ESP_LOGD(TAG_PROC, "Moved, %f", motion);
         return true;
       }
     } while ((long)(millis() - t) < timeout || timeout == -1);
     return false;
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
-  }
-#endif
+  }  // state.check(STATE_MEMS_READY)
+#endif  // ENABLE_MEMS
   return false;
-}
+}  // waitMotion()
 
 /*******************************************************************************
   Collecting and processing data
@@ -1082,7 +974,6 @@ void process()
   if (state.check(STATE_OBD_READY)) {
 
     processOBD(buffer);
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 
     if (state.check(STATE_GET_OBFCM)) {
       lastObfcmTime = millis();
@@ -1118,13 +1009,8 @@ void process()
     }
 
     if (obd.errors >= node_info.obd_max_errors) {
-      if (!obd.init(PROTO_AUTO, node_info.obd_alt_init_cmds)) {
+      if (!obd.init(PROTO_AUTO, false, node_info.obd_alt_init_cmds)) {
         ESP_LOGE(TAG_PROC, "OBD OFF(%i)", obd.init_stage);
-=======
-    if (obd.errors >= MAX_OBD_ERRORS) {
-      if (!obd.init()) {
-        Serial.println("[OBD] ECU OFF");
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
         state.clear(STATE_OBD_READY | STATE_WORKING);
         return;
       } else {
@@ -1148,11 +1034,7 @@ void process()
     batteryVoltage = obd.getVoltage();
   }
   if (batteryVoltage) {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     buffer->add(PID_BATTERY_VOLTAGE, batteryVoltage);
-=======
-    buffer->add(PID_BATTERY_VOLTAGE, (int)(batteryVoltage * 100));
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
   }
 #endif
 
@@ -1221,177 +1103,92 @@ void process()
   }
   current_stationary_tx_interval_stage = new_tx_interval_stage;
 #endif
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-  long t = dataInterval - (millis() - startTime);
-  if (t > 0 && t < dataInterval) delay(t);
-}  // process()
-
-=======
   do {
     long t = dataInterval - (millis() - startTime);
     processBLE(t > 0 ? t : 0);
   } while (millis() - startTime < dataInterval);
-}
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+}  // process()
+
+#if ENABLE_WIFI
+bool initWifi()
+{
+  OLED_PRINT("Connecting WiFi...");
+  // TODO: make `wifi_retries` reconfigurable.
+  for (byte attempts = 0; attempts < 3; attempts++) {
+    teleClient.wifi.begin(node_info.wifi_ssids);
+    if (teleClient.wifi.setup()) {
+        ESP_LOGI(TAG_WIFI, "Connected");
+        OLED_PRINTLN("Connected");
+        return true;
+    }
+  }  // wifi attempts loop
+  ESP_LOGW(TAG_WIFI, "No WiFi.");
+  return false;
+}  // initWifi()
+# endif  // ENABLE_WIFI
 
 bool initCell()
 {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-#if NET_DEVICE == NET_WIFI
-  OLED_PRINT("Connecting WiFi...");
-  for (byte attempts = 0; attempts < 3; attempts++) {
-    teleClient.net.begin(node_info.wifi_ssids);
-    if (teleClient.net.setup()) {
-      state.set(STATE_NET_READY);
-      std::string ip = teleClient.net.getIP();
-      if (ip.length()) {
-        state.set(STATE_NET_CONNECTED);
-        ESP_LOGI(TAG_NET, "WiFi IP: %s", ip.c_str());
-        OLED_PRINTLN(ip);
-        break;
-      }
-    } else {
-      ESP_LOGE(TAG_NET, "No WiFi!");
-    }
-  }  // wifi attempts loop
-#else // NET_DEVICE != NET_WIFI
+  ESP_LOGD(TAG_CELL, "Activating...");
   // power on network module
-  if (teleClient.net.begin(&sys)) {
-    state.set(STATE_NET_READY);
-  } else {
-    ESP_LOGE(TAG_NET, "CELL: NO");
-    OLED_PRINTLN("No Cell Module");
+  if (!teleClient.cell.begin(&sys)) {
+    ESP_LOGE(TAG_CELL, "No Cell Module!");
+    OLED_PRINTLN("No Cell Module!");
     return false;
   }
-#if NET_DEVICE >= SIM800
-  OLED_PRINTF("%s OK\nIMEI: %s", teleClient.net.deviceName(), teleClient.net.IMEI);
-  ESP_LOGI(TAG_NET, "CELL: %s", teleClient.net.deviceName());
-  if (!teleClient.net.checkSIM(node_info.sim_card_pin)) {
-    ESP_LOGE(TAG_NET, "NO SIM CARD");
+  OLED_PRINTF("%s OK\nIMEI: %s", teleClient.cell.deviceName(), teleClient.cell.IMEI);
+  ESP_LOGI(TAG_CELL, "Device: %s", teleClient.cell.deviceName());
+  if (!teleClient.cell.checkSIM(node_info.sim_card_pin)) {
+    ESP_LOGE(TAG_CELL, "NO SIM CARD");
+    OLED_PRINTLN("NO SIM CARD");
     return false;
   }
-  ESP_LOGI(TAG_NET, "IMEI: %s", teleClient.net.IMEI);
-  if (state.check(STATE_NET_READY) && !state.check(STATE_NET_CONNECTED)) {
-    if (teleClient.net.setup(node_info.cell_apn)) {
-      std::string op = teleClient.net.getOperatorName();
+  ESP_LOGI(TAG_CELL, "IMEI: %s, APN: %s, Searching...",
+      teleClient.cell.IMEI, node_info.cell_apn);
+  if (state.check(STATE_NET_READY) && !state.check(STATE_CELL_CONNECTED)) {
+    if (teleClient.cell.setup(node_info.cell_apn)) {
+      std::string op = teleClient.cell.getOperatorName();
       if (op.length()) {
-        ESP_LOGI(TAG_NET, "Operator: %s", op.c_str());
-        OLED_PRINTLN(op);
+        ESP_LOGI(TAG_CELL, "Operator: %s", op.c_str());
+        OLED_PRINTLN("Operator: %s", op);
       }
 
 #if GNSS == GNSS_CELLULAR
-      if (teleClient.net.setGPS(true)) {
-        ESP_LOGI(TAG_NET, "CELL GNSS:OK");
+      if (teleClient.cell.setGPS(true)) {
+        ESP_LOGI(TAG_CELL, "CELL GNSS:OK");
       }
 #endif
 
-      std::string ip = teleClient.net.getIP();
+      std::string ip = teleClient.cell.getIP();
       if (ip.length()) {
-        ESP_LOGI(TAG_NET, "IP: %s", ip.c_str());
-        OLED_PRINTF("IP: %s\n",ip.c_str());
+        ESP_LOGI(TAG_CELL, "IP: %s", ip.c_str());
+        OLED_PRINTLN("IP: %s",ip.c_str());
       }
-      rssi = teleClient.net.getSignal();
-      if (rssi) {
-        ESP_LOGI(TAG_NET, "CELL RSSI: %idBm", rssi);
-        OLED_PRINTF("RSSI: %idBm\n", rssi);
-      }
-      state.set(STATE_NET_CONNECTED);
-    } else {
-      char *p = strstr(teleClient.net.getBuffer(), "+CPSI:");
+      state.set(STATE_CELL_CONNECTED);
+    } else {  // if cell.setup() failed?
+      char *p = strstr(teleClient.cell.getBuffer(), "+CPSI:");
       if (p) {
         char *q = strchr(p, '\r');
         if (q) *q = 0;
-        ESP_LOGD(TAG_NET, "raw info: %s", p + 7);
-        OLED_PRINTLN(p + 7);
+        ESP_LOGD(TAG_CELL, "raw cell info: %s", p + 7);
+        OLED_PRINTLN("raw cell info: %s", p + 7);
       } else {
-        ESP_LOGD(TAG_NET, "raw buf: %s", teleClient.net.getBuffer());
-=======
-  Serial.println("[CELL] Activating...");
-  // power on network module
-  if (!teleClient.cell.begin(&sys)) {
-    Serial.println("[CELL] No supported module");
-#if ENABLE_OLED
-    oled.println("No Cell Module");
-#endif
-    return false;
-  }
-#if ENABLE_OLED
-    oled.print(teleClient.cell.deviceName());
-    oled.println(" OK\r");
-    oled.print("IMEI:");
-    oled.println(teleClient.cell.IMEI);
-#endif
-  Serial.print("CELL:");
-  Serial.println(teleClient.cell.deviceName());
-  if (!teleClient.cell.checkSIM(SIM_CARD_PIN)) {
-    Serial.println("NO SIM CARD");
-    //return false;
-  }
-  Serial.print("IMEI:");
-  Serial.println(teleClient.cell.IMEI);
-  Serial.println("[CELL] Searching...");
-  if (teleClient.cell.setup(CELL_APN)) {
-    String op = teleClient.cell.getOperatorName();
-    if (op.length()) {
-      Serial.print("Operator:");
-      Serial.println(op);
-#if ENABLE_OLED
-      oled.println(op);
-#endif
-    }
-
-#if GNSS == GNSS_CELLULAR
-    if (teleClient.cell.setGPS(true)) {
-      Serial.println("CELL GNSS:OK");
-    }
-#endif
-
-    String ip = teleClient.cell.getIP();
-    if (ip.length()) {
-      Serial.print("[CELL] IP:");
-      Serial.println(ip);
-#if ENABLE_OLED
-      oled.print("IP:");
-      oled.println(ip);
-#endif
-    }
-    state.set(STATE_CELL_CONNECTED);
-  } else {
-    char *p = strstr(teleClient.cell.getBuffer(), "+CPSI:");
-    if (p) {
-      char *q = strchr(p, '\r');
-      if (q) *q = 0;
-      Serial.print("[CELL] ");
-      Serial.println(p + 7);
-#if ENABLE_OLED
-      oled.println(p + 7);
-#endif
-    } else {
-      Serial.print(teleClient.cell.getBuffer());
-    }
-
-    for (int n = 0; n < 3; n++) {
-      rssi = teleClient.cell.RSSI();
-      if (rssi) {
-        Serial.print("RSSI:");
-        Serial.print(rssi);
-        Serial.println("dBm");
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+        ESP_LOGD(TAG_CELL, "raw cell buf: %s", teleClient.cell.getBuffer());
       }
-      delay(1000);
-    }
-  }
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-#else
-  state.set(STATE_NET_CONNECTED);
-#endif
-#endif // NET_DEVICE == NET_WIFI
-  return state.check(STATE_NET_CONNECTED);
-=======
+
+      for (int n = 0; n < 3; n++) {
+        rssi = teleClient.cell.RSSI();
+        if (rssi) {
+          ESP_LOGI(TAG_CELL, "RSSI: %idBm", rssi);
+          OLED_PRINTLN("RSSI: %idBm", rssi);
+        }
+        delay(1000);
+      }  // RSSI loop
+    }  // if cell.setup() failed/no?
+  } // STATE_NET_READY && !STATE_CELL_CONNECTED
   timeoutsNet = 0;
   return state.check(STATE_CELL_CONNECTED);
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
-}
+}  //  initCell()
 
 /*******************************************************************************
   Initializing network, maintaining connection and doing transmissions
@@ -1423,16 +1220,11 @@ void telemetry(void* inst)
 
 #if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
       if (state.check(STATE_GPS_READY)) {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-        sys.gpsEnd();
-=======
-        Serial.println("[GPS] OFF");
 #if GNSS_ALWAYS_ON
         sys.gpsEnd(false);
 #else
         sys.gpsEnd(true);
 #endif
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
         state.clear(STATE_GPS_READY);
       }
       gd = 0;
@@ -1443,35 +1235,29 @@ void telemetry(void* inst)
         delay(1000);
       } while (state.check(STATE_STANDBY) && millis() - t < 1000L * node_info.ping_back_interval_sec);
       if (state.check(STATE_STANDBY)) {
+        bool pingOk = false;
         // start ping
-        Serial.println("[NET] Ping...");
 #if ENABLE_WIFI
-        teleClient.wifi.begin(WIFI_SSID, WIFI_PASSWORD);
-        if (teleClient.wifi.setup()) {
-          teleClient.ping();
+        if (initWifi()) {
+          ESP_LOGD(TAG_WIFI, "Ping...");
+          pingOk = teleClient.ping();
         }
         else
 #endif
         {
           if (initCell()) {
-            teleClient.ping();
+            ESP_LOGD(TAG_CELL, "Ping...");
+            pingOk = teleClient.ping();
           }
         }
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-#endif
-        if (initNetwork()) {
-          ESP_LOGV(TAG_TELE, "Ping...");
-          bool success = teleClient.ping();
-          ESP_LOGD(TAG_TELE, "Ping: %s", success ? "OK" : "NO");
-        }
-=======
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+        ESP_LOGI(TAG_TELE, "Ping: %s", pingOk ? "OK" : "NO");
         teleClient.shutdown();
         state.clear(STATE_CELL_CONNECTED | STATE_WIFI_CONNECTED);
-      }
+      }  // endif STATE_STANDBY inner
       continue;
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    } else if (!state.check(STATE_WORKING)) {
+    }  // endif STATE_STANDBY outer
+    else if (!state.check(STATE_WORKING))
+    {
       // WARNING: without this delay,
       // it stucks in state(3C) just before falling to sleep:
       // not WORKING anymore but not yet STANDBY,
@@ -1479,27 +1265,29 @@ void telemetry(void* inst)
       // meaning that the CPU cannot task-switch(!??)
       // for `process()` to return, and STANDBY flag to become 1.
       delay(1000);
-    }  // STANBDY?
+    }  // endif not STATE_WORKING
 
-    if (!state.check(STATE_NET_CONNECTED)) {
+/*
+  <<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
+    if (!state.check(STATE_CELL_CONNECTED)) {
       if (!initNetwork() || !teleClient.connect()) {
         // 1Hz ta-tick till reconnect.
         if (_CHECK_BUZTICKS) buzzer.tone(1, 0.2);
         teleClient.shutdown();
-        state.clear(STATE_NET_READY | STATE_NET_CONNECTED);
+        state.clear(STATE_NET_READY | STATE_CELL_CONNECTED);
         delay(30000);
         if (_CHECK_BUZTICKS) buzzer.tone(0);
         continue;
       }
-    }  // !CONNCTED?
-=======
+    }  // !CONNECTED?
+  =======
     }
-    
+
 #if ENABLE_WIFI
     if (!state.check(STATE_WIFI_CONNECTED)) {
       Serial.print("WIFI SSID:");
       Serial.println(WIFI_SSID);
-      teleClient.wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+      teleClient.wifi.begin(node_info.wifi_ssids);
       if (teleClient.wifi.setup()) {
         String ip = teleClient.wifi.getIP();
         if (ip.length()) {
@@ -1512,7 +1300,8 @@ void telemetry(void* inst)
       }
     }
 #endif
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+  >>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+*/
 
     while (state.check(STATE_WORKING)) {
 #if ENABLE_WIFI
@@ -1544,11 +1333,7 @@ void telemetry(void* inst)
         Serial.println("[CELL] In service");
       }
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    for (;;) {  // inner tx-loop 2
-=======
       // get data from buffer
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
       CBuffer* buffer = bufman.getNewest();
       if (!buffer) {
         delay(50);
@@ -1575,7 +1360,7 @@ void telemetry(void* inst)
 
 #if ENABLE_WIFI
         if (!state.check(STATE_WIFI_CONNECTED)) {
-          teleClient.wifi.begin(WIFI_SSID, WIFI_PASSWORD);
+          teleClient.wifi.begin(node_info.wifi_ssids);
         }
 #endif
       }
@@ -1616,7 +1401,7 @@ void telemetry(void* inst)
         timeoutsNet++;
         connErrors++;
         printTimeoutStats();
-        if (connErrors < MAX_CONN_ERRORS_RECONNECT) {
+        if (connErrors < node_info.reconnect_max_nerrors) {
           // quick reconnect
           teleClient.connect(true);
         }
@@ -1626,34 +1411,25 @@ void telemetry(void* inst)
 #endif
       store.purge();
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-      if (!teleClient.inbound()) {
-        ESP_LOGW(TAG_TELE, "Unstable connection");
-        connErrors++;
-        timeoutsNet++;
-      }
-      if (connErrors > node_info.reconnect_max_nerrors) {
-        ESP_LOGE(TAG_TELE, "Shutdown due to %i network errors!", connErrors);
-        teleClient.net.close();
-=======
       teleClient.inbound();
 
       if (state.check(STATE_CELL_CONNECTED) && !teleClient.cell.check(1000)) {
-        Serial.println("[CELL] Not in service");
+        ESP_LOGE(TAG_CELL, "Not in service");
         state.clear(STATE_NET_READY | STATE_CELL_CONNECTED);
         break;
       }
 
-      if (syncInterval > 10000 && millis() - teleClient.lastSyncTime > syncInterval) {
-        Serial.println("[NET] Poor connection");
+      auto syncTimeout = node_info.srv_sync_timeout_ms;
+      if (syncTimeout > 0 && millis() - teleClient.lastSyncTime > syncTimeout) {
+        ESP_LOGW(TAG_TELE, "Poor connection");
         timeoutsNet++;
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
         if (!teleClient.connect()) {
           connErrors++;
         }
       }
 
-      if (connErrors >= MAX_CONN_ERRORS_RECONNECT) {
+      if (connErrors > node_info.reconnect_max_nerrors) {
+        ESP_LOGE(TAG_TELE, "Shutdown due to %i network errors!", connErrors);
 #if ENABLE_WIFI
         if (state.check(STATE_WIFI_CONNECTED)) {
           teleClient.wifi.end();
@@ -1670,42 +1446,33 @@ void telemetry(void* inst)
 
       if (deviceTemp >= node_info.cool_temp) {
         // device too hot, cool down by pause transmission
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
         ESP_LOGE(TAG_TELE, "Overheat %.2f!  Purging cached samples.", deviceTemp);
-        delay(node_info.cool_delay_sec * 1000);
-=======
-        Serial.print("HIGH DEVICE TEMP: ");
-        Serial.println(deviceTemp);
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+        delay(node_info.cool_delay_sec * 1000);  // Stanley has deleted that.
         bufman.purge();
       }
 
-    }  // inner tx-loop 2
+    }  // while(STATE_WORKING)
   }  // outer tx-loop
-}
+}  // telemetry()
 
 /*******************************************************************************
   Implementing stand-by mode
 *******************************************************************************/
 void standby()
 {
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   boot_ark.naps += 1;
   boot_ark.wake_sec += (millis() - wakeup_tstamp) / 1000;
   standby_tstamp = millis();
 
-#if STORAGE
-=======
   state.set(STATE_STANDBY);
-#if STORAGE != STORAGE_NONE
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+#if STORAGE
   if (state.check(STATE_STORAGE_READY)) {
     logger.end();
   }
 #endif
+  state.set(STATE_GET_OBFCM);
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
   // this will put co-processor into sleep mode
-  state.set(STATE_STANDBY | STATE_GET_OBFCM);
   ESP_LOGI(TAG_PROC, "STANDBY(state: %X)", state.m_state);
 #if ENABLE_OLED
   oled.print("STANDBY");
@@ -1748,7 +1515,7 @@ void standby()
         , state.m_state);
       if (ledMode == 0) digitalWrite(PIN_LED, LOW);
 
-    if (waitMotion(-1)) {
+    if (waitMotion(10)) {
       break;
     }
 
@@ -1767,16 +1534,12 @@ void standby()
 #endif
   ESP_LOGI(TAG_PROC, "Wakeup!");
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   boot_ark.nap_sec += (millis() - standby_tstamp) / 1000;
   wakeup_tstamp = millis();
   current_stationary_tx_interval_stage = 0;
 
-  if (node_info.reboot_on_wakeup) {
-=======
   sys.resetLink();
-#if RESET_AFTER_WAKEUP
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
+  if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
     mems->end();
 #endif
@@ -1789,77 +1552,9 @@ void standby()
 /*******************************************************************************
   SETUP (after boot)
 *******************************************************************************/
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 void enter_coproc_bootpipe_mode() {
   constexpr const char EOT = 0x04; // End Of Transmission
   const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
-=======
-void genDeviceID(char* buf)
-{
-    uint64_t seed = ESP.getEfuseMac() >> 8;
-    for (int i = 0; i < 8; i++, seed >>= 5) {
-      byte x = (byte)seed & 0x1f;
-      if (x >= 10) {
-        x = x - 10 + 'A';
-        switch (x) {
-          case 'B': x = 'W'; break;
-          case 'D': x = 'X'; break;
-          case 'I': x = 'Y'; break;
-          case 'O': x = 'Z'; break;
-        }
-      } else {
-        x += '0';
-      }
-      buf[i] = x;
-    }
-    buf[8] = 0;
-}
-
-void showSysInfo()
-{
-  Serial.print("CPU:");
-  Serial.print(ESP.getCpuFreqMHz());
-  Serial.print("MHz FLASH:");
-  Serial.print(ESP.getFlashChipSize() >> 20);
-  Serial.println("MB");
-  Serial.print("IRAM:");
-  Serial.print(ESP.getHeapSize() >> 10);
-  Serial.print("KB");
-#if BOARD_HAS_PSRAM
-  Serial.print(" PSRAM:");
-  Serial.print(esp_spiram_get_size() >> 20);
-  Serial.print("MB");
-#endif
-  Serial.println();
-
-  int rtc = rtc_clk_slow_freq_get();
-  if (rtc) {
-    Serial.print("RTC:");
-    Serial.println(rtc);
-  }
-
-#if ENABLE_OLED
-  oled.clear();
-  oled.print("CPU:");
-  oled.print(ESP.getCpuFreqMHz());
-  oled.print("Mhz ");
-  oled.print(getFlashSize() >> 10);
-  oled.println("MB Flash");
-#endif
-
-  Serial.print("DEVICE ID:");
-  Serial.println(devid);
-#if ENABLE_OLED
-  oled.print("DEVICE ID:");
-  oled.println(devid);
-#endif
-}
-
-#if CONFIG_MODE_TIMEOUT
-void configMode()
-{
-  uint32_t t = millis();
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 
   ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE ))--");
   Serial.printf(
@@ -1895,99 +1590,6 @@ void configMode()
 ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did nothing ))--");
 }
 
-void apply_runtime_log_levels(const LogLevels &levels) {
-    for (auto iter = std::cbegin(levels); iter != std::cend(levels); ++iter)
-      esp_log_level_set(iter->first.c_str(), iter->second);
-
-#if HIDE_SECRETS_IN_LOGS
-    // SIM code logs reveal CELL_APN, SIM_CARD_PIN & server DN & IP!!
-    esp_log_level_t gsm_level = esp_log_level_get(TAG_GSM);
-    if (gsm_level >= ESP_LOG_DEBUG) esp_log_level_set(TAG_GSM, ESP_LOG_INFO);
-    ESP_LOGI(TAG_SETUP,
-             "Lower '%s' log-level to conceal secrets, from %i --> %i",
-             TAG_GSM, gsm_level, esp_log_level_get(TAG_GSM));
-#endif  // HIDE_SECRETS_IN_LOGS
-}
-
-
-#if _NEED_SD
-bool setup_SD()
-{
-    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 5/* files open */, FORMAT_SD_IF_FAILED)) {
-        uint64_t total = SD.totalBytes();
-        uint64_t used = SD.usedBytes();
-        float used_ratio = 100.0 * used / total;
-        ESP_LOGI(TAG_SETUP, "SD: %u MB total, %u MB used (%%%.2f)",
-                 (uint)(total >> 20), (uint)(used >> 20), used_ratio);
-        return true;
-    } else {
-        ESP_LOGE(TAG_SETUP, "No SD card");
-        return false;
-    }
-}
-#endif // _NEED_SD
-
-#if _NEED_SPIFFS
-bool setup_SPIFFS()
-{
-    if (SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
-        uint64_t total = SPIFFS.totalBytes();
-        uint64_t used = SPIFFS.usedBytes();
-        float used_ratio = 100.0 * used / total;
-        ESP_LOGI(TAG_SETUP,
-                 "SPIFFS: %llu bytes total, %llu bytes used (%%%.2f)", total,
-                 used, used_ratio);
-        return true;
-    } else {
-        ESP_LOGE(TAG_SETUP, "No SPIFFS");
-        return false;
-    }
-}
-#endif // _NEED_SPIFFS
-
-#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
-void setup_multilog() {
-#if (LOG_SINK & LOG_SINK_SERIAL)
-    static multilog::SerialSink serial_link;
-    multilog::log_sinks[0] = &serial_link;
-#endif  // (LOG_SINK & LOG_SINK_SERIAL)
-#if (LOG_SINK & LOG_SINK_SD)
-    static multilog::FileSink sd_sink{
-            "SD",
-            SD,
-            node_info.log_sink_fpath,
-            FILE_APPEND,
-            node_info.log_sink_disk_usage_purge_prcnt,
-            node_info.log_sink_sync_interval_ms,
-    };
-    multilog::log_sinks[1] = &sd_sink;
-#endif
-#if (LOG_SINK & LOG_SINK_SPIFFS)
-    static multilog::FileSink spiffs_sink{
-            "SPIFFS",
-            SPIFFS,
-            node_info.log_sink_fpath,
-            FILE_APPEND,
-            node_info.log_sink_disk_usage_purge_prcnt,
-            node_info.log_sink_sync_interval_ms,
-    };
-    multilog::log_sinks[2] = &spiffs_sink;
-#endif
-
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    multilog::enable(true);
-}  // setup_multilog()
-#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
-
-// Allow test-cases to call functions from here, and avoid clashing.
-// see: https://docs.platformio.org/en/latest/advanced/unit-testing/structure/shared-code.html#unit-testing-shared-code
-#ifndef PIO_UNIT_TESTING
-void setup()
-{
-    // 2hz ticks till `initialize()` starts.
-    if (_CHECK_BUZTICKS) buzzer.tone(1);
-
-=======
 void processBLE(int timeout)
 {
 #if ENABLE_BLE
@@ -2065,6 +1667,7 @@ void processBLE(int timeout)
             }
         }
     } else if (!strcmp(cmd, "VIN")) {
+      char *vin = node_info.vin;
         n += snprintf(buf + n, bufsize - n, "%s", vin[0] ? vin : "N/A");
     } else if (!strcmp(cmd, "LAT") && gd) {
         n += snprintf(buf + n, bufsize - n, "%f", gd->lat);
@@ -2095,11 +1698,99 @@ void processBLE(int timeout)
 #endif
 }
 
+void apply_runtime_log_levels(const LogLevels &levels) {
+    for (auto iter = std::cbegin(levels); iter != std::cend(levels); ++iter)
+      esp_log_level_set(iter->first.c_str(), iter->second);
+
+#if HIDE_SECRETS_IN_LOGS
+    // SIM code logs reveal CELL_APN, SIM_CARD_PIN & server DN & IP!!
+    esp_log_level_t gsm_level = esp_log_level_get(TAG_GSM);
+    if (gsm_level >= ESP_LOG_DEBUG) esp_log_level_set(TAG_GSM, ESP_LOG_INFO);
+    ESP_LOGI(TAG_SETUP,
+             "Lower '%s' log-level to conceal secrets, from %i --> %i",
+             TAG_GSM, gsm_level, esp_log_level_get(TAG_GSM));
+#endif  // HIDE_SECRETS_IN_LOGS
+}
+
+
+#if _NEED_SD
+bool setup_SD()
+{
+    if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ, "/sd", 5/* files open */, FORMAT_SD_IF_FAILED)) {
+        uint64_t total = SD.totalBytes();
+        uint64_t used = SD.usedBytes();
+        float used_ratio = 100.0 * used / total;
+        ESP_LOGI(TAG_SETUP, "SD: %u MB total, %u MB used (%%%.2f)",
+                 (uint)(total >> 20), (uint)(used >> 20), used_ratio);
+        return true;
+    } else {
+        ESP_LOGE(TAG_SETUP, "No SD card");
+        return false;
+    }
+}
+#endif // _NEED_SD
+
+#if _NEED_SPIFFS
+bool setup_SPIFFS()
+{
+    if (SPIFFS.begin(FORMAT_SPIFFS_IF_FAILED)) {
+        uint64_t total = SPIFFS.totalBytes();
+        uint64_t used = SPIFFS.usedBytes();
+        float used_ratio = 100.0 * used / total;
+        ESP_LOGI(TAG_SETUP,
+                 "SPIFFS: %llu bytes total, %llu bytes used (%%%.2f)", total,
+                 used, used_ratio);
+        return true;
+    } else {
+        ESP_LOGE(TAG_SETUP, "No SPIFFS");
+        return false;
+    }
+}
+#endif // _NEED_SPIFFS
+
+#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
+void setup_multilog() {
+#if (LOG_SINK & LOG_SINK_SERIAL)
+    static multilog::SerialSink serial_link;
+    multilog::log_sinks[0] = &serial_link;
+#endif  // (LOG_SINK & LOG_SINK_SERIAL)
+#if (LOG_SINK & LOG_SINK_SD)
+    static multilog::FileSink sd_sink{
+            "SD",
+            SD,
+            node_info.log_sink_fpath,
+            FILE_APPEND,
+            node_info.log_sink_disk_usage_purge_prcnt,
+            node_info.log_sink_sync_interval_ms,
+    };
+    multilog::log_sinks[1] = &sd_sink;
+#endif  // (LOG_SINK & LOG_SINK_SD)
+#if (LOG_SINK & LOG_SINK_SPIFFS)
+    static multilog::FileSink spiffs_sink{
+            "SPIFFS",
+            SPIFFS,
+            node_info.log_sink_fpath,
+            FILE_APPEND,
+            node_info.log_sink_disk_usage_purge_prcnt,
+            node_info.log_sink_sync_interval_ms,
+    };
+    multilog::log_sinks[2] = &spiffs_sink;
+#endif  // (LOG_SINK & LOG_SINK_SPIFFS)
+
+    multilog::enable(true);
+}  // setup_multilog()
+#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
+
+
+// Allow test-cases to call functions from here, and avoid clashing.
+// see: https://docs.platformio.org/en/latest/advanced/unit-testing/structure/shared-code.html#unit-testing-shared-code
+#ifndef PIO_UNIT_TESTING
 void setup()
 {
+  // 2hz ticks till `initialize()` starts.
+  if (_CHECK_BUZTICKS) buzzer.tone(1);
+
   delay(500);
-  
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 #if ENABLE_OLED
   oled.begin();
   oled.setFontSize(FONT_SIZE_SMALL);
@@ -2107,162 +1798,87 @@ void setup()
   // initialize USB serial
   Serial.begin(115200);
 
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-    // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
-    apply_runtime_log_levels(node_info.log_levels);
+  // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
+  apply_runtime_log_levels(node_info.log_levels);
 
 #if _NEED_SD
-    setup_SD();
+  setup_SD();
 #endif  // _NEED_SD
 #if _NEED_SPIFFS
-    setup_SPIFFS();
+  setup_SPIFFS();
 #endif  // _NEED_SPIFFS
 
 #if ENABLE_MULTILOG
 #if USE_ESP_IDF_LOG
-    setup_multilog();
+  setup_multilog();
 #else
-    ESP_LOGW(TAG_SETUP, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
+  ESP_LOGW(TAG_SETUP, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
 #endif  // USE_ESP_IDF_LOG
 #endif  // ENABLE_MULTILOG
 
-    // init LED pin
-    pinMode(PIN_LED, OUTPUT);
-    digitalWrite(PIN_LED, HIGH);
-
-    // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
-    if (node_info.obd_pipe_sec)
-        enter_coproc_bootpipe_mode();
-
-    node_info_j = node_info.to_json();
-    ESP_LOGE(
-      TAG_SETUP,
-      "NODE_INFO:\n%s",
-      node_info_j.dump(2, ' ', false, json_dump_handler).c_str()
-    );
-    OLED_CLEAR();
-    OLED_PRINTF(
-        "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
-        (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
-        node_info.device_id);
-
-#if LOG_EXT_SENSORS
-    pinMode(node_info.pin_sensor1, INPUT);
-    pinMode(node_info.pin_sensor2, INPUT);
-#endif
-
-#if ENABLE_OBD
-    if (sys.begin()) {
-      ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
-      obd.begin(sys.link);
-    }
-=======
   // init LED pin
 #ifdef PIN_LED
   pinMode(PIN_LED, OUTPUT);
   if (ledMode == 0) digitalWrite(PIN_LED, HIGH);
 #endif
 
-  // generate unique device ID
-  genDeviceID(devid);
-
-#if CONFIG_MODE_TIMEOUT
-  configMode();
+#if BOARD_HAS_PSRAM
+  esp_spiram_init();
 #endif
 
 #if LOG_EXT_SENSORS == 1
-  pinMode(PIN_SENSOR1, INPUT);
-  pinMode(PIN_SENSOR2, INPUT);
+  pinMode(node_info.pin_sensor1, INPUT);
+  pinMode(node_info.pin_sensor2, INPUT);
 #elif LOG_EXT_SENSORS == 2
   adc1_config_width(ADC_WIDTH_BIT_12);
   adc1_config_channel_atten(ADC1_CHANNEL_0, ADC_ATTEN_DB_11);
   adc1_config_channel_atten(ADC1_CHANNEL_1, ADC_ATTEN_DB_11);
 #endif
 
-#if BOARD_HAS_PSRAM
-  esp_spiram_init();
-#endif
-  
-  // show system information
-  showSysInfo();
+  node_info_j = node_info.to_json();
+  ESP_LOGE(
+    TAG_SETUP,
+    "NODE_INFO:\n%s",
+    node_info_j.dump(2, ' ', false, json_dump_handler).c_str()
+  );
+  OLED_CLEAR();
+  OLED_PRINTF(
+      "CPU: %iMHz, Flash: %iMiB\nDEVICE ID: %s\n",
+      (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
+      node_info.device_id);
+
+  // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
+  if (node_info.obd_pipe_sec)
+      enter_coproc_bootpipe_mode();
 
   bufman.init();
-  
-  //Serial.print(heap_caps_get_free_size(MALLOC_CAP_SPIRAM) >> 10);
-  //Serial.println("KB");
 
 #if ENABLE_OBD
   if (sys.begin()) {
-    Serial.print("TYPE:");
-    Serial.println(sys.devType);
+    ESP_LOGI(TAG_SETUP, "LINK(OBD/GNSS?) coproc ver: %i, ", sys.devType);
     obd.begin(sys.link);
   }
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 #else
   sys.begin(false, true);
 #endif
 
 #if ENABLE_MEMS
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
-  if (!state.check(STATE_MEMS_READY)) {
+  if (!state.check(STATE_MEMS_READY)) do {
     mems = init_MEMS(ENABLE_ORIENTATION);
     if (mems) {
       state.set(STATE_MEMS_READY);
     }
     ESP_LOGI(TAG_SETUP, "MEMS: %s", mems? mems->name() : "NO");
-  }  // !STATE_MEMS_READY
-#endif
-
-    state.set(STATE_WORKING);
-    // initialize network and maintain connection
-    subtask.create(telemetry, "telemetry", 2, 8192);
-
-    ESP_LOGI(TAG_SETUP, "<SETUP> completed");
-    digitalWrite(PIN_LED, LOW);
-
-    // initialize components
-    initialize();
-
-=======
-if (!state.check(STATE_MEMS_READY)) do {
-  Serial.print("MEMS:");
-  mems = new ICM_42627;
-  byte ret = mems->begin(ENABLE_ORIENTATION);
-  if (ret) {
-    state.set(STATE_MEMS_READY);
-    Serial.println("ICM-42627");
-    break;
-  }
-  delete mems;
-  mems = new ICM_20948_I2C;
-  ret = mems->begin(ENABLE_ORIENTATION);
-  if (ret) {
-    state.set(STATE_MEMS_READY);
-    Serial.println("ICM-20948");
-    break;
-  } 
-  delete mems;
-  mems = new MPU9250;
-  ret = mems->begin(ENABLE_ORIENTATION);
-  if (ret) {
-    state.set(STATE_MEMS_READY);
-    Serial.println("MPU-9250");
-    break;
-  } 
-  Serial.println("NO");
-} while (0);
+  } while (!state.check(STATE_MEMS_READY));
 #endif
 
 #if ENABLE_HTTPD
   IPAddress ip;
   if (serverSetup(ip)) {
-    Serial.println("HTTPD:");
-    Serial.println(ip);
-#if ENABLE_OLED
-    oled.println(ip);
-#endif
+    ESP_LOGI(TAG_SETUP, "HTTPD:%s", ip);
+    OLED_PRINTLN(ip);
   } else {
-    Serial.println("HTTPD:NO");
+    ESP_LOGE(TAG_SETUP, "HTTPD:NO");
   }
 #endif
 
@@ -2279,10 +1895,10 @@ if (!state.check(STATE_MEMS_READY)) do {
   // initialize network and maintain connection
   subtask.create(telemetry, "telemetry", 2, 8192);
 
+  ESP_LOGI(TAG_SETUP, "<SETUP> completed");
 #ifdef PIN_LED
   digitalWrite(PIN_LED, LOW);
 #endif
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 }
 
 void loop()
@@ -2302,7 +1918,6 @@ void loop()
 
   // collect and log data
   process();
-<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 
   // check serial input for command
   while (Serial.available()) {
@@ -2329,7 +1944,5 @@ void loop()
   digitalWrite(node_info.pin_sensor2, digitalRead(node_info.pin_sensor1));
 
   ESP_LOGD(TAG_INIT, "<loop> state: %X", state.m_state);
-=======
->>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
 }
 #endif // PIO_UNIT_TESTING

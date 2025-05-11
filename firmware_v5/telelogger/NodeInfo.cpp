@@ -325,7 +325,6 @@ Json node_info_t::config_to_json() const {
       {"log_sink_sync_interval_ms", log_sink_sync_interval_ms},
       {"ota_url", ota_url},
       {"ota_update_cert_pem_len", std::strlen(ota_update_cert_pem)},
-      {"net_dev", net_dev},
       {"wifi_ssids", wifi_ssids},
       {"cell_apn", cell_apn},
       {"sim_card_pin", sim_card_pin},

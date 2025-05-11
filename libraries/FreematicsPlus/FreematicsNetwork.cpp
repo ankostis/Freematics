@@ -203,11 +203,7 @@ int WifiUDP::receive(char* buffer, int bufsize, unsigned int timeout)
   return 0;
 }
 
-<<<<<<< HEAD
-std::string UDPClientWIFI::queryIP(const char* host)
-=======
-String WifiUDP::queryIP(const char* host)
->>>>>>> upstream
+std::string WifiUDP::queryIP(const char* host)
 {
   return std::string(udpIP.toString().c_str());
 }
@@ -303,307 +299,16 @@ char* WifiHTTP::receive(char* buffer, int bufsize, int* pbytes, unsigned int tim
 *******************************************************************************/
 bool CellSIMCOM::begin(CFreematics* device)
 {
-<<<<<<< HEAD
-  ESP_LOGD(TAG_SIM800, "<BEGIN>");
-=======
+  ESP_LOGD(TAG_CELL, "<BEGIN>");
   getBuffer();
->>>>>>> upstream
   m_device = device;
   for (byte n = 0; n < 30; n++) {
     device->xbTogglePower(200);
     device->xbPurge();
-<<<<<<< HEAD
-    delay(2000);
-    for (byte m = 0; m < 3; m++) {
-      if (sendCommand("AT\r")) {
-        return true;
-      }
-    }
-  }
-  return false;
-}
-
-void ClientSIM800::end()
-{
-  sendCommand("AT+CPOWD=1\r");
-  delay(3000);
-}
-
-bool ClientSIM800::setup(const char* apn, bool gps, unsigned int timeout)
-{
-  uint32_t t = millis();
-  bool success = false;
-  sendCommand("ATE0\r");
-  do {
-    success = sendCommand("AT+CREG?\r", 3000, "+CREG: 0,1") != 0;
-  } while (!success && millis() - t < timeout);
-  if (!success) return false;
-  do {
-    success = sendCommand("AT+CGATT?\r", 3000, "+CGATT: 1");
-  } while (!success && millis() - t < timeout);
-  sprintf(m_buffer, "AT+CSTT=\"%s\"\r", apn);
-  if (!sendCommand(m_buffer)) {
-    return false;
-  }
-  sendCommand("AT+CIICR\r");
-  return success;
-}
-
-std::string ClientSIM800::getIP()
-{
-  for (uint32_t t = millis(); millis() - t < 60000; ) {
-    if (sendCommand("AT+CIFSR\r", 3000, ".")) {
-      char *p;
-      for (p = m_buffer; *p && !isdigit(*p); p++);
-      char *q = strchr(p, '\r');
-      if (q) *q = 0;
-      return p;
-    }
-  }
-  return "";
-}
-
-int ClientSIM800::getSignal()
-{
-  if (sendCommand("AT+CSQ\r", 500)) {
-      char *p = strchr(m_buffer, ':');
-      if (p) {
-        int csq = atoi(p + 2);
-        if (csq == 0)
-          return -115;
-        else if (csq == 1)
-          return -111;
-        else if (csq != 99)
-          return csq * 2 - 114;
-      }
-  }
-  return 0;
-}
-
-std::string ClientSIM800::getOperatorName()
-{
-  // display operator name
-  if (sendCommand("AT+COPS?\r") == 1) {
-      char *p = strstr(m_buffer, ",\"");
-      if (p) {
-          p += 2;
-          char *s = strchr(p, '\"');
-          if (s) *s = 0;
-          return p;
-      }
-  }
-  return "";
-}
-
-bool ClientSIM800::checkSIM(const char* pin)
-{
-  if (pin && *pin) {
-    sprintf(m_buffer, "AT+CPIN=\"%s\"\r", pin);
-    sendCommand(m_buffer);
-  }
-  return (sendCommand("AT+CPIN?\r") && strstr(m_buffer, "READY"));
-}
-
-std::string ClientSIM800::queryIP(const char* host)
-{
-  sprintf(m_buffer, "AT+CDNSGIP=\"%s\"\r", host);
-  if (sendCommand(m_buffer, 10000)) {
-    char *p = strstr(m_buffer, host);
-    if (p) {
-      p = strstr(p, ",\"");
-      if (p) {
-        char *ip = p + 2;
-        p = strchr(ip, '\"');
-        if (p) *p = 0;
-        return ip;
-      }
-    }
-  }
-  return "";
-}
-
-bool ClientSIM800::sendCommand(const char* cmd, unsigned int timeout, const char* expected)
-{
-  if (cmd) {
-    m_device->xbWrite(cmd);
-  }
-  m_buffer[0] = 0;
-  byte ret = m_device->xbReceive(m_buffer, sizeof(m_buffer), timeout, &expected, 1);
-  if (ret) {
-    return true;
-  } else {
-    return false;
-  }
-}
-
-bool ClientSIM800::getLocation(NET_LOCATION* loc)
-{
-  if (sendCommand("AT+CIPGSMLOC=1,1\r", 3000)) do {
-    char *p;
-    if (!(p = strchr(m_buffer, ':'))) break;
-    if (!(p = strchr(p, ','))) break;
-    loc->lng = atof(++p);
-    if (!(p = strchr(p, ','))) break;
-    loc->lat = atof(++p);
-    if (!(p = strchr(p, ','))) break;
-    loc->year = atoi(++p) - 2000;
-    if (!(p = strchr(p, '/'))) break;
-    loc->month = atoi(++p);
-    if (!(p = strchr(p, '/'))) break;
-    loc->day = atoi(++p);
-    if (!(p = strchr(p, ','))) break;
-    loc->hour = atoi(++p);
-    if (!(p = strchr(p, ':'))) break;
-    loc->minute = atoi(++p);
-    if (!(p = strchr(p, ':'))) break;
-    loc->second = atoi(++p);
-    return true;
-  } while(0);
-  return false;
-}
-
-bool UDPClientSIM800::open(const char* host, uint16_t port)
-{
-  //sendCommand("AT+CLPORT=\"UDP\",8000\r");
-  sendCommand("AT+CIPSRIP=1\r");
-  //sendCommand("AT+CIPUDPMODE=1\r");
-  sprintf(m_buffer, "AT+CIPSTART=\"UDP\",\"%s\",\"%u\"\r", host, port);
-  return sendCommand(m_buffer, 3000);
-}
-
-void UDPClientSIM800::close()
-{
-  sendCommand("AT+CIPCLOSE\r");
-}
-
-bool UDPClientSIM800::send(const char* data, unsigned int len)
-{
-  sprintf(m_buffer, "AT+CIPSEND=%u\r", len);
-  if (sendCommand(m_buffer, 200, ">")) {
-    m_device->xbWrite(data, len);
-    m_device->xbWrite("\r", 1);
-    if (sendCommand(0, 5000, "\r\nSEND OK")) {
-      return true;
-    }
-  }
-  return false;
-}
-
-char* UDPClientSIM800::receive(int* pbytes, unsigned int timeout)
-{
-	char *data = checkIncoming(pbytes);
-	if (data) return data;
-  if (sendCommand("AT+CIPUDPMODE?\r", timeout, "RECV FROM:")) {
-		return checkIncoming(pbytes);
-  }
-  return 0;
-}
-
-char* UDPClientSIM800::checkIncoming(int* pbytes)
-{
-	char *p = strstr(m_buffer, "RECV FROM:");
-	if (p) {
-    *p = '-'; // mark this datagram as checked
-    p = strchr(p, '\n');
-    if (p) {
-      if (pbytes) *pbytes = strlen(p);
-      return p + 1;
-    }
-  }
-  return 0;
-}
-
-bool HTTPClientSIM800::open(const char* host, uint16_t port)
-{
-  if (!host) {
-    close();
-    return sendCommand("AT+HTTPINIT\r");
-  }
-  m_host = host;
-  m_port = port;
-  m_state = HTTP_CONNECTED;
-  return true;
-}
-
-bool HTTPClientSIM800::send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
-{
-  sendCommand("AT+HTTPPARA = \"CID\",1\r");
-  sprintf(m_buffer, "AT+HTTPPARA=\"URL\",\"%s:%u%s\"\r", m_host.c_str(), m_port, path);
-  if (!sendCommand(m_buffer)) {
-  } else if (method == METHOD_GET) {
-    if (sendCommand("AT+HTTPACTION=0\r", HTTP_CONN_TIMEOUT)) {
-      m_state = HTTP_SENT;
-      return true;
-    }
-  } else {
-    sprintf(m_buffer, "AT+HTTPDATA=%u,10000\r", payloadSize);
-    if (sendCommand(m_buffer)) {
-      if (sendCommand("AT+HTTPACTION=1\r", HTTP_CONN_TIMEOUT)) {
-        m_state = HTTP_SENT;
-        return true;
-      }
-    }
-  }
-  m_state = HTTP_ERROR;
-  ESP_LOGD(TAG_SIM800, "%s", m_buffer);
-  return false;
-}
-
-void HTTPClientSIM800::close()
-{
-  sendCommand("AT+HTTPTERM\r");
-  m_state = HTTP_DISCONNECTED;
-}
-
-char* HTTPClientSIM800::receive(int* pbytes, unsigned int timeout)
-{
-  char *p = strstr(m_buffer, "+HTTPACTION:");
-  if (!p) {
-    if (!sendCommand(0, timeout, "+HTTPACTION")) return 0;
-  }
-  if (sendCommand("AT+HTTPREAD\r", 1000)) {
-    ESP_LOGD(TAG_SIM800, "%s", m_buffer);
-    p = strstr(m_buffer, "+HTTPREAD: ");
-    if (p) {
-      p += 11;
-      int bytes = atoi(p);
-      p = strchr(p, '\n');
-      if (p++) {
-        p[bytes] = 0;
-        if (pbytes) *pbytes = bytes;
-        return p;
-      }
-    }
-  }
-  m_state = HTTP_ERROR;
-  return 0;
-}
-
-/*******************************************************************************
-  SIM5360
-*******************************************************************************/
-
-bool ClientSIM5360::begin(CFreematics* device)
-{
-  ESP_LOGD(TAG_SIM5360, "<BEGIN>");
-  m_device = device;
-  for (byte n = 0; n < 3; n++) {
-    // try turning on module
-    device->xbTogglePower();
-    // discard any stale data
-    device->xbPurge();
-    delay(3000);
-    for (byte m = 0; m < 5; m++) {
-      if (sendCommand("AT\r") && sendCommand("ATE0\r") && sendCommand("ATI\r")) {
-        // retrieve module info
-        ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
-        char *p = strstr(m_buffer, "Model:");
-        if (p) p = strchr(p, '_');
-=======
     if (!check(2000)) continue;
     if (sendCommand("ATE0\r") && sendCommand("ATI\r")) {
       // retrieve module info
-      //Serial.print(m_buffer);
+      ESP_LOGD(TAG_CELL, "%s", m_buffer);
       char *p = strstr(m_buffer, "Model:");
       if (!p) {
         sendCommand("AT+SIMCOMATI\r");
@@ -620,13 +325,12 @@ bool ClientSIM5360::begin(CFreematics* device)
         m_type = CELL_SIM7070;
       } else {
         p = strchr(p, '_');
->>>>>>> upstream
         if (p++) {
           int i = 0;
           while (i < sizeof(m_model) - 1 && p[i] && p[i] != '\r' && p[i] != '\n') {
             m_model[i] = p[i];
             i++;
-          } 
+          }
           m_model[i] = 0;
         }
         m_type = strstr(m_model, "5360") ? CELL_SIM5360 : CELL_SIM7600;
@@ -710,7 +414,7 @@ bool CellSIMCOM::setup(const char* apn, unsigned int timeout)
         }
       } while (!success && millis() - t < timeout);
       if (!success) break;
-      
+
       //sendCommand("AT+CSOCKAUTH=1,1,\"APN_PASSWORD\",\"APN_USERNAME\"\r");
 
       if (m_type == CELL_SIM7600) {
@@ -725,48 +429,12 @@ bool CellSIMCOM::setup(const char* apn, unsigned int timeout)
         if (!success) break;
       }
 
-<<<<<<< HEAD
-    success = false;
-    do {
-      delay(100);
-      if (sendCommand("AT+CREG?\r", 1000, "+CREG: 0,")) {
-        char *p = strstr(m_buffer, "+CREG: 0,");
-        success = (p && (*(p + 9) == '1' || *(p + 9) == '5'));
-      }
-    } while (!success && millis() - t < timeout);
-    if (!success) break;
-
-    success = false;
-    do {
-      delay(100);
-      if (sendCommand("AT+CGREG?\r",1000, "+CGREG: 0,")) {
-        char *p = strstr(m_buffer, "+CGREG: 0,");
-        success = (p && (*(p + 10) == '1' || *(p + 10) == '5'));
-      }
-    } while (!success && millis() - t < timeout);
-    if (!success) break;
-
-    if (apn && *apn) {
-      sprintf(m_buffer, "AT+CGSOCKCONT=1,\"IP\",\"%s\"\r", apn);
-      sendCommand(m_buffer);
-    }
-    if (!success) break;
-
-    //sendCommand("AT+CSOCKAUTH=1,1,\"APN_PASSWORD\",\"APN_USERNAME\"\r");
-
-    sendCommand("AT+CSOCKSETPN=1\r");
-    sendCommand("AT+CIPMODE=0\r");
-    sendCommand("AT+NETOPEN\r");
-  } while(0);
-  if (!success) ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
-=======
       sendCommand("AT+CSOCKSETPN=1\r");
       sendCommand("AT+CIPMODE=0\r");
       sendCommand("AT+NETOPEN\r");
     } while(0);
   }
-  if (!success) Serial.println(m_buffer);
->>>>>>> upstream
+  if (!success) ESP_LOGD(TAG_CELL, "%s", m_buffer);
   return success;
 }
 
@@ -822,11 +490,7 @@ bool CellSIMCOM::getLocation(GPS_DATA** pgd)
   }
 }
 
-<<<<<<< HEAD
-std::string ClientSIM5360::getIP()
-=======
-String CellSIMCOM::getIP()
->>>>>>> upstream
+std::string CellSIMCOM::getIP()
 {
   if (m_type == CELL_SIM7070) {
     sendCommand("AT+CNACT=0,1\r");
@@ -860,7 +524,7 @@ String CellSIMCOM::getIP()
       }
       delay(500);
     } while (millis() - t < 15000);
-  } 
+  }
   return "";
 }
 
@@ -878,11 +542,7 @@ int CellSIMCOM::RSSI()
   return 0;
 }
 
-<<<<<<< HEAD
-std::string ClientSIM5360::getOperatorName()
-=======
-String CellSIMCOM::getOperatorName()
->>>>>>> upstream
+std::string CellSIMCOM::getOperatorName()
 {
   if (sendCommand("AT+COPS?\r")) {
       char *p = strstr(m_buffer, ",\"");
@@ -912,19 +572,11 @@ bool CellSIMCOM::checkSIM(const char* pin)
     snprintf(m_buffer, RECV_BUF_SIZE, "AT+CPIN=\"%s\"\r", pin);
     sendCommand(m_buffer);
   }
-<<<<<<< HEAD
-  for (byte n = 0; n < 10 && !(success = sendCommand("AT+CPIN?\r", 500, ": READY")); n++);
+  for (byte n = 0; n < 20 && !(success = sendCommand("AT+CPIN?\r", 500, ": READY")); n++);
   return success;
 }
 
-std::string ClientSIM5360::queryIP(const char* host)
-=======
-  for (byte n = 0; n < 20 && !(success = sendCommand("AT+CPIN?\r", 500, ": READY")); n++);
-  return success;  
-}
-
-String CellSIMCOM::queryIP(const char* host)
->>>>>>> upstream
+std::string CellSIMCOM::queryIP(const char* host)
 {
   if (m_type == CELL_SIM7070) {
     sprintf(m_buffer, "AT+CDNSGIP=\"%s\",1,3000\r", host);
@@ -1043,12 +695,6 @@ void CellSIMCOM::checkGPS()
   }
 }
 
-char* CellSIMCOM::getBuffer()
-{
-  if (!m_buffer) m_buffer = (char*)malloc(RECV_BUF_SIZE);
-  return m_buffer;
-}
-
 bool CellUDP::open(const char* host, uint16_t port)
 {
   if (host) {
@@ -1058,31 +704,23 @@ bool CellUDP::open(const char* host, uint16_t port)
     }
     udpPort = port;
   }
-<<<<<<< HEAD
-  sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
-  if (!sendCommand(m_buffer, 3000)) {
-    close();
-    ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
-    return false;
-=======
   if (!udpIP.length()) return false;
   if (m_type == CELL_SIM7070) {
     sendCommand("AT+CNACT=0,1\r");
     sendCommand("AT+CACID=0\r");
     sprintf(m_buffer, "AT+CAOPEN=0,0,\"UDP\",\"%s\",%u\r", udpIP.c_str(), udpPort);
     if (!sendCommand(m_buffer, 3000)) {
-      Serial.println(m_buffer);
+      ESP_LOGD(TAG_CELLUDP, "%s", m_buffer);
       return false;
     }
     return true;
   } else {
     sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
     if (!sendCommand(m_buffer, 3000)) {
-      Serial.println(m_buffer);
+      ESP_LOGD(TAG_CELLUDP, "%s", m_buffer);
       return false;
     }
     return true;
->>>>>>> upstream
   }
 }
 
@@ -1135,7 +773,7 @@ char* CellUDP::receive(int* pbytes, unsigned int timeout)
     if (sendCommand(0, timeout, "+IPD")) {
       return checkIncoming(pbytes);
     }
-  }  
+  }
   return 0;
 }
 
@@ -1182,7 +820,7 @@ bool CellHTTP::open(const char* host, uint16_t port)
         m_state = HTTP_CONNECTED;
         m_host = host;
         sendCommand("AT+SHCHEAD\r");
-        sendCommand("AT+SHAHEAD=\"User-Agent\",\"curl/7.47.0\"\r"); 
+        sendCommand("AT+SHAHEAD=\"User-Agent\",\"curl/7.47.0\"\r");
         sendCommand("AT+SHAHEAD=\"Cache-control\",\"no-cache\"\r");
         sendCommand("AT+SHAHEAD=\"Connection\",\"keep-alive\"\r");
         sendCommand("AT+SHAHEAD=\"Accept\",\"*/*\"\r");
@@ -1203,12 +841,7 @@ bool CellHTTP::open(const char* host, uint16_t port)
     }
     checkGPS();
   }
-<<<<<<< HEAD
-  ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
-  checkGPS();
-=======
-  Serial.println(m_buffer);
->>>>>>> upstream
+  ESP_LOGD(TAG_CELLHTTP, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -1227,63 +860,6 @@ bool CellHTTP::close()
 
 bool CellHTTP::send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize)
 {
-<<<<<<< HEAD
-  std::string header = genHeader(method, path, keepAlive, payload, payloadSize);
-  int len = header.length();
-  sprintf(m_buffer, "AT+CHTTPSSEND=%u\r", len + payloadSize);
-  if (!sendCommand(m_buffer, 100, ">")) {
-    m_state = HTTP_DISCONNECTED;
-    return false;
-  }
-  // send HTTP header
-  m_device->xbWrite(header.c_str());
-  // send POST payload if any
-  if (method == METHOD_POST && payload) m_device->xbWrite(payload);
-  if (sendCommand(0, 200)) {
-    m_state = HTTP_SENT;
-    return true;
-  }
-  ESP_LOGD(TAG_SIM5360, "%s", m_buffer);
-  m_state = HTTP_ERROR;
-  return false;
-}
-
-char* HTTPClientSIM5360::receive(int* pbytes, unsigned int timeout)
-{
-  // start receiving
-  int received = 0;
-  char* payload = 0;
-
-  // wait for RECV EVENT
-  if (!sendCommand(0, timeout, "\r\n+CHTTPS: RECV EVENT")) {
-    checkGPS();
-    return 0;
-  }
-  // FIXME
-  if (strstr(m_buffer, " 200 ")) {
-    m_code = 200;
-  }
-
-  checkGPS();
-
-  /*
-    +CHTTPSRECV:XX\r\n
-    [XX bytes from server]\r\n
-    +CHTTPSRECV: 0\r\n
-  */
-  // TODO: implement for multiple chunks of data
-  // only deals with first chunk now
-  sprintf(m_buffer, "AT+CHTTPSRECV=%u\r", sizeof(m_buffer) - 36);
-  if (sendCommand(m_buffer, timeout, "\r\n+CHTTPSRECV: 0")) {
-    char *p = strstr(m_buffer, "\r\n+CHTTPSRECV: DATA");
-    if (p) {
-      if ((p = strchr(p, ','))) {
-        received = atoi(p + 1);
-        char *q = strchr(p, '\n');
-        payload = q ? (q + 1) : p;
-        if (m_buffer + sizeof(m_buffer) - payload > received) {
-          payload[received] = 0;
-=======
   if (m_type == CELL_SIM7070) {
     if (method == METHOD_POST) {
       sprintf(m_buffer, "AT+SHBOD=%u,100\r", payloadSize);
@@ -1307,12 +883,11 @@ char* HTTPClientSIM5360::receive(int* pbytes, unsigned int timeout)
         if (sendCommand(m_buffer)) {
           m_state = HTTP_SENT;
           return true;
->>>>>>> upstream
         }
       }
     }
   } else {
-    String header = genHeader(method, path, keepAlive, payload, payloadSize);
+    std::string header = genHeader(method, path, keepAlive, payload, payloadSize);
     int len = header.length();
     sprintf(m_buffer, "AT+CHTTPSSEND=%u\r", len + payloadSize);
     if (!sendCommand(m_buffer, 100, ">")) {
@@ -1328,7 +903,7 @@ char* HTTPClientSIM5360::receive(int* pbytes, unsigned int timeout)
       return true;
     }
   }
-  Serial.println(m_buffer);
+  ESP_LOGD(TAG_CELLHTTP, "%s", m_buffer);
   m_state = HTTP_ERROR;
   return false;
 }
@@ -1372,7 +947,7 @@ char* CellHTTP::receive(int* pbytes, unsigned int timeout)
       else if (*(p - 1) != ':')
         return 0;
     }
-    
+
     checkGPS();
 
     /*
@@ -1520,7 +1095,7 @@ bool UDPClientSIM7600::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
   if (!sendCommand(m_buffer, 3000)) {
     close();
-    ESP_LOGD(TAG_SIM7600, "%s", m_buffer);
+    ESP_LOGW(TAG_SIM7600, "%s", m_buffer);
     return false;
   }
   return true;
@@ -1699,7 +1274,7 @@ bool ClientSIM7070::begin(CFreematics* device)
     for (byte m = 0; m < 5; m++) {
       if (sendCommand("AT\r") && sendCommand("ATE0\r") && sendCommand("AT+SIMCOMATI\r")) {
         // retrieve module info
-        //Serial.print(m_buffer);
+        ESP_LOGD(TAG_SIM7070, "%s", m_buffer);
         char *p = strstr(m_buffer, "IMEI:");
         if (p) strncpy(IMEI, p + 6, sizeof(IMEI) - 1);
         p = strstr(m_buffer, "QCN:");
@@ -1884,7 +1459,7 @@ bool UDPClientSIM7070::open(const char* host, uint16_t port)
   sprintf(m_buffer, "AT+CAOPEN=0,0,\"UDP\",\"%s\",%u\r", host, port);
   if (!sendCommand(m_buffer, 5000)) {
     close();
-    Serial.println(m_buffer);
+    ESP_LOGW(TAG_SIM7070, "%s", m_buffer);
     return false;
   }
   return true;
@@ -1939,7 +1514,7 @@ bool HTTPClientSIM7070::open(const char* host, uint16_t port)
       m_state = HTTP_CONNECTED;
       m_host = host;
       sendCommand("AT+SHCHEAD\r");
-      sendCommand("AT+SHAHEAD=\"User-Agent\",\"curl/7.47.0\"\r"); 
+      sendCommand("AT+SHAHEAD=\"User-Agent\",\"curl/7.47.0\"\r");
       sendCommand("AT+SHAHEAD=\"Cache-control\",\"no-cache\"\r");
       sendCommand("AT+SHAHEAD=\"Connection\",\"keep-alive\"\r");
       sendCommand("AT+SHAHEAD=\"Accept\",\"*/*\"\r");

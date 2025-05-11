@@ -137,16 +137,6 @@ void CQuaterion::getOrientation(ORIENTATION* ori)
 bool MEMS_I2C::initI2C(unsigned long clock)
 {
   i2c_port_t i2c_master_port = I2C_NUM_0;
-<<<<<<< HEAD
-  i2c_config_t conf;
-  conf.mode = I2C_MODE_MASTER;
-  conf.sda_io_num = (gpio_num_t)21;
-  conf.sda_pullup_en = GPIO_PULLUP_ENABLE;
-  conf.scl_io_num = (gpio_num_t)22;
-  conf.scl_pullup_en = GPIO_PULLUP_ENABLE;
-  conf.master.clk_speed = clock;
-  conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL;
-=======
   i2c_config_t conf = {
     conf.mode = I2C_MODE_MASTER,
     conf.sda_io_num = (gpio_num_t)21,
@@ -154,8 +144,8 @@ bool MEMS_I2C::initI2C(unsigned long clock)
     conf.scl_io_num = (gpio_num_t)22,
     conf.scl_pullup_en = GPIO_PULLUP_ENABLE,
     conf.master.clk_speed = clock,
+    conf.clk_flags = I2C_SCLK_SRC_FLAG_FOR_NOMAL,
   };
->>>>>>> upstream
   return i2c_param_config(i2c_master_port, &conf) == ESP_OK &&
     i2c_driver_install(i2c_master_port, conf.mode, 0, 0, 0) == ESP_OK;
 }
@@ -725,10 +715,7 @@ bool MPU9250::read(float* acc, float* gyr, float* mag, float* temp, ORIENTATION*
 }
 
 /*******************************************************************************
-<<<<<<< HEAD
-  ICM-20948 class functions
-=======
-  ICM-42627 class functions 
+  ICM-42627 class functions
 *******************************************************************************/
 byte ICM_42627::begin(bool fusion)
 {
@@ -739,7 +726,7 @@ byte ICM_42627::begin(bool fusion)
 
 void ICM_42627::init()
 {
-  writeByte(PWR_MGMT0_REG, TEMP_DIS_ON | IDLE_ON | ACCEL_MODE_LN | GYRO_MODE_LN ); 
+  writeByte(PWR_MGMT0_REG, TEMP_DIS_ON | IDLE_ON | ACCEL_MODE_LN | GYRO_MODE_LN );
   delay(100);
 
   writeByte(ACCEL_CONFIG0_REG, ACCEL_ODR_1KHZ | ACCEL_FS_SEL_2G);  // Auto select clock source to be PLL gyroscope reference if ready else
@@ -860,8 +847,7 @@ bool ICM_42627::read(float* acc, float* gyr, float* mag, float* temp, ORIENTATIO
 }
 
 /*******************************************************************************
-  ICM-20948 class functions 
->>>>>>> upstream
+  ICM-20948 class functions
 *******************************************************************************/
 
 // serif functions for the I2C and SPI classes
@@ -1573,16 +1559,23 @@ bool ICM_20948_I2C::read(float* acc, float* gyr, float* mag, float* tmp, ORIENTA
 }
 
 MEMS_I2C *init_MEMS(bool enable_orientation) {
-  MEMS_I2C *mems = new ICM_20948_I2C;
-  if (!mems->begin(enable_orientation)) {
+  MEMS_I2C *mems = new ICM_42627;
+  byte ret = mems->begin(enable_orientation);
+  if (!ret) {
     mems->end();
     delete mems;
 
-    mems = new MPU9250;
+    mems = new ICM_20948_I2C;
     if (!mems->begin(enable_orientation)) {
       mems->end();
       delete mems;
-      mems = nullptr;
+
+      mems = new MPU9250;
+      if (!mems->begin(enable_orientation)) {
+        mems->end();
+        delete mems;
+        mems = nullptr;
+      }
     }
   }
 

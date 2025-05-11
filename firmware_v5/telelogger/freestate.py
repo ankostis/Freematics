@@ -11,7 +11,7 @@ EXAMPLE:
     0(   0x4): GPS_READY
     1(   0x8): MEMS_READY
     2(  0x10): NET_READY
-    3(  0x20): NET_CONNECTED
+    3(  0x20): CELL_CONNECTED
     4( 0x200): GET_OBFCM
 """
 
@@ -23,8 +23,9 @@ flags = {
     0x4: "GPS_READY",
     0x8: "MEMS_READY",
     0x10: "NET_READY",
-    0x20: "NET_CONNECTED",
-    0x40: "WORKING",
+    0x20: "CELL_CONNECTED",
+    0x40: "WIFI_CONNECTED",
+    0x80: "WORKING",
     0x100: "STANDBY",
     0x200: "GET_OBFCM",
     0x800: "SEND_ITID17",

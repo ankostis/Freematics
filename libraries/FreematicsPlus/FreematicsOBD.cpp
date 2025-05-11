@@ -482,31 +482,24 @@ bool COBD::isValidPID(byte pid)
 	return true || (pidmap[i] & b) != 0;
 }
 
-<<<<<<< HEAD
 bool COBD::init(
 	OBD_PROTOCOLS protocol,
+	bool quick,
 	std::vector<std::vector<std::string>> obd_alt_init_cmds
 ) {
 	ESP_LOGI(TAG_OBD, "<init> proto: %i", protocol);
 	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
 	char buffer[64];
-=======
-bool COBD::init(OBD_PROTOCOLS protocol, bool quick)
-{
-	const char *initcmd[] = {"ATE0\r", "ATH0\r"};
-	char buffer[64];
 	bool success = false;
->>>>>>> upstream
 
 	if (!link) {
 		return false;
 	}
 
 	m_state = OBD_DISCONNECTED;
-<<<<<<< HEAD
 
 	init_stage = 0;
-	for (byte n = 0; n < 10; n++) {
+	for (byte n = 0; n < 3; n++) {
 		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
 			init_stage += 1;
 			goto success_1;
@@ -516,16 +509,6 @@ bool COBD::init(OBD_PROTOCOLS protocol, bool quick)
 success_1:
 
 	for (byte i = 0; i < sizeof_array(initcmd); i++) {
-=======
-	for (byte n = 0; n < 3; n++) {
-		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
-			success = true;
-			break;
-		}
-	}
-	if (!success) return false;
-	for (byte i = 0; i < sizeof(initcmd) / sizeof(initcmd[0]); i++) {
->>>>>>> upstream
 		link->sendCommand(initcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
 	init_stage += 1;
@@ -536,7 +519,6 @@ success_1:
 			// Bail-out, set-protocol  command must not fail.
 			return false;
 		}
-<<<<<<< HEAD
 		init_stage += 1;
 		if (protocol == PROTO_J1939) {
 			m_state = OBD_CONNECTED;
@@ -576,26 +558,10 @@ success:
 	if (link->receive(buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
 		active_protocol = buffer;
 		init_stage += 1;
-=======
-	}
-	if (protocol == PROTO_J1939) {
-		m_state = OBD_CONNECTED;
-		errors = 0;
-		return true;
-	}
-
-	success = false;
-	for (byte n = 0; n < 2; n++) {
-		int value;
-		if (readPID(PID_SPEED, value)) {
-			success = true;
-			break;
-		}
 	}
 
 	if (!success && quick) {
 		return false;
->>>>>>> upstream
 	}
 
 	// load pid map

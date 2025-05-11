@@ -21,8 +21,10 @@
 #define ELEMENT_FLOATX3 3
 
 // ESP_IDF logging tag used
-inline constexpr const char TAG_BUF[] = "BUF";
-inline constexpr const char TAG_NET[] = "NET";
+inline constexpr const char TAG_BUF[] = "APPBUF";
+inline constexpr const char TAG_UDP[] = "APPUDP";
+inline constexpr const char TAG_AWIFI[] = "APPWIFI";
+inline constexpr const char TAG_ACELL[] = "APPCELL";
 
 class CBuffer
 {
@@ -47,91 +49,12 @@ private:
 class CBufferManager
 {
 public:
-<<<<<<< HEAD
-    CBufferManager()
-    {
-        for (int n = 0; n < BUFFER_SLOTS; n++) buffers[n] = new CBuffer;
-    }
-    void purge()
-    {
-        int purged = 0;
-        for (auto *buf: buffers) {
-            if (buf->count) purged++;
-            buf->purge();
-        }
-        ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
-    }
-    CBuffer* get(byte state = BUFFER_STATE_EMPTY)
-    {
-        for (int n = 0; n < BUFFER_SLOTS; n++) {
-            if (buffers[n]->state == state) return buffers[n];
-        }
-        return 0;
-    }
-    CBuffer* getOldest()
-    {
-        uint32_t ts = 0xffffffff;
-        int m = -1;
-        for (int n = 0; n < BUFFER_SLOTS; n++) {
-            if (buffers[n]->state == BUFFER_STATE_FILLED && buffers[n]->timestamp < ts) {
-                m = n;
-                ts = buffers[n]->timestamp;
-            }
-        }
-        return m >= 0 ? buffers[m] : 0;
-    }
-    CBuffer* getNewest()
-    {
-        uint32_t ts = 0;
-        int m = -1;
-        for (int n = 0; n < BUFFER_SLOTS; n++) {
-            if (buffers[n]->state == BUFFER_STATE_FILLED && buffers[n]->timestamp > ts) {
-                m = n;
-                ts = buffers[n]->timestamp;
-            }
-        }
-        return m >= 0 ? buffers[m] : 0;
-    }
-    void showCacheStats(uint16_t state)
-    {
-        int bytes = 0;
-        int slots = 0;
-        int samples = 0;
-        for (int n = 0; n < BUFFER_SLOTS; n++) {
-            if (buffers[n]->state != BUFFER_STATE_FILLED) continue;
-            bytes += buffers[n]->offset;
-            samples += buffers[n]->count;
-            slots++;
-            ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n,
-                    buffers[n]->count, buffers[n]->offset);
-        }
-        if (slots) {
-            constexpr const uint RAM_SIZE_KiB = 320;
-            uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
-            ESP_LOG_LEVEL(
-                    (slots > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
-                    TAG_BUF,
-                    "PIDs: %u(%u b/PID)"
-                    ", slots: %u/%u(%u%%)"
-                    ", filled: %u/%u bytes (%u%%)"
-                    ", RAM: %u/%u KiB(%u%%)"
-                    ", state: %X",
-                    samples, samples ? bytes / samples : 0,
-                    slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
-                    bytes, BUFFER_SLOTS * BUFFER_LENGTH,
-                    100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
-                    ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
-                    state);
-        }
-    }
-=======
     void init();
     void purge();
     CBuffer* get(byte state = BUFFER_STATE_EMPTY);
     CBuffer* getOldest();
     CBuffer* getNewest();
-    void printStats();
->>>>>>> upstream
+    void showCacheStats(uint16_t state);
     CBuffer* buffers[BUFFER_SLOTS];
 };
 
@@ -156,7 +79,7 @@ public:
                 t / 60000,
                 (t % 60000) / 1000,
                 (t % 1000) / 100 + '0');
-        ESP_LOGI(TAG_NET,
+        ESP_LOGI(TAG_UDP,
             "%s: packet #%i, Tx: %.2fKiB, Rx: %ib, login: %i, feedid: %u, state: %X",
             timestr,
             txCount,
@@ -186,7 +109,7 @@ public:
     /**
      * :return: true if event received OR not timeout yet
      */
-    bool inbound();
+    void inbound();
     bool verifyChecksum(char* data);
     void shutdown();
 #if ENABLE_WIFI
