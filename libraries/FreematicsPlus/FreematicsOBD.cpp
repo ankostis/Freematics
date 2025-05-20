@@ -560,8 +560,8 @@ success:
 		init_stage += 1;
 	}
 
-	if (!success && quick) {
-		return false;
+	if (quick) {
+		return success;
 	}
 
 	// load pid map

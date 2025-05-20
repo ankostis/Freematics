@@ -30,18 +30,17 @@ extern char isoTime[];
 
 CBuffer::CBuffer()
 {
-#if BOARD_HAS_PSRAM
+#if HAS_LARGE_RAM
   data = (uint8_t*)heap_caps_malloc(BUFFER_LENGTH, MALLOC_CAP_SPIRAM);
-  types = (uint32_t*)heap_caps_malloc((BUFFER_LENGTH / (sizeof(uint16_t) + sizeof(int)) + 15) / 16, MALLOC_CAP_SPIRAM);
 #else
   data = (uint8_t*)malloc(BUFFER_LENGTH);
-  types = (uint32_t*)malloc((BUFFER_LENGTH / (sizeof(uint16_t) + sizeof(int)) + 15) / 16);
 #endif
   purge();
 }
 
-void CBuffer::add(uint16_t pid, int value)
+void CBuffer::add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t count)
 {
+<<<<<<< HEAD
   if (offset < BUFFER_LENGTH - sizeof(uint16_t) - sizeof(int)) {
     setType(ELEMENT_INT);
     *(uint16_t*)(data + offset) = pid;
@@ -88,6 +87,15 @@ void CBuffer::add(uint16_t pid, float value[])
     memcpy(data + offset, value, sizeof(float) * 3);
     offset += sizeof(float) * 3;
     count++;
+=======
+  if (offset < BUFFER_LENGTH - sizeof(ELEMENT_HEAD) - bytes) {
+    ELEMENT_HEAD hdr = {pid, type, count};
+    *(ELEMENT_HEAD*)(data + offset) = hdr;
+    offset += sizeof(ELEMENT_HEAD);
+    memcpy(data + offset, values, bytes);
+    offset += bytes;
+    total++;
+>>>>>>> stanley_submerged_1
   } else {
       ESP_LOGW(TAG_BUF, "FULL");
   }
@@ -97,51 +105,38 @@ void CBuffer::purge()
   state = BUFFER_STATE_EMPTY;
   timestamp = 0;
   offset = 0;
-  count = 0;
-  memset(types, 0, sizeof(types));
-}
-
-void CBuffer::setType(uint32_t dataType)
-{
-  types[count / 16] |= (dataType << ((count % 16) * 2));
+  total = 0;
 }
 
 void CBuffer::serialize(CStorage& store)
 {
-  int of = 0;
-  for (int n = 0; n < count; n++) {
-    uint16_t pid = *(uint16_t*)(data + of);
-    of += sizeof(uint16_t);
-    switch ((types[n / 16] >> ((n % 16) * 2)) & 0x3) {
-    case ELEMENT_INT:
-      {
-        int value = *(int*)(data + of);
-        of += sizeof(value);
-        store.log(pid, value);
-      }
+  uint16_t of = 0;
+  for (int n = 0; n < total && of < offset; n++) {
+    ELEMENT_HEAD* hdr = (ELEMENT_HEAD*)(data + of);
+    of += sizeof(ELEMENT_HEAD);
+    switch (hdr->type) {
+    case ELEMENT_UINT8:
+      store.log(hdr->pid, (uint8_t*)(data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(uint8_t);
       break;
-    case ELEMENT_UINT:
-      {
-        uint32_t value = *(uint32_t*)(data + of);
-        of += sizeof(value);
-        store.log(pid, value);
-      }
+    case ELEMENT_UINT16:
+      store.log(hdr->pid, (uint16_t*)(data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(uint16_t);
+      break;
+    case ELEMENT_UINT32:
+      store.log(hdr->pid, (uint32_t*)(data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(uint32_t);
+      break;
+    case ELEMENT_INT32:
+      store.log(hdr->pid, (int32_t*)(data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(int32_t);
       break;
     case ELEMENT_FLOAT:
-      {
-        float value = *(float*)(data + of);
-        of += sizeof(value);
-        store.log(pid, value);
-      }
+      store.log(hdr->pid, (float*)(data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(float);
       break;
-    case ELEMENT_FLOATX3:
-      {
-        float value[3];
-        memcpy(value, data + of, sizeof(value));
-        of += sizeof(value);
-        store.log(pid, value);
-      }
-      break;
+    default:
+      return;
     }
   }
 }
@@ -149,12 +144,13 @@ void CBuffer::serialize(CStorage& store)
 void CBufferManager::init()
 {
   for (int n = 0; n < BUFFER_SLOTS; n++) {
-      buffers[n] = new CBuffer();
+      slots[n] = new CBuffer();
   }
 }
 
 void CBufferManager::purge()
 {
+<<<<<<< HEAD
   int purged = 0;
   for (auto *buf: buffers) {
       if (buf->count) purged++;
@@ -162,14 +158,33 @@ void CBufferManager::purge()
   }
   ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
 
+=======
+  for (int n = 0; n < BUFFER_SLOTS; n++) slots[n]->purge();
+>>>>>>> stanley_submerged_1
 }
 
-CBuffer* CBufferManager::get(byte state)
+CBuffer* CBufferManager::getFree()
 {
-    for (int n = 0; n < BUFFER_SLOTS; n++) {
-        if (buffers[n]->state == state) return buffers[n];
+  if (last) {
+    CBuffer* slot = last;
+    last = 0;
+    if (slot->state == BUFFER_STATE_EMPTY) return slot;
+  }
+  uint32_t ts = 0xffffffff;
+  int m = 0;
+  // search for free slot, if none, mark the oldest one
+  for (int n = 0; n < BUFFER_SLOTS; n++) {
+    if (slots[n]->state == BUFFER_STATE_EMPTY) {
+      return slots[n];
+    } else if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp < ts) {
+        m = n;
+        ts = slots[n]->timestamp;
     }
-    return 0;
+  }
+  // dispose oldest data when buffer is full
+  while (slots[m]->state == BUFFER_STATE_LOCKED) delay(1);
+  slots[m]->purge();
+  return slots[m];
 }
 
 CBuffer* CBufferManager::getOldest()
@@ -177,12 +192,16 @@ CBuffer* CBufferManager::getOldest()
   uint32_t ts = 0xffffffff;
   int m = -1;
   for (int n = 0; n < BUFFER_SLOTS; n++) {
-      if (buffers[n]->state == BUFFER_STATE_FILLED && buffers[n]->timestamp < ts) {
-          m = n;
-          ts = buffers[n]->timestamp;
-      }
+    if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp < ts) {
+        m = n;
+        ts = slots[n]->timestamp;
+    }
   }
-  return m >= 0 ? buffers[m] : 0;
+  if (m >= 0) {
+    slots[m]->state = BUFFER_STATE_LOCKED;
+    return slots[m];
+  }
+  return 0;
 }
 
 CBuffer* CBufferManager::getNewest()
@@ -190,20 +209,31 @@ CBuffer* CBufferManager::getNewest()
   uint32_t ts = 0;
   int m = -1;
   for (int n = 0; n < BUFFER_SLOTS; n++) {
-      if (buffers[n]->state == BUFFER_STATE_FILLED && buffers[n]->timestamp > ts) {
-          m = n;
-          ts = buffers[n]->timestamp;
-      }
+    if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp > ts) {
+      m = n;
+      ts = slots[n]->timestamp;
+    }
   }
-  return m >= 0 ? buffers[m] : 0;
+  if (m >= 0) {
+    slots[m]->state = BUFFER_STATE_LOCKED;
+    return slots[m];
+  }
+  return 0;
+}
+
+void CBufferManager::free(CBuffer* slot)
+{
+  slot->purge();
+  last = slot;  
 }
 
 void CBufferManager::showCacheStats(uint16_t state)
 {
   int bytes = 0;
-  int slots = 0;
+  int count = 0;
   int samples = 0;
   for (int n = 0; n < BUFFER_SLOTS; n++) {
+<<<<<<< HEAD
       if (buffers[n]->state != BUFFER_STATE_FILLED) continue;
       bytes += buffers[n]->offset;
       samples += buffers[n]->count;
@@ -228,6 +258,22 @@ void CBufferManager::showCacheStats(uint16_t state)
               100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
               ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
               state);
+=======
+    if (slots[n]->state != BUFFER_STATE_FILLED) continue;
+    bytes += slots[n]->offset;
+    samples += slots[n]->total;
+    count++;
+  }
+  if (slots) {
+    Serial.print("[BUF] ");
+    Serial.print(samples);
+    Serial.print(" samples | ");
+    Serial.print(bytes);
+    Serial.print(" bytes | ");
+    Serial.print(count);
+    Serial.print('/');
+    Serial.println(BUFFER_SLOTS);
+>>>>>>> stanley_submerged_1
   }
 }
 
@@ -311,7 +357,12 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     char pattern[16];
     sprintf(pattern, "EV=%u", event);
     if (!strstr(data, pattern)) {
+<<<<<<< HEAD
       ESP_LOGE(TAG_UDP, "RECV invalid reply: %s, expected event: %i", data, event);
+=======
+      Serial.print("[UDP] Invalid reply: ");
+      Serial.println(data);
+>>>>>>> stanley_submerged_1
       continue;
     }
     if (event == EVENT_LOGIN) {
@@ -427,7 +478,7 @@ bool TeleClientUDP::connect(bool quick)
 bool TeleClientUDP::ping()
 {
   bool success = false;
-  for (byte n = 0; n < 2 && !success; n++) {
+  for (byte n = 0; n < 3 && !success; n++) {
 #if ENABLE_WIFI
     if (wifi.connected())
     {
@@ -438,7 +489,20 @@ bool TeleClientUDP::ping()
     {
       success = cell.open(node_info.srv_host, node_info.srv_port);
     }
-    if (success) success = notify(EVENT_PING);
+    if (success) {
+      if ((success = notify(EVENT_PING))) break;
+#if ENABLE_WIFI
+      if (wifi.connected())
+      {
+        wifi.close();
+      }
+      else
+#endif
+      {
+        cell.close();
+      }
+      delay(1000);
+    }
   }
   if (success) lastSyncTime = millis();
   return success;
@@ -548,8 +612,16 @@ void TeleClientUDP::shutdown()
     ESP_LOGI(TAG_UDP, "<LOGOUT>");
   }
 #if ENABLE_WIFI
+<<<<<<< HEAD
   wifi.end();
   ESP_LOGI(TAG_AWIFI, "<SHUTDOWN>");
+=======
+  if (wifi.connected()) {
+    wifi.end();
+    Serial.println("[WIFI] Deactivated");
+    return;
+  }
+>>>>>>> stanley_submerged_1
 #endif
   cell.end();
   ESP_LOGI(TAG_ACELL, "<SHUTDOWN> %s", cell.deviceName());
@@ -577,7 +649,11 @@ bool TeleClientHTTP::notify(byte event, const char* payload)
 bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 {
 #if ENABLE_WIFI
+<<<<<<< HEAD
   if (wifi.connected() && (wifi.state() != HTTP_CONNECTED || cell.state() != HTTP_CONNECTED)) {
+=======
+  if ((wifi.connected() && wifi.state() != HTTP_CONNECTED) || cell.state() != HTTP_CONNECTED) {
+>>>>>>> stanley_submerged_1
 #else
   if (cell.state() != HTTP_CONNECTED) {
 #endif
@@ -657,12 +733,17 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 
 bool TeleClientHTTP::connect(bool quick)
 {
-  cell.close();
   if (!quick) {
 #if ENABLE_WIFI
     if (!wifi.connected()) cell.init();
 #else
     cell.init();
+#endif
+  } else {
+#if ENABLE_WIFI
+    if (!wifi.connected()) cell.close();
+#else
+    cell.close();
 #endif
   }
 
@@ -718,8 +799,16 @@ void TeleClientHTTP::shutdown()
     login = false;
   }
 #if ENABLE_WIFI
+<<<<<<< HEAD
   wifi.end();
   ESP_LOGI(TAG_AWIFI, "<SHUTDOWN> %s", wifi.deviceName());
+=======
+  if (wifi.connected()) {
+    wifi.end();
+    Serial.println("[WIFI] Deactivated");
+    return;
+  }
+>>>>>>> stanley_submerged_1
 #endif
   cell.close();
   cell.end();

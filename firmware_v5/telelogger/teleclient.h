@@ -15,10 +15,17 @@
 #define BUFFER_STATE_FILLED 2
 #define BUFFER_STATE_LOCKED 3
 
-#define ELEMENT_INT 0
-#define ELEMENT_UINT 1
-#define ELEMENT_FLOAT 2
-#define ELEMENT_FLOATX3 3
+#define ELEMENT_UINT8 0
+#define ELEMENT_UINT16 1
+#define ELEMENT_UINT32 2
+#define ELEMENT_INT32 3
+#define ELEMENT_FLOAT 4
+
+typedef struct {
+    uint16_t pid;
+    uint8_t type;
+    uint8_t count;
+} ELEMENT_HEAD;
 
 // ESP_IDF logging tag used
 inline constexpr const char TAG_BUF[] = "APPBUF";
@@ -30,20 +37,15 @@ class CBuffer
 {
 public:
     CBuffer();
-    void add(uint16_t pid, int value);
-    void add(uint16_t pid, uint32_t value);
-    void add(uint16_t pid, float value);
-    void add(uint16_t pid, float value[]);
+    void add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t count = 1);
     void purge();
     void serialize(CStorage& store);
     uint32_t timestamp;
-    int offset;
-    uint16_t count;
+    uint16_t offset;
+    uint8_t total;
     uint8_t state;
 private:
-    void setType(uint32_t dataType);
     uint8_t* data;
-    uint32_t* types;
 };
 
 class CBufferManager
@@ -51,11 +53,14 @@ class CBufferManager
 public:
     void init();
     void purge();
-    CBuffer* get(byte state = BUFFER_STATE_EMPTY);
+    void free(CBuffer* slot);
+    CBuffer* getFree();
     CBuffer* getOldest();
     CBuffer* getNewest();
     void showCacheStats(uint16_t state);
-    CBuffer* buffers[BUFFER_SLOTS];
+private:
+    CBuffer* slots[BUFFER_SLOTS];
+    CBuffer* last = 0;
 };
 
 class TeleClient
