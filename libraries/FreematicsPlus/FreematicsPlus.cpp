@@ -432,7 +432,7 @@ int CLink_SPI::sendCommand(const char* cmd, char* buf, int bufsize, unsigned int
 
 void FreematicsESP32::gpsEnd(bool powerOff)
 {
-    ESP_LOGI(TAG_GNSS, "<END> %i", m_flags);
+    ESP_LOGI(TAG_GNSS, "<END> powoff: %d, flags: %i", powerOff, m_flags);
     if (m_flags & FLAG_GNSS_USE_LINK) {
         if (powerOff) {
             ESP_LOGD(TAG_GNSS, "<END> ATcmd");
