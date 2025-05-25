@@ -501,6 +501,8 @@ bool COBD::init(
 	init_stage = 0;
 	for (byte n = 0; n < 3; n++) {
 		if (link->sendCommand("ATZ\r", buffer, sizeof(buffer), OBD_TIMEOUT_SHORT)) {
+			// Dump ATZ reply to view ELM327 revision.
+			ESP_LOGI(TAG_OBD, "<init>: %s", buffer);
 			init_stage += 1;
 			goto success_1;
 		}
