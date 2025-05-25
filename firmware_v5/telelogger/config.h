@@ -47,7 +47,7 @@
 #define STORAGE CONFIG_STORAGE
 #endif
 #ifdef CONFIG_BOARD_HAS_PSRAM
-#define BOARD_HAS_PSRAM CONFIG_BOARD_HAS_PSRAM
+#define BOARD_HAS_PSRAM 1
 #endif
 #ifdef CONFIG_ENABLE_WIFI
 #define ENABLE_WIFI CONFIG_ENABLE_WIFI
@@ -85,13 +85,11 @@
  */
 #define BUFFER_LENGTH           384
 #define SERIALIZE_BUFFER_SIZE   4096  /* bytes */
-#define HAS_LARGE_RAM 1
-#else
+#else  //  No BOARD_HAS_PSRAM
 #define BUFFER_SLOTS            256   /* see above */
 #define BUFFER_LENGTH           180   /* see above */
 #define SERIALIZE_BUFFER_SIZE   1024
-#define HAS_LARGE_RAM 0
-#endif
+#endif  // BOARD_HAS_PSRAM
 
 /**************************************
 * Configuration Definitions
@@ -117,13 +115,12 @@
 #define STORAGE_SD              2
 
 #define GNSS_NONE               0
-#define GNSS_INTERNAL           1
-#define GNSS_EXTERNAL           2
-#define GNSS_CELLULAR           3
+#define GNSS_STANDALONE         1
+#define GNSS_CELLULAR           2
 
 #define PROTOCOL_UDP            1
-#define PROTOCOL_HTTP           2
-#define PROTOCOL_HTTPS          3
+#define PROTOCOL_HTTPS_GET      2
+#define PROTOCOL_HTTPS_POST     3
 
 #define PROTOCOL_METHOD_GET     0
 #define PROTOCOL_METHOD_POST    1
@@ -142,7 +139,7 @@
 #define RUNTIME_LOG_LEVELS \
     {"*", (esp_log_level_t)CORE_DEBUG_LEVEL},
 
-    /** logs in `telelogger.cpp` */
+    /** TODO: check with list of log-TAGs in `telelogger.cpp` */
     // {"SETUP", (esp_log_level_t)CORE_DEBUG_LEVEL),
     // {"INIT", (esp_log_level_t)CORE_DEBUG_LEVEL),
     // {"TELE", (esp_log_level_t)CORE_DEBUG_LEVEL),
@@ -269,7 +266,7 @@
  *      #define SERVER_HOST           "hub.freematics.com"
  */
 #ifndef ENABLE_WIFI
-#define ENABLE_WIFI 0
+#define ENABLE_WIFI 1
 /**
  * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
  * like:
@@ -303,6 +300,9 @@
  * (json-config default for `node_info.sim_card_pin`)
  */
 #define SIM_CARD_PIN            ""
+// TODO: `APN_USERNAME` & `APN_PASSWORD` --> nodinfo 
+#define APN_USERNAME            NULL
+#define APN_PASSWORD            NULL
 
 // HTTPS settings
 #define SERVER_METHOD           PROTOCOL_METHOD_POST
@@ -317,12 +317,10 @@
 #undef SERVER_PORT
 #if SERVER_PROTOCOL == PROTOCOL_UDP
 #define SERVER_PORT             8081
-#elif SERVER_PROTOCOL == PROTOCOL_HTTP
-#define SERVER_PORT             80
-#elif SERVER_PROTOCOL == PROTOCOL_HTTPS
+#else
 #define SERVER_PORT             443
 #endif
-#endif
+#endif  // SERVER_PROTOCOL ? PROTOCOL_UDP
 
 // WiFi Mesh settings
 #define WIFI_MESH_ID            "123456"
@@ -376,7 +374,7 @@
  * (json-config default for `node_info.transmission_intervals`)
  */
 #define STATIONARY_TRANSMISSION_INTERVALS \
-        {30, 1000}, \
+        {10, 1000}, \
         {60, 2000}, \
         {180, 5000},
 
@@ -386,8 +384,8 @@
  */
 #define PING_BACK_INTERVAL_SEC      900
 /**
- * How often to check RSSI & reconnect WiFi?
- * (TODO: `SIGNAL_CHECK_INTERVAL_sec` -> nodeinfo.json-config default)
+ * How often to check RSSI?
+ * (TODO: `SIGNAL_CHECK_INTERVAL`  --> `nodeinfo.rssi_interval_sec`
  */
 #define SIGNAL_CHECK_INTERVAL       10
 
@@ -425,7 +423,7 @@
 **************************************/
 #ifndef GNSS
 // change the following line to change GNSS setting
-#define GNSS                    GNSS_INTERNAL
+#define GNSS                    GNSS_STANDALONE
 #endif
 #define GPS_SERIAL_BAUDRATE     115200L  // TODO: drop unused `GPS_SERIAL_BAUDRATE`.
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
@@ -434,6 +432,12 @@
  * (TODO: `GNSS_ALWAYS_ON` -> nodeinfo.json-config default)
 */
 #define GNSS_ALWAYS_ON 0
+/**
+ * GNSS reset timeout while no signal.
+ * TODO: `GNSS_RESET_TIMEOUT` --> `node_info.gnss_timeout_ms`
+ */
+
+#define GNSS_RESET_TIMEOUT      300 /* seconds */
 
 /**************************************
 * Standby/wakeup
@@ -450,12 +454,13 @@
 #define MOTION_THRESHOLD        0.4f
 /**
  * Engine jumpstart upper voltage for waking up (when ENABLE_MEMS).
+ * (TODO: `wakeup_jumpstart_thr` -> `wakeup_volt_thr`)
  * (json-config default for `node_info.wakeup_jumpstart_thr`)
  */
 #define THR_VOLTAGE             13.6 /* V */
 /**
  * Engine jumpstart voltage gradient threshold.
- * (TODO: `THR_GRAD` -> nodeinfo.wakeup_jumpstart_gradient_thr)
+ * (TODO: `THR_GRAD` -> nodeinfo.wakeup_volt_grad_thr`)
  */
 #define THR_GRAD                1 /* V */
 
@@ -556,7 +561,7 @@ extern const char ota_url2log[];
 
 // enable(1)/disable(0) BLE SPP server (for Freematics Controller App).
 #ifndef ENABLE_BLE
-#define ENABLE_BLE 0
+#define ENABLE_BLE 1
 #endif
 
 

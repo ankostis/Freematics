@@ -16,10 +16,15 @@
 ******************************************************************************/
 
 #include <FreematicsPlus.h>
+<<<<<<< HEAD
 #include <NodeInfo.h>
 #include "telelogger.h"
 #include "telemesh.h"
+=======
+#include "telestore.h"
+>>>>>>> origin/master
 #include "teleclient.h"
+#include "config.h"
 
 bool processCommand(char* data);
 
@@ -28,13 +33,9 @@ extern int16_t rssi;
 extern GPS_DATA* gd;
 extern char isoTime[];
 
-CBuffer::CBuffer()
+CBuffer::CBuffer(uint8_t* mem)
 {
-#if HAS_LARGE_RAM
-  data = (uint8_t*)heap_caps_malloc(BUFFER_LENGTH, MALLOC_CAP_SPIRAM);
-#else
-  data = (uint8_t*)malloc(BUFFER_LENGTH);
-#endif
+  m_data = mem;
   purge();
 }
 
@@ -42,9 +43,9 @@ void CBuffer::add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t c
 {
   if (offset < BUFFER_LENGTH - sizeof(ELEMENT_HEAD) - bytes) {
     ELEMENT_HEAD hdr = {pid, type, count};
-    *(ELEMENT_HEAD*)(data + offset) = hdr;
+    *(ELEMENT_HEAD*)(m_data + offset) = hdr;
     offset += sizeof(ELEMENT_HEAD);
-    memcpy(data + offset, values, bytes);
+    memcpy(m_data + offset, values, bytes); 
     offset += bytes;
     total++;
   } else {
@@ -71,27 +72,35 @@ void CBuffer::serialize(CStorage& store)
 {
   uint16_t of = 0;
   for (int n = 0; n < total && of < offset; n++) {
-    ELEMENT_HEAD* hdr = (ELEMENT_HEAD*)(data + of);
+    ELEMENT_HEAD* hdr = (ELEMENT_HEAD*)(m_data + of);
     of += sizeof(ELEMENT_HEAD);
     switch (hdr->type) {
     case ELEMENT_UINT8:
-      store.log(hdr->pid, (uint8_t*)(data + of), hdr->count);
+      store.log(hdr->pid, (uint8_t*)(m_data + of), hdr->count);
       of += (uint16_t)hdr->count * sizeof(uint8_t);
       break;
     case ELEMENT_UINT16:
-      store.log(hdr->pid, (uint16_t*)(data + of), hdr->count);
+      store.log(hdr->pid, (uint16_t*)(m_data + of), hdr->count);
       of += (uint16_t)hdr->count * sizeof(uint16_t);
       break;
     case ELEMENT_UINT32:
-      store.log(hdr->pid, (uint32_t*)(data + of), hdr->count);
+      store.log(hdr->pid, (uint32_t*)(m_data + of), hdr->count);
       of += (uint16_t)hdr->count * sizeof(uint32_t);
       break;
     case ELEMENT_INT32:
-      store.log(hdr->pid, (int32_t*)(data + of), hdr->count);
+      store.log(hdr->pid, (int32_t*)(m_data + of), hdr->count);
       of += (uint16_t)hdr->count * sizeof(int32_t);
       break;
     case ELEMENT_FLOAT:
-      store.log(hdr->pid, (float*)(data + of), hdr->count);
+      store.log(hdr->pid, (float*)(m_data + of), hdr->count);
+      of += (uint16_t)hdr->count * sizeof(float);
+      break;
+    case ELEMENT_FLOAT_D1:
+      store.log(hdr->pid, (float*)(m_data + of), hdr->count, "%.1f");
+      of += (uint16_t)hdr->count * sizeof(float);
+      break;
+    case ELEMENT_FLOAT_D2:
+      store.log(hdr->pid, (float*)(m_data + of), hdr->count, "%.2f");
       of += (uint16_t)hdr->count * sizeof(float);
       break;
     default:
@@ -102,13 +111,32 @@ void CBuffer::serialize(CStorage& store)
 
 void CBufferManager::init()
 {
+  total = BUFFER_SLOTS;
+#if BOARD_HAS_PSRAM
+    slots = (CBuffer**)heap_caps_malloc(BUFFER_SLOTS * sizeof(void*), MALLOC_CAP_SPIRAM);
+#else
+    slots = (CBuffer**)malloc(BUFFER_SLOTS * sizeof(void*));
+#endif
   for (int n = 0; n < BUFFER_SLOTS; n++) {
-      slots[n] = new CBuffer();
+    void* mem;
+#if BOARD_HAS_PSRAM
+    mem = heap_caps_malloc(BUFFER_LENGTH, MALLOC_CAP_SPIRAM);
+#else
+    mem = malloc(BUFFER_LENGTH);
+#endif
+    if (!mem) {
+      Serial.println("OUT OF RAM");
+      total = n;
+      break;
+    }
+    slots[n] = new CBuffer((uint8_t*)mem);
   }
+  assert(total > 0);
 }
 
 void CBufferManager::purge()
 {
+<<<<<<< HEAD
   int purged = 0;
   for (auto *buf: slots) {
       if (buf->total) purged++;
@@ -116,6 +144,9 @@ void CBufferManager::purge()
   }
   ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
 
+=======
+  for (int n = 0; n < total; n++) slots[n]->purge();
+>>>>>>> origin/master
 }
 
 CBuffer* CBufferManager::getFree()
@@ -128,7 +159,7 @@ CBuffer* CBufferManager::getFree()
   uint32_t ts = 0xffffffff;
   int m = 0;
   // search for free slot, if none, mark the oldest one
-  for (int n = 0; n < BUFFER_SLOTS; n++) {
+  for (int n = 0; n < total; n++) {
     if (slots[n]->state == BUFFER_STATE_EMPTY) {
       return slots[n];
     } else if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp < ts) {
@@ -146,7 +177,7 @@ CBuffer* CBufferManager::getOldest()
 {
   uint32_t ts = 0xffffffff;
   int m = -1;
-  for (int n = 0; n < BUFFER_SLOTS; n++) {
+  for (int n = 0; n < total; n++) {
     if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp < ts) {
         m = n;
         ts = slots[n]->timestamp;
@@ -163,7 +194,7 @@ CBuffer* CBufferManager::getNewest()
 {
   uint32_t ts = 0;
   int m = -1;
-  for (int n = 0; n < BUFFER_SLOTS; n++) {
+  for (int n = 0; n < total; n++) {
     if (slots[n]->state == BUFFER_STATE_FILLED && slots[n]->timestamp > ts) {
       m = n;
       ts = slots[n]->timestamp;
@@ -187,6 +218,7 @@ void CBufferManager::showCacheStats(uint16_t state)
   int bytes = 0;
   int count = 0;
   int samples = 0;
+<<<<<<< HEAD
   for (int n = 0; n < BUFFER_SLOTS; n++) {
       if (slots[n]->state != BUFFER_STATE_FILLED) continue;
       bytes += slots[n]->offset;
@@ -212,6 +244,23 @@ void CBufferManager::showCacheStats(uint16_t state)
               100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
               ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
               state);
+=======
+  for (int n = 0; n < total; n++) {
+    if (slots[n]->state != BUFFER_STATE_FILLED) continue;
+    bytes += slots[n]->offset;
+    samples += slots[n]->total;
+    count++;
+  }
+  if (slots) {
+    Serial.print("[BUF] ");
+    Serial.print(samples);
+    Serial.print(" samples | ");
+    Serial.print(bytes);
+    Serial.print(" bytes | ");
+    Serial.print(count);
+    Serial.print('/');
+    Serial.println(total);
+>>>>>>> origin/master
   }
 }
 
@@ -557,20 +606,26 @@ void TeleClientUDP::shutdown()
 
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
+<<<<<<< HEAD
   char url[256];
   snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", node_info.srv_path,
            node_info.device_id.c_str(), (uint)event, (int)rssi,
            (const char *)node_info.vin);
+=======
+  char path[256];
+  snprintf(path, sizeof(path), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", SERVER_PATH, devid,
+    (unsigned int)event, (int)rssi, vin);
+>>>>>>> origin/master
   if (event == EVENT_LOGOUT) login = false;
 #if ENABLE_WIFI
   if (wifi.connected())
   {
-    return wifi.send(METHOD_GET, url, true) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1) && wifi.code() == 200;
+    return wifi.send(METHOD_GET, path) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1) && wifi.code() == 200;
   }
   else
 #endif
   {
-    return cell.send(METHOD_GET, url, true) && cell.receive() && cell.code() == 200;
+    return cell.send(METHOD_GET, SERVER_HOST, SERVER_PORT, path) && cell.receive() && cell.code() == 200;
   }
 }
 
@@ -587,12 +642,19 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     }
   }
 
+<<<<<<< HEAD
   const char *devid = node_info.device_id.c_str();
   char url[256];
   bool success = false;
   int len;
 #if SERVER_METHOD == PROTOCOL_METHOD_GET
   auto srv_path = node_info.srv_path;
+=======
+  char path[256];
+  bool success = false;
+  int len;
+#if SERVER_PROTOCOL == PROTOCOL_HTTPS_GET
+>>>>>>> origin/master
   if (gd && gd->ts) {
     len = snprintf(url, sizeof(url), "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
       srv_path, devid, isoTime,
@@ -600,24 +662,40 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   } else {
     len = snprintf(url, sizeof(url), "%s/push?id=%s", srv_path, devid);
   }
-  success = cell.send(METHOD_GET, url, true);
+  success = cell.send(METHOD_GET, SERVER_HOST, SERVER_PORT, url);
 #else
-  len = snprintf(url, sizeof(url), "%s/post/%s", SERVER_PATH, devid);
+  len = snprintf(path, sizeof(path), "%s/post/%s", SERVER_PATH, devid);
 #if ENABLE_WIFI
   if (wifi.connected()) {
+<<<<<<< HEAD
     ESP_LOGD(TAG_AWIFI, "Transmit %i bytes: %s", packetSize, host2log);
     success = wifi.send(METHOD_POST, url, true, packetBuffer, packetSize);
+=======
+    Serial.print("[WIFI] ");
+    Serial.println(path);
+    success = wifi.send(METHOD_POST, path, packetBuffer, packetSize);
+>>>>>>> origin/master
   }
   else
 #endif
   {
+<<<<<<< HEAD
     ESP_LOGD(TAG_ACELL, "Transmit %i bytes: %s", packetSize, host2log);
     success = cell.send(METHOD_POST, url, true, packetBuffer, packetSize);
+=======
+    Serial.print("[CELL] ");
+    Serial.println(path);
+    success = cell.send(METHOD_POST, SERVER_HOST, SERVER_PORT, path, packetBuffer, packetSize);
+>>>>>>> origin/master
   }
   len += packetSize;
 #endif
   if (!success) {
+<<<<<<< HEAD
     ESP_LOGE(TAG_HTTP, "Transmit failed.");
+=======
+    Serial.println("[HTTP] Connection closed");
+>>>>>>> origin/master
     return false;
   } else {
     txBytes += len;
@@ -635,11 +713,15 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   else
 #endif
   {
-    content = cell.receive(&recvBytes);
+    content = cell.receive(&recvBytes, HTTP_CONN_TIMEOUT);
   }
   if (!content) {
     // close connection on receiving timeout
+<<<<<<< HEAD
     ESP_LOGE(TAG_HTTP, "No response");
+=======
+    Serial.println("[HTTP] No response");
+>>>>>>> origin/master
     return false;
   }
   ESP_LOGD(TAG_HTTP, "tx-reply: %s", content);

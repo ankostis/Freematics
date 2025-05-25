@@ -104,7 +104,7 @@ const char* contentTypeTable[]={
 	"application/json",
 };
 
-const char* defaultPages[]={"index.htm","index.html","default.htm","main.xul"};
+const char* defaultPages[]={"index.html"};
 
 ////////////////////////////////////////////////////////////////////////////
 // API callsc
@@ -1257,7 +1257,7 @@ int _mwStartSendFile2(HttpParam* hp, HttpSocket* phsSocket, const char* filePath
 		mwGetLocalFileName(&hfp);
 	}
 	else {
-		strncpy(hfp.cFilePath, filePath, sizeof(hfp.cFilePath));
+		strncpy(hfp.cFilePath, filePath, sizeof(hfp.cFilePath) - 1);
 	}
 
 	if (stat(hfp.cFilePath, &st) == 0) {

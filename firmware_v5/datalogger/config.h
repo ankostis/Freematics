@@ -40,20 +40,23 @@
 #ifndef HAVE_CONFIG
 // enable(1)/disable(0) OBD-II reading
 #define USE_OBD 1
-// GNSS option: 0:disable 1:external 2:SIM5360/7600 3:SIM7070
+// GNSS option: 0:disable 1:standalone 2:SIM5360/7600 3:SIM7070
 #define USE_GNSS 1
 // enable(1)/disable(0) MEMS motion sensor
 #define USE_MEMS 1
-// enable(1)/disable(0) quaternion calculation to get orientation
-#define ENABLE_ORIENTATION 0
 #endif
 
 // enable(1)/disable(0) BLE SPP server (for Freematics Controller App).
-#define ENABLE_BLE 0
+#define ENABLE_BLE 1
 
+/**************************************
+* Parameters
+**************************************/
+// stats update interval
+#define STATS_INTERVAL 500
+// OBD retry interval
+#define OBD_RETRY_INTERVAL 3000
 // GPS parameters
 #define GPS_SERIAL_BAUDRATE 115200L
 // motion detection
-#define WAKEUP_MOTION_THRESHOLD 0.03 /* G */
-// minimum loop time
-#define MIN_LOOP_TIME 100 /* ms */ 
+#define WAKEUP_MOTION_THRESHOLD 0.3 /* G */

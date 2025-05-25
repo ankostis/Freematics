@@ -35,7 +35,7 @@ inline constexpr const char TAG_HTTP[] = "NetHTTP";
 #define XBEE_BAUDRATE 115200
 #define HTTP_CONN_TIMEOUT 5000
 
-#define RECV_BUF_SIZE 384
+#define RECV_BUF_SIZE 512
 
 typedef enum {
   METHOD_GET = 0,
@@ -66,7 +66,11 @@ public:
     HTTP_STATES state() { return m_state; }
     uint16_t code() { return m_code; }
 protected:
+<<<<<<< HEAD
     std::string genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
+=======
+    String genHeader(HTTP_METHOD method, const char* path, const char* payload, int payloadSize);
+>>>>>>> origin/master
     HTTP_STATES m_state = HTTP_DISCONNECTED;
     uint16_t m_code = 0;
     std::string m_host;
@@ -116,7 +120,7 @@ class WifiHTTP : public HTTPClient, public ClientWIFI
 public:
     bool open(const char* host = 0, uint16_t port = 0);
     void close();
-    bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
+    bool send(HTTP_METHOD method, const char* path, const char* payload = 0, int payloadSize = 0);
     char* receive(char* buffer, int bufsize, int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
 private:
     WiFiClient client;
@@ -124,8 +128,9 @@ private:
 
 typedef enum {
     CELL_SIM7600 = 0,
-    CELL_SIM7070 = 1,
-    CELL_SIM5360 = 2
+    CELL_SIM7670 = 1,
+    CELL_SIM7070 = 2,
+    CELL_SIM5360 = 3
 } CELL_TYPE;
 
 class CellSIMCOM
@@ -133,7 +138,7 @@ class CellSIMCOM
 public:
     virtual bool begin(CFreematics* device);
     virtual void end();
-    virtual bool setup(const char* apn, unsigned int timeout = 30000);
+    virtual bool setup(const char* apn, const char* username = 0, const char* password = 0, unsigned int timeout = 30000);
     virtual bool setGPS(bool on);
     virtual std::string getIP();
     int RSSI();
@@ -147,6 +152,7 @@ public:
     char IMEI[16] = {0};
 protected:
     bool sendCommand(const char* cmd, unsigned int timeout = 1000, const char* expected = 0);
+    virtual void inbound();
     virtual void checkGPS();
     float parseDegree(const char* s);
     char* m_buffer = 0;
@@ -154,6 +160,7 @@ protected:
     CFreematics* m_device = 0;
     GPS_DATA* m_gps = 0;
     CELL_TYPE m_type = CELL_SIM7600;
+    int m_incoming = 0;
 };
 
 class CellUDP : public CellSIMCOM
@@ -164,8 +171,12 @@ public:
     bool send(const char* data, unsigned int len);
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
 protected:
+<<<<<<< HEAD
     char* checkIncoming(int* pbytes);
     std::string udpIP;
+=======
+    String udpIP;
+>>>>>>> origin/master
     uint16_t udpPort = 0;
 };
 
@@ -175,6 +186,7 @@ public:
     void init();
     bool open(const char* host = 0, uint16_t port = 0);
     bool close();
+<<<<<<< HEAD
     bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
     char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
 };
@@ -241,6 +253,9 @@ public:
     bool open(const char* host = 0, uint16_t port = 0);
     bool close();
     bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
+=======
+    bool send(HTTP_METHOD method, const char* host, uint16_t port, const char* path, const char* payload = 0, int payloadSize = 0);
+>>>>>>> origin/master
     char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
 };
 

@@ -11,6 +11,7 @@ class CStorage {
 public:
     virtual bool init() { return true; }
     virtual void uninit() {}
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.h
     void log(uint16_t pid, uint8_t values[], uint8_t count)
     {
         char buf[256];
@@ -75,16 +76,22 @@ public:
         Serial.write(' ');
         m_samples++;
     }
+=======
+    virtual void log(uint16_t pid, uint8_t values[], uint8_t count);
+    virtual void log(uint16_t pid, uint16_t values[], uint8_t count);
+    virtual void log(uint16_t pid, uint32_t values[], uint8_t count);
+    virtual void log(uint16_t pid, int32_t values[], uint8_t count);
+    virtual void log(uint16_t pid, float values[], uint8_t count, const char* fmt = "%f");
+    virtual void timestamp(uint32_t ts);
+    virtual void purge() { m_samples = 0; }
+    virtual uint16_t samples() { return m_samples; }
+    virtual void dispatch(const char* buf, byte len);
+>>>>>>> origin/master:firmware_v5/telelogger/telestore.h
 protected:
-    byte checksum(const char* data, int len)
-    {
-        byte sum = 0;
-        for (int i = 0; i < len; i++) sum += data[i];
-        return sum;
-    }
+    byte checksum(const char* data, int len);
     virtual void header(const char* devid) {}
     virtual void tailer() {}
-    uint16_t m_samples = 0;
+    int m_samples = 0;
     char m_delimiter = ':';
 };
 
@@ -106,6 +113,7 @@ public:
     void purge() { m_cacheBytes = 0; m_samples = 0; }
     unsigned int length() { return m_cacheBytes; }
     char* buffer() { return m_cache; }
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.h
     void dispatch(const char* buf, byte len)
     {
         // reserve some space for checksum
@@ -138,6 +146,12 @@ public:
             m_cacheBytes = p + 1 - m_cache;
         }
     }
+=======
+    void dispatch(const char* buf, byte len);
+    void header(const char* devid);
+    void tailer();
+    void untailer();
+>>>>>>> origin/master:firmware_v5/telelogger/telestore.h
 protected:
     unsigned int m_cacheSize = 0;
     unsigned int m_cacheBytes = 0;
@@ -147,6 +161,7 @@ protected:
 class FileLogger : public CStorage {
 public:
     FileLogger() { m_delimiter = ','; }
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.h
     virtual void dispatch(const char* buf, byte len)
     {
         if (m_id == 0) return;
@@ -167,6 +182,11 @@ public:
         return m_size;
     }
     void end()
+=======
+    virtual void dispatch(const char* buf, byte len);
+    virtual uint32_t size() { return m_size; }
+    virtual void end()
+>>>>>>> origin/master:firmware_v5/telelogger/telestore.h
     {
         m_data_file.close();
         m_id = 0;
@@ -177,21 +197,7 @@ public:
         m_data_file.flush();
     }
 protected:
-    int getFileID(File& root)
-    {
-        if (root) {
-            File file;
-            int id = 0;
-            while(file = root.openNextFile()) {
-                char *p = strrchr(file.name(), '/');
-                unsigned int n = atoi(p ? p + 1 : file.name());
-                if (n > id) id = n;
-            }
-            return id + 1;
-        } else {
-            return 0;
-        }
-    }
+    int getFileID(File& root);
     uint32_t m_dataTime = 0;
     uint32_t m_dataCount = 0;
     uint32_t m_size = 0;
@@ -202,6 +208,7 @@ protected:
 /** ATTENTION: must have enabled `SD` instance before calling `begin()`. */
 class SDLogger : public FileLogger {
 public:
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.h
     uint32_t begin()
     {
         File root = SD.open("/DATA");
@@ -231,11 +238,17 @@ public:
             ESP_LOGE(TAG, "Failed flushing SD file: %s", path);
         }
     }
+=======
+    bool init();
+    uint32_t begin();
+    void flush();
+>>>>>>> origin/master:firmware_v5/telelogger/telestore.h
 };
 
 /** ATTENTION: must have enabled `SPIFFS` instance before calling `begin()`. */
 class SPIFFSLogger : public FileLogger {
 public:
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.h
 
     uint32_t begin()
     {
@@ -276,4 +289,10 @@ private:
             if (!m_data_file) m_id = 0;
         }
     }
+=======
+    bool init();
+    uint32_t begin();
+private:
+    void purge();
+>>>>>>> origin/master:firmware_v5/telelogger/telestore.h
 };

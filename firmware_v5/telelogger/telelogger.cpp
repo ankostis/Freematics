@@ -26,9 +26,13 @@
 #include <FreematicsPlus.h>
 #include <Buzzer.h>
 #include "config.h"
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 #include "telelogger.h"
 #include "NodeInfo.h"
 #include "telemesh.h"
+=======
+#include "telestore.h"
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #include "teleclient.h"
 #if _NEED_SD
 #include "SD.h"
@@ -46,6 +50,8 @@
 #include "esp32/himem.h"
 #endif
 #include "driver/adc.h"
+#include "nvs_flash.h"
+#include "nvs.h"
 #if ENABLE_OLED
 #include "FreematicsOLED.h"
 #endif
@@ -81,6 +87,7 @@ const char ota_url2log[] = OTA_UPDATE_URL;
 #define STATE_GPS_READY 0x4
 #define STATE_MEMS_READY 0x8
 #define STATE_NET_READY 0x10
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 #define STATE_CELL_CONNECTED 0x20
 #define STATE_WIFI_CONNECTED 0x40
 #define STATE_WORKING 0x80
@@ -143,6 +150,13 @@ unsigned long wakeup_tstamp = 0;
 constexpr const auto json_dump_handler = nlohmann::detail::error_handler_t::replace;
 Json node_info_j;
 node_info_t node_info;
+=======
+#define STATE_GPS_ONLINE 0x20
+#define STATE_CELL_CONNECTED 0x40
+#define STATE_WIFI_CONNECTED 0x80
+#define STATE_WORKING 0x100
+#define STATE_STANDBY 0x200
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 
 typedef struct {
   byte pid;
@@ -168,7 +182,17 @@ uint8_t accCount = 0;
 #endif
 float deviceTemp = 0;
 
+// config data
+char apn[32];
+#if ENABLE_WIFI
+char wifiSSID[32] = WIFI_SSID;
+char wifiPassword[32] = WIFI_PASSWORD;
+#endif
+nvs_handle_t nvs;
+
 // live data
+String netop;
+String ip;
 int16_t rssi = 0;
 int16_t rssiLast = 0;
 uint16_t dtc[6] = {0};
@@ -194,9 +218,12 @@ int fileid = 0;
 uint16_t lastSizeKB = 0;
 #endif
 
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 uint32_t lastCmdToken = 0;
 std::string serialCommand;
 
+=======
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 byte ledMode = 0;
 
 bool processCommand(char* data);
@@ -227,7 +254,7 @@ protected:
 #if ENABLE_MEMS
     processMEMS(0);
 #endif
-    delay(5);
+    processBLE(0);
   }
 };
 
@@ -280,6 +307,15 @@ void printTimeoutStats()
   ESP_LOGI(TAG_TELE, "Timeouts: OBD: %i, network: %i", timeoutsOBD, timeoutsNet);
 }
 
+void beep(int duration)
+{
+    // turn on buzzer at 2000Hz frequency 
+    sys.buzzer(2000);
+    delay(duration);
+    // turn off buzzer
+    sys.buzzer(0);
+}
+
 #if LOG_EXT_SENSORS
 void processExtInputs(CBuffer* buffer)
 {
@@ -288,12 +324,20 @@ void processExtInputs(CBuffer* buffer)
   buffer->add(PID_EXT_SENSORS, ELEMENT_UINT8, levels, sizeof(levels), 2);
 #elif LOG_EXT_SENSORS == LOG_EXT_SENSORS_ANALOG
   uint16_t reading[] = {adc1_get_raw(ADC1_CHANNEL_0), adc1_get_raw(ADC1_CHANNEL_1)};
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   ESP_LOGI(TAG_PROC, "GPIO0: %f, GPIO1: %f",
       (float)reading[0] * 3.15 / 4095 - 0.01,
       (float)reading[1] * 3.15 / 4095 - 0.01);
   for (int i = 0; i < 2; i++) {
     buffer->add(pids[i], reading[i]);
   }
+=======
+  Serial.print("GPIO0:");
+  Serial.print((float)reading[0] * 3.15 / 4095 - 0.01);
+  Serial.print(" GPIO1:");
+  Serial.println((float)reading[1] * 3.15 / 4095 - 0.01);
+  buffer->add(PID_EXT_SENSORS, ELEMENT_UINT16, reading, sizeof(reading), 2);
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #endif
 }
 #endif
@@ -367,7 +411,6 @@ void processOBD(CBuffer* buffer)
         printTimeoutStats();
         break;
     }
-    processBLE(0);
     if (tier > 1) break;
   }
 
@@ -383,6 +426,20 @@ void processOBD(CBuffer* buffer)
 }
 #endif
 
+bool initGPS()
+{
+  // start GNSS receiver
+  if (sys.gpsBeginExt()) {
+    Serial.println("GNSS:OK(E)");
+  } else if (sys.gpsBegin()) {
+    Serial.println("GNSS:OK(I)");
+  } else {
+    Serial.println("GNSS:NO");
+    return false;
+  }
+  return true;
+}
+
 bool processGPS(CBuffer* buffer)
 {
   static uint32_t lastGPStime = 0;
@@ -394,7 +451,7 @@ bool processGPS(CBuffer* buffer)
     lastGPSLat = 0;
     lastGPSLng = 0;
   }
-#if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
+#if GNSS == GNSS_STANDALONE
   if (state.check(STATE_GPS_READY)) {
     // read parsed GPS data
     if (!sys.gpsGetData(&gd)) {
@@ -406,10 +463,26 @@ bool processGPS(CBuffer* buffer)
       return false;
     }
 #endif
-
-  if (!gd || lastGPStime == gd->time || gd->date == 0 || (gd->lng == 0 && gd->lat == 0)) return false;
-
-  if ((lastGPSLat || lastGPSLng) && (abs(gd->lat - lastGPSLat) > 0.001 || abs(gd->lng - lastGPSLng > 0.001))) {
+  if (!gd || lastGPStime == gd->time) return false;
+  if (gd->date) {
+    // generate ISO time string
+    char *p = isoTime + sprintf(isoTime, "%04u-%02u-%02uT%02u:%02u:%02u",
+        (unsigned int)(gd->date % 100) + 2000, (unsigned int)(gd->date / 100) % 100, (unsigned int)(gd->date / 10000),
+        (unsigned int)(gd->time / 1000000), (unsigned int)(gd->time % 1000000) / 10000, (unsigned int)(gd->time % 10000) / 100);
+    unsigned char tenth = (gd->time % 100) / 10;
+    if (tenth) p += sprintf(p, ".%c00", '0' + tenth);
+    *p = 'Z';
+    *(p + 1) = 0;
+  }
+  if (gd->lng == 0 && gd->lat == 0) {
+    // coordinates not ready
+    if (gd->date) {
+      Serial.print("[GNSS] ");
+      Serial.println(isoTime);
+    }
+    return false;
+  }
+  if ((lastGPSLat || lastGPSLng) && (abs(gd->lat - lastGPSLat) > 0.001 || abs(gd->lng - lastGPSLng) > 0.001)) {
     // invalid coordinates data
     lastGPSLat = 0;
     lastGPSLng = 0;
@@ -417,12 +490,18 @@ bool processGPS(CBuffer* buffer)
   }
   lastGPSLat = gd->lat;
   lastGPSLng = gd->lng;
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   
   float kph = (float)((int)(gd->speed * 1.852f * 10)) / 10;
+=======
+
+  float kph = gd->speed * 1.852f;
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   if (kph >= 2) lastMotionTime = millis();
 
   if (buffer) {
     buffer->add(PID_GPS_TIME, ELEMENT_UINT32, &gd->time, sizeof(uint32_t));
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     if (gd->lat && gd->lng && gd->sat > 3) {
       buffer->add(PID_GPS_LATITUDE, ELEMENT_FLOAT, &gd->lat, sizeof(float));
       buffer->add(PID_GPS_LONGITUDE, ELEMENT_FLOAT, &gd->lng, sizeof(float));
@@ -448,6 +527,31 @@ bool processGPS(CBuffer* buffer)
       "<GPS> lat: %.6f, lng: %.6f, v: %.1f km/h, heading: %i, sats: %i"
       ", t: %s, err: %i",
       gd->lat, gd->lng, kph, gd->heading, gd->sat, isoTime, gd->errors);
+=======
+    buffer->add(PID_GPS_LATITUDE, ELEMENT_FLOAT, &gd->lat, sizeof(float));
+    buffer->add(PID_GPS_LONGITUDE, ELEMENT_FLOAT, &gd->lng, sizeof(float));
+    buffer->add(PID_GPS_ALTITUDE, ELEMENT_FLOAT_D1, &gd->alt, sizeof(float)); /* m */
+    buffer->add(PID_GPS_SPEED, ELEMENT_FLOAT_D1, &kph, sizeof(kph));
+    buffer->add(PID_GPS_HEADING, ELEMENT_UINT16, &gd->heading, sizeof(uint16_t));
+    if (gd->sat) buffer->add(PID_GPS_SAT_COUNT, ELEMENT_UINT8, &gd->sat, sizeof(uint8_t));
+    if (gd->hdop) buffer->add(PID_GPS_HDOP, ELEMENT_UINT8, &gd->hdop, sizeof(uint8_t));
+  }
+  
+  Serial.print("[GNSS] ");
+  Serial.print(gd->lat, 6);
+  Serial.print(' ');
+  Serial.print(gd->lng, 6);
+  Serial.print(' ');
+  Serial.print((int)kph);
+  Serial.print("km/h");
+  Serial.print(" SATS:");
+  Serial.print(gd->sat);
+  Serial.print(" HDOP:");
+  Serial.print(gd->hdop);
+  Serial.print(" Course:");
+  Serial.println(gd->heading);
+  //Serial.println(gd->errors);
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   lastGPStime = gd->time;
   return true;
 }
@@ -491,14 +595,26 @@ void processMEMS(CBuffer* buffer)
       value[0] = accSum[0] / accCount - accBias[0];
       value[1] = accSum[1] / accCount - accBias[1];
       value[2] = accSum[2] / accCount - accBias[2];
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
       // buffer->add(PID_ACC, ELEMENT_FLOAT, value, sizeof(value), 3);
       ESP_LOGD(TAG_PROC, "ACC: %.4f/%.4f/%.4f", value[0], value[1], value[2]);
 #endif
+=======
+      buffer->add(PID_ACC, ELEMENT_FLOAT_D2, value, sizeof(value), 3);
+/*
+      Serial.print("[ACC] ");
+      Serial.print(value[0]);
+      Serial.print('/');
+      Serial.print(value[1]);
+      Serial.print('/');
+      Serial.println(value[2]);
+*/
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #if ENABLE_ORIENTATION
       value[0] = ori.yaw;
       value[1] = ori.pitch;
       value[2] = ori.roll;
-      buffer->add(PID_ORIENTATION, ELEMENT_FLOAT, value, sizeof(value), 3);
+      buffer->add(PID_ORIENTATION, ELEMENT_FLOAT_D2, value, sizeof(value), 3);
 #endif
 #if ENABLE_MOVEMENT
       // calculate motion
@@ -562,6 +678,7 @@ void printTime()
 *******************************************************************************/
 void initialize()
 {
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   buzzer.tone(2000);
   delay(100);
   if (_CHECK_BUZTICKS)
@@ -570,6 +687,8 @@ void initialize()
   else
     buzzer.tone(0);
 
+=======
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   // dump buffer data
   bufman.purge();
 
@@ -579,20 +698,17 @@ void initialize()
   }
 #endif
 
-#if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
-  // start GPS receiver
+#if GNSS == GNSS_STANDALONE
   if (!state.check(STATE_GPS_READY)) {
-#if GNSS == GNSS_EXTERNAL
-    if (sys.gpsBeginExt())
-#else
-    if (sys.gpsBegin())
-#endif
-    {
+    if (initGPS()) {
       state.set(STATE_GPS_READY);
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
       ESP_LOGI(TAG_INIT, "GNSS: OK, state: %X", state.m_state);
       OLED_PRINTLN("GNSS OK");
     } else {
       ESP_LOGE(TAG_INIT, "GNSS: NO, state: %X", state.m_state);
+=======
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
     }
   }
 #endif
@@ -708,6 +824,7 @@ void do_firmware_upgrade(const char *ota_url = nullptr) {
 
 std::string executeCommand(const char* cmd)
 {
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   int cmd_len = strlen(cmd);
   std::string result = "OK";
   ESP_LOGI(TAG_PROC, "cmd: %s", cmd);
@@ -902,6 +1019,32 @@ bool processCommand(char* data)
     }
   }
   return true;
+=======
+  uint32_t t = millis() - teleClient.startTime;
+  char buf[32];
+  sprintf(buf, "%02u:%02u.%c ", t / 60000, (t % 60000) / 1000, (t % 1000) / 100 + '0');
+  Serial.print("[NET] ");
+  Serial.print(buf);
+  Serial.print("| Packet #");
+  Serial.print(teleClient.txCount);
+  Serial.print(" | Out: ");
+  Serial.print(teleClient.txBytes >> 10);
+  Serial.print(" KB | In: ");
+  Serial.print(teleClient.rxBytes);
+  Serial.print(" bytes | ");
+  Serial.print((unsigned int)((uint64_t)(teleClient.txBytes + teleClient.rxBytes) * 3600 / (millis() - teleClient.startTime)));
+  Serial.print(" KB/h");
+
+  Serial.println();
+#if ENABLE_OLED
+  oled.setCursor(0, 2);
+  oled.println(timestr);
+  oled.setCursor(0, 5);
+  oled.printInt(teleClient.txCount, 2);
+  oled.setCursor(80, 5);
+  oled.printInt(teleClient.txBytes >> 10, 3);
+#endif
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 }
 
 bool waitMotion(long timeout)
@@ -928,7 +1071,7 @@ bool waitMotion(long timeout)
         float m = (acc[i] - accBias[i]);
         motion += m * m;
       }
-#if ENABLE_HTTTPD
+#if ENABLE_HTTPD
       serverProcess(100);
 #endif
       processBLE(100);
@@ -938,7 +1081,7 @@ bool waitMotion(long timeout)
         ESP_LOGD(TAG_PROC, "Moved, %f", motion);
         return true;
       }
-    } while ((long)(millis() - t) < timeout || timeout == -1);
+    } while (state.check(STATE_STANDBY) && ((long)(millis() - t) < timeout || timeout == -1));
     return false;
   }  // state.check(STATE_MEMS_READY)
 #endif  // ENABLE_MEMS
@@ -950,6 +1093,7 @@ bool waitMotion(long timeout)
 *******************************************************************************/
 void process()
 {
+  static uint32_t lastGPStick = 0;
   uint32_t startTime = millis();
 
   CBuffer* buffer = bufman.getFree();
@@ -1034,7 +1178,21 @@ void process()
   processMEMS(buffer);
 #endif
 
-  processGPS(buffer);
+  bool success = processGPS(buffer);
+#if GNSS_RESET_TIMEOUT
+  if (success) {
+    lastGPStick = millis();
+    state.set(STATE_GPS_ONLINE);
+  } else {
+    if (millis() - lastGPStick > GNSS_RESET_TIMEOUT * 1000) {
+      sys.gpsEnd();
+      state.clear(STATE_GPS_ONLINE | STATE_GPS_READY);
+      delay(20);
+      if (initGPS()) state.set(STATE_GPS_READY);
+      lastGPStick = millis();
+    }
+  }
+#endif
 
   if (!state.check(STATE_MEMS_READY)) {
     deviceTemp = readChipTemperature();
@@ -1130,6 +1288,7 @@ bool initCell(bool quick = false)
     OLED_PRINTLN("NO SIM CARD");
     //return false;
   }
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   ESP_LOGI(TAG_CELL, "IMEI: %s, APN: %s, Searching...",
       teleClient.cell.IMEI, node_info.cell_apn);
   if (state.check(STATE_NET_READY) && !state.check(STATE_CELL_CONNECTED)) {
@@ -1173,6 +1332,55 @@ bool initCell(bool quick = false)
       }  // RSSI loop
     }  // if cell.setup() failed/no?
   } // STATE_NET_READY && !STATE_CELL_CONNECTED
+=======
+  Serial.print("IMEI:");
+  Serial.println(teleClient.cell.IMEI);
+  Serial.println("[CELL] Searching...");
+  if (*apn) {
+    Serial.print("APN:");
+    Serial.println(apn);
+  }
+  if (teleClient.cell.setup(apn, APN_USERNAME, APN_PASSWORD)) {
+    netop = teleClient.cell.getOperatorName();
+    if (netop.length()) {
+      Serial.print("Operator:");
+      Serial.println(netop);
+#if ENABLE_OLED
+      oled.println(op);
+#endif
+    }
+
+#if GNSS == GNSS_CELLULAR
+    if (teleClient.cell.setGPS(true)) {
+      Serial.println("CELL GNSS:OK");
+    }
+#endif
+
+    ip = teleClient.cell.getIP();
+    if (ip.length()) {
+      Serial.print("[CELL] IP:");
+      Serial.println(ip);
+#if ENABLE_OLED
+      oled.print("IP:");
+      oled.println(ip);
+#endif
+    }
+    state.set(STATE_CELL_CONNECTED);
+  } else {
+    char *p = strstr(teleClient.cell.getBuffer(), "+CPSI:");
+    if (p) {
+      char *q = strchr(p, '\r');
+      if (q) *q = 0;
+      Serial.print("[CELL] ");
+      Serial.println(p + 7);
+#if ENABLE_OLED
+      oled.println(p + 7);
+#endif
+    } else {
+      Serial.print(teleClient.cell.getBuffer());
+    }
+  }
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   timeoutsNet = 0;
   return state.check(STATE_CELL_CONNECTED);
 }  //  initCell()
@@ -1186,7 +1394,7 @@ void telemetry(void* inst)
   uint8_t connErrors = 0;
   CStorageRAM store;
   store.init(
-#if HAS_LARGE_RAM
+#if BOARD_HAS_PSRAM
     (char*)heap_caps_malloc(SERIALIZE_BUFFER_SIZE, MALLOC_CAP_SPIRAM),
 #else
     (char*)malloc(SERIALIZE_BUFFER_SIZE),
@@ -1200,11 +1408,15 @@ void telemetry(void* inst)
     if (state.check(STATE_STANDBY)) {
       if (state.check(STATE_CELL_CONNECTED) || state.check(STATE_WIFI_CONNECTED)) {
         teleClient.shutdown();
+        netop = "";
+        ip = "";
+        rssi = 0;
       }
       state.clear(STATE_NET_READY | STATE_CELL_CONNECTED | STATE_WIFI_CONNECTED);
       teleClient.reset();
       bufman.purge();
 
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 #if GNSS == GNSS_INTERNAL || GNSS == GNSS_EXTERNAL
       if (state.check(STATE_GPS_READY)) {
 #if GNSS_ALWAYS_ON
@@ -1217,6 +1429,8 @@ void telemetry(void* inst)
       gd = 0;
 #endif
 
+=======
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
       uint32_t t = millis();
       do {
         delay(1000);
@@ -1225,9 +1439,20 @@ void telemetry(void* inst)
         bool pingOk = false;
         // start ping
 #if ENABLE_WIFI
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
         if (initWifi()) {
           ESP_LOGD(TAG_WIFI, "Ping...");
           pingOk = teleClient.ping();
+=======
+        if (wifiSSID[0]) { 
+          Serial.print("[WIFI] Joining SSID:");
+          Serial.println(wifiSSID);
+          teleClient.wifi.begin(wifiSSID, wifiPassword);
+        }
+        if (teleClient.wifi.setup()) {
+          Serial.println("[WIFI] Ping...");
+          teleClient.ping();
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
         }
         else
 #endif
@@ -1271,6 +1496,7 @@ void telemetry(void* inst)
     }
 
 #if ENABLE_WIFI
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     if (!state.check(STATE_WIFI_CONNECTED)) {
       initWifi()
       Serial.println(WIFI_SSID);
@@ -1291,6 +1517,13 @@ void telemetry(void* inst)
       teleClient.wifi.setup();
       initCell(true);
   >>>>>>> stanley_submerged_1:firmware_v5/telelogger/telelogger.ino
+=======
+    if (wifiSSID[0] && !state.check(STATE_WIFI_CONNECTED)) {
+      Serial.print("[WIFI] Joining SSID:");
+      Serial.println(wifiSSID);
+      teleClient.wifi.begin(wifiSSID, wifiPassword);
+      teleClient.wifi.setup();
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
     }
 #endif
     >>>>>>> upstream:firmware_v5/telelogger/telelogger.ino
@@ -1298,23 +1531,28 @@ void telemetry(void* inst)
 
     while (state.check(STATE_WORKING)) {
 #if ENABLE_WIFI
-      if (!state.check(STATE_WIFI_CONNECTED) && teleClient.wifi.connected()) {
-        String ip = teleClient.wifi.getIP();
-        if (ip.length()) {
-          Serial.print("[WIFI] IP:");
-          Serial.println(ip);
+      if (wifiSSID[0]) {
+        if (!state.check(STATE_WIFI_CONNECTED) && teleClient.wifi.connected()) {
+          ip = teleClient.wifi.getIP();
+          if (ip.length()) {
+            Serial.print("[WIFI] IP:");
+            Serial.println(ip);
+          }
+          connErrors = 0;
+          if (teleClient.connect()) {
+            state.set(STATE_WIFI_CONNECTED | STATE_NET_READY);
+            beep(50);
+            // switch off cellular module when wifi connected
+            if (state.check(STATE_CELL_CONNECTED)) {
+              teleClient.cell.end();
+              state.clear(STATE_CELL_CONNECTED);
+              Serial.println("[CELL] Deactivated");
+            }
+          }
+        } else if (state.check(STATE_WIFI_CONNECTED) && !teleClient.wifi.connected()) {
+          Serial.println("[WIFI] Disconnected");
+          state.clear(STATE_WIFI_CONNECTED);
         }
-        connErrors = 0;
-        if (teleClient.connect()) {
-          state.set(STATE_WIFI_CONNECTED | STATE_NET_READY);
-          // switch off cellular module when wifi connected
-          teleClient.cell.end();
-          state.clear(STATE_CELL_CONNECTED);
-          Serial.println("[CELL] Deactivated");
-        }
-      } else if (state.check(STATE_WIFI_CONNECTED) && !teleClient.wifi.connected()) {
-        Serial.println("[WIFI] Disconnected");
-        state.clear(STATE_WIFI_CONNECTED);
       }
 #endif
       if (!state.check(STATE_WIFI_CONNECTED) && !state.check(STATE_CELL_CONNECTED)) {
@@ -1322,10 +1560,11 @@ void telemetry(void* inst)
         if (!initCell() || !teleClient.connect()) {
           teleClient.cell.end();
           state.clear(STATE_NET_READY | STATE_CELL_CONNECTED);
-          delay(15000);
           break;
         }
         Serial.println("[CELL] In service");
+        state.set(STATE_NET_READY);
+        beep(50);
       }
 
       if (millis() - lastRssiTime > SIGNAL_CHECK_INTERVAL * 1000) {
@@ -1347,8 +1586,13 @@ void telemetry(void* inst)
         lastRssiTime = millis();
 
 #if ENABLE_WIFI
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
         if (!state.check(STATE_WIFI_CONNECTED)) {
           teleClient.wifi.begin(node_info.wifi_ssids);
+=======
+        if (wifiSSID[0] && !state.check(STATE_WIFI_CONNECTED)) {
+          teleClient.wifi.begin(wifiSSID, wifiPassword);
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
         }
 #endif
       }
@@ -1366,7 +1610,12 @@ void telemetry(void* inst)
       buffer->serialize(store);
       bufman.free(buffer);
       store.tailer();
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
       ESP_LOGD(TAG_TELE, "To tx: |%s|", store.buffer());
+=======
+      Serial.print("[DAT] ");
+      Serial.println(store.buffer());
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 
       // start transmission
 #ifdef PIN_LED
@@ -1463,7 +1712,20 @@ void standby()
     logger.end();
   }
 #endif
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   state.set(STATE_GET_OBFCM);
+=======
+
+#if !GNSS_ALWAYS_ON && GNSS == GNSS_STANDALONE
+  if (state.check(STATE_GPS_READY)) {
+    Serial.println("[GNSS] OFF");
+    sys.gpsEnd(true);
+    state.clear(STATE_GPS_READY | STATE_GPS_ONLINE);
+    gd = 0;
+  }
+#endif
+
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   state.clear(STATE_WORKING | STATE_OBD_READY | STATE_STORAGE_READY);
   // this will put co-processor into sleep mode
   ESP_LOGI(TAG_PROC, "STANDBY(state: %X)", state.m_state);
@@ -1525,16 +1787,24 @@ void standby()
 #else
   delay(5000);
 #endif
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   ESP_LOGI(TAG_PROC, "Wakeup!");
 
   boot_ark.nap_sec += (millis() - standby_tstamp) / 1000;
   wakeup_tstamp = millis();
   current_stationary_tx_interval_stage = 0;
 
+=======
+  Serial.println("WAKEUP");
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
   sys.resetLink();
   if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     mems->end();
+=======
+  if (mems) mems->end();  
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #endif
     esp_restart();
   }
@@ -1545,6 +1815,7 @@ void standby()
 /*******************************************************************************
   SETUP (after boot)
 *******************************************************************************/
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
 void enter_coproc_bootpipe_mode() {
   constexpr const char EOT = 0x04; // End Of Transmission
   const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
@@ -1581,44 +1852,170 @@ void enter_coproc_bootpipe_mode() {
     esp_restart();
   }
 ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did nothing ))--");
+=======
+void genDeviceID(char* buf)
+{
+    uint64_t seed = ESP.getEfuseMac() >> 8;
+    for (int i = 0; i < 8; i++, seed >>= 5) {
+      byte x = (byte)seed & 0x1f;
+      if (x >= 10) {
+        x = x - 10 + 'A';
+        switch (x) {
+          case 'B': x = 'W'; break;
+          case 'D': x = 'X'; break;
+          case 'I': x = 'Y'; break;
+          case 'O': x = 'Z'; break;
+        }
+      } else {
+        x += '0';
+      }
+      buf[i] = x;
+    }
+    buf[8] = 0;
+}
+
+void showSysInfo()
+{
+  Serial.print("CPU:");
+  Serial.print(ESP.getCpuFreqMHz());
+  Serial.print("MHz FLASH:");
+  Serial.print(ESP.getFlashChipSize() >> 20);
+  Serial.println("MB");
+  Serial.print("IRAM:");
+  Serial.print(ESP.getHeapSize() >> 10);
+  Serial.print("KB");
+#if BOARD_HAS_PSRAM
+  if (psramInit()) {
+    Serial.print(" PSRAM:");
+    Serial.print(esp_spiram_get_size() >> 20);
+    Serial.print("MB");
+  }
+#endif
+  Serial.println();
+
+  int rtc = rtc_clk_slow_freq_get();
+  if (rtc) {
+    Serial.print("RTC:");
+    Serial.println(rtc);
+  }
+
+#if ENABLE_OLED
+  oled.clear();
+  oled.print("CPU:");
+  oled.print(ESP.getCpuFreqMHz());
+  oled.print("Mhz ");
+  oled.print(getFlashSize() >> 10);
+  oled.println("MB Flash");
+#endif
+
+  Serial.print("DEVICE ID:");
+  Serial.println(devid);
+#if ENABLE_OLED
+  oled.print("DEVICE ID:");
+  oled.println(devid);
+#endif
+}
+
+void loadConfig()
+{
+  size_t len;
+  len = sizeof(apn);
+  apn[0] = 0;
+  nvs_get_str(nvs, "CELL_APN", apn, &len);
+  if (!apn[0]) {
+    strcpy(apn, CELL_APN);
+  }
+
+#if ENABLE_WIFI
+  len = sizeof(wifiSSID);
+  nvs_get_str(nvs, "WIFI_SSID", wifiSSID, &len);
+  len = sizeof(wifiPassword);
+  nvs_get_str(nvs, "WIFI_PWD", wifiPassword, &len);
+#endif
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 }
 
 void processBLE(int timeout)
 {
 #if ENABLE_BLE
-    static byte echo = 0;
-    char* cmd;
-    if (!(cmd = ble_recv_command(timeout))) {
-        return;
-    }
+  static byte echo = 0;
+  char* cmd;
+  if (!(cmd = ble_recv_command(timeout))) {
+    return;
+  }
 
-    char *p = strchr(cmd, '\r');
-    if (p) *p = 0;
-    char buf[48];
-    int bufsize = sizeof(buf);
-    int n = 0;
-    if (echo) n += snprintf(buf + n, bufsize - n, "%s\r", cmd);
-    Serial.print("[BLE] ");
-    Serial.print(cmd);
-    if (!strcmp(cmd, "UPTIME") || !strcmp(cmd, "TICK")) {
-        n += snprintf(buf + n, bufsize - n, "%lu", millis());
-    } else if (!strcmp(cmd, "BATT")) {
-        n += snprintf(buf + n, bufsize - n, "%.2f", (float)(analogRead(A0) * 42) / 4095);
-    } else if (!strcmp(cmd, "RESET")) {
+  char *p = strchr(cmd, '\r');
+  if (p) *p = 0;
+  char buf[48];
+  int bufsize = sizeof(buf);
+  int n = 0;
+  if (echo) n += snprintf(buf + n, bufsize - n, "%s\r", cmd);
+  Serial.print("[BLE] ");
+  Serial.print(cmd);
+  if (!strcmp(cmd, "UPTIME") || !strcmp(cmd, "TICK")) {
+    n += snprintf(buf + n, bufsize - n, "%lu", millis());
+  } else if (!strcmp(cmd, "BATT")) {
+    n += snprintf(buf + n, bufsize - n, "%.2f", (float)(analogRead(A0) * 42) / 4095);
+  } else if (!strcmp(cmd, "RESET")) {
 #if STORAGE
-        logger.end();
+    logger.end();
 #endif
-        ESP.restart();
-        // never reach here
-    } else if (!strcmp(cmd, "OFF")) {
-        state.set(STATE_STANDBY);
-        n += snprintf(buf + n, bufsize - n, "OK");
-    } else if (!strcmp(cmd, "ON")) {
-        state.clear(STATE_STANDBY);
-        n += snprintf(buf + n, bufsize - n, "OK");
-    } else if (!strcmp(cmd, "ON?")) {
-        n += snprintf(buf + n, bufsize - n, "%u", state.check(STATE_STANDBY) ? 0 : 1);
+    ESP.restart();
+    // never reach here
+  } else if (!strcmp(cmd, "OFF")) {
+    state.set(STATE_STANDBY);
+    state.clear(STATE_WORKING);
+    n += snprintf(buf + n, bufsize - n, "OK");
+  } else if (!strcmp(cmd, "ON")) {
+    state.clear(STATE_STANDBY);
+    n += snprintf(buf + n, bufsize - n, "OK");
+  } else if (!strcmp(cmd, "ON?")) {
+    n += snprintf(buf + n, bufsize - n, "%u", state.check(STATE_STANDBY) ? 0 : 1);
+  } else if (!strcmp(cmd, "APN?")) {
+    n += snprintf(buf + n, bufsize - n, "%s", *apn ? apn : "DEFAULT");
+  } else if (!strncmp(cmd, "APN=", 4)) {
+    n += snprintf(buf + n, bufsize - n, nvs_set_str(nvs, "CELL_APN", strcmp(cmd + 4, "DEFAULT") ? cmd + 4 : "") == ESP_OK ? "OK" : "ERR");
+    loadConfig();
+  } else if (!strcmp(cmd, "NET_OP")) {
+    if (state.check(STATE_WIFI_CONNECTED)) {
+#if ENABLE_WIFI
+      n += snprintf(buf + n, bufsize - n, "%s", wifiSSID[0] ? wifiSSID : "-");
+#endif
+    } else {
+      snprintf(buf + n, bufsize - n, "%s", netop.length() ? netop.c_str() : "-");
+      char *p = strchr(buf + n, ' ');
+      if (p) *p = 0;
+      n += strlen(buf + n);
+    }
+  } else if (!strcmp(cmd, "NET_IP")) {
+    n += snprintf(buf + n, bufsize - n, "%s", ip.length() ? ip.c_str() : "-");
+  } else if (!strcmp(cmd, "NET_PACKET")) {
+      n += snprintf(buf + n, bufsize - n, "%u", teleClient.txCount);
+  } else if (!strcmp(cmd, "NET_DATA")) {
+      n += snprintf(buf + n, bufsize - n, "%u", teleClient.txBytes);
+  } else if (!strcmp(cmd, "NET_RATE")) {
+      n += snprintf(buf + n, bufsize - n, "%u", teleClient.startTime ? (unsigned int)((uint64_t)(teleClient.txBytes + teleClient.rxBytes) * 3600 / (millis() - teleClient.startTime)) : 0);
+  } else if (!strcmp(cmd, "RSSI")) {
+    n += snprintf(buf + n, bufsize - n, "%d", rssi);
+#if ENABLE_WIFI
+  } else if (!strcmp(cmd, "SSID?")) {
+    n += snprintf(buf + n, bufsize - n, "%s", wifiSSID[0] ? wifiSSID : "-");
+  } else if (!strncmp(cmd, "SSID=", 5)) {
+    const char* p = cmd + 5;
+    n += snprintf(buf + n, bufsize - n, nvs_set_str(nvs, "WIFI_SSID", strcmp(p, "-") ? p : "") == ESP_OK ? "OK" : "ERR");
+    loadConfig();
+  } else if (!strcmp(cmd, "WPWD?")) {
+    n += snprintf(buf + n, bufsize - n, "%s", wifiPassword[0] ? wifiPassword : "-");
+  } else if (!strncmp(cmd, "WPWD=", 5)) {
+    const char* p = cmd + 5;
+    n += snprintf(buf + n, bufsize - n, nvs_set_str(nvs, "WIFI_PWD", strcmp(p, "-") ? p : "") == ESP_OK ? "OK" : "ERR");
+    loadConfig();
+#else
+  } else if (!strcmp(cmd, "SSID?") || !strcmp(cmd, "WPWD?")) {
+    n += snprintf(buf + n, bufsize - n, "-");
+#endif
 #if ENABLE_MEMS
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
     } else if (!strcmp(cmd, "TEMP")) {
         n += snprintf(buf + n, bufsize - n, "%.2f", deviceTemp);
     } else if (!strcmp(cmd, "ACC")) {
@@ -1627,22 +2024,31 @@ void processBLE(int timeout)
         n += snprintf(buf + n, bufsize - n, "%.1f/%.1f/%.1f", gyr[0], gyr[1], gyr[2]);
     } else if (!strcmp(cmd, "GF")) {
         n += snprintf(buf + n, bufsize - n, "%f", (float)sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]));
+=======
+  } else if (!strcmp(cmd, "TEMP")) {
+    n += snprintf(buf + n, bufsize - n, "%d", (int)deviceTemp);
+  } else if (!strcmp(cmd, "ACC")) {
+    n += snprintf(buf + n, bufsize - n, "%.1f/%.1f/%.1f", acc[0], acc[1], acc[2]);
+  } else if (!strcmp(cmd, "GYRO")) {
+    n += snprintf(buf + n, bufsize - n, "%.1f/%.1f/%.1f", gyr[0], gyr[1], gyr[2]);
+  } else if (!strcmp(cmd, "GF")) {
+    n += snprintf(buf + n, bufsize - n, "%f", (float)sqrt(acc[0]*acc[0] + acc[1]*acc[1] + acc[2]*acc[2]));
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #endif
-    } else if (!strcmp(cmd, "RSSI")) {
-        n += snprintf(buf + n, bufsize - n, "%d", rssi);
-    } else if (!strcmp(cmd, "ATE0")) {
-        echo = 0;
-        n += snprintf(buf + n, bufsize - n, "OK");
-    } else if (!strcmp(cmd, "ATE1")) {
-        echo = 1;
-        n += snprintf(buf + n, bufsize - n, "OK");
-    } else if (!strcmp(cmd, "FS")) {
-        n += snprintf(buf + n, bufsize - n, "%u",
+  } else if (!strcmp(cmd, "ATE0")) {
+    echo = 0;
+    n += snprintf(buf + n, bufsize - n, "OK");
+  } else if (!strcmp(cmd, "ATE1")) {
+    echo = 1;
+    n += snprintf(buf + n, bufsize - n, "OK");
+  } else if (!strcmp(cmd, "FS")) {
+    n += snprintf(buf + n, bufsize - n, "%u",
 #if STORAGE == STORAGE_NONE
-          0
+    0
 #else
-          logger.size()
+    logger.size()
 #endif
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
         );
     } else if (!memcmp(cmd, "01", 2)) {
         byte pid = hex2uint8(cmd + 2);
@@ -1678,18 +2084,54 @@ void processBLE(int timeout)
         n += snprintf(buf + n, bufsize - n, "%u", (unsigned int)gd->heading);
     } else {
         n += snprintf(buf + n, bufsize - n, "ERROR");
+=======
+      );
+  } else if (!memcmp(cmd, "01", 2)) {
+    byte pid = hex2uint8(cmd + 2);
+    for (byte i = 0; i < sizeof(obdData) / sizeof(obdData[0]); i++) {
+      if (obdData[i].pid == pid) {
+        n += snprintf(buf + n, bufsize - n, "%d", obdData[i].value);
+        pid = 0;
+        break;
+      }
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
     }
-    Serial.print(" -> ");
-    Serial.println((p = strchr(buf, '\r')) ? p + 1 : buf);
-    if (n < bufsize - 1) {
-        buf[n++] = '\r';
-    } else {
-        n = bufsize - 1;
+    if (pid) {
+      int value;
+      if (obd.readPID(pid, value)) {
+        n += snprintf(buf + n, bufsize - n, "%d", value);
+      } else {
+        n += snprintf(buf + n, bufsize - n, "N/A");
+      }
     }
-    buf[n] = 0;
-    ble_send_response(buf, n, cmd);
+  } else if (!strcmp(cmd, "VIN")) {
+    n += snprintf(buf + n, bufsize - n, "%s", vin[0] ? vin : "N/A");
+  } else if (!strcmp(cmd, "LAT") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%f", gd->lat);
+  } else if (!strcmp(cmd, "LNG") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%f", gd->lng);
+  } else if (!strcmp(cmd, "ALT") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%d", (int)gd->alt);
+  } else if (!strcmp(cmd, "SAT") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%u", (unsigned int)gd->sat);
+  } else if (!strcmp(cmd, "SPD") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%d", (int)(gd->speed * 1852 / 1000));
+  } else if (!strcmp(cmd, "CRS") && gd) {
+    n += snprintf(buf + n, bufsize - n, "%u", (unsigned int)gd->heading);
+  } else {
+    n += snprintf(buf + n, bufsize - n, "ERROR");
+  }
+  Serial.print(" -> ");
+  Serial.println((p = strchr(buf, '\r')) ? p + 1 : buf);
+  if (n < bufsize - 1) {
+    buf[n++] = '\r';
+  } else {
+    n = bufsize - 1;
+  }
+  buf[n] = 0;
+  ble_send_response(buf, n, cmd);
 #else
-    if (timeout) delay(timeout);
+  if (timeout) delay(timeout);
 #endif
 }
 
@@ -1786,6 +2228,24 @@ void setup()
   if (_CHECK_BUZTICKS) buzzer.tone(1);
 
   delay(500);
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
+=======
+
+  // Initialize NVS
+  esp_err_t err = nvs_flash_init();
+  if (err == ESP_ERR_NVS_NO_FREE_PAGES || err == ESP_ERR_NVS_NEW_VERSION_FOUND) {
+    // NVS partition was truncated and needs to be erased
+    // Retry nvs_flash_init
+    ESP_ERROR_CHECK(nvs_flash_erase());
+    err = nvs_flash_init();
+  }
+  ESP_ERROR_CHECK( err );
+  err = nvs_open("storage", NVS_READWRITE, &nvs);
+  if (err == ESP_OK) {
+    loadConfig();
+  }
+
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #if ENABLE_OLED
   oled.begin();
   oled.setFontSize(FONT_SIZE_SMALL);
@@ -1858,6 +2318,7 @@ void setup()
 #endif
 
 #if ENABLE_MEMS
+<<<<<<< HEAD:firmware_v5/telelogger/telelogger.cpp
   if (!state.check(STATE_MEMS_READY)) do {
     mems = init_MEMS();
     if (mems) {
@@ -1865,6 +2326,38 @@ void setup()
     }
     ESP_LOGI(TAG_SETUP, "MEMS: %s", mems? mems->name() : "NO");
   } while (!state.check(STATE_MEMS_READY));
+=======
+if (!state.check(STATE_MEMS_READY)) do {
+  Serial.print("MEMS:");
+  mems = new ICM_42627;
+  byte ret = mems->begin();
+  if (ret) {
+    state.set(STATE_MEMS_READY);
+    Serial.println("ICM-42627");
+    break;
+  }
+  delete mems;
+  mems = new ICM_20948_I2C;
+  ret = mems->begin();
+  if (ret) {
+    state.set(STATE_MEMS_READY);
+    Serial.println("ICM-20948");
+    break;
+  } 
+  delete mems;
+  /*
+  mems = new MPU9250;
+  ret = mems->begin();
+  if (ret) {
+    state.set(STATE_MEMS_READY);
+    Serial.println("MPU-9250");
+    break;
+  }
+  */
+  mems = 0;
+  Serial.println("NO");
+} while (0);
+>>>>>>> origin/master:firmware_v5/telelogger/telelogger.ino
 #endif
 
 #if ENABLE_HTTPD
@@ -1881,7 +2374,7 @@ void setup()
 
 #if ENABLE_BLE
   // init BLE
-  ble_init();
+  ble_init("FreematicsPlus");
 #endif
 
   // initialize components

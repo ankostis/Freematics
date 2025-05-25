@@ -20,6 +20,8 @@
 #define ELEMENT_UINT32 2
 #define ELEMENT_INT32 3
 #define ELEMENT_FLOAT 4
+#define ELEMENT_FLOAT_D1 5 /* floating-point data with 1 decimal place*/
+#define ELEMENT_FLOAT_D2 6 /* floating-point data with 2 decimal places*/
 
 typedef struct {
     uint16_t pid;
@@ -36,7 +38,7 @@ inline constexpr const char TAG_ACELL[] = "APPCELL";
 class CBuffer
 {
 public:
-    CBuffer();
+    CBuffer(uint8_t* mem);
     void add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t count = 1);
     void add(uint16_t pid, int32_t value);
     void add(uint16_t pid, float value);
@@ -47,7 +49,7 @@ public:
     uint8_t total;
     uint8_t state;
 private:
-    uint8_t* data;
+    uint8_t* m_data;
 };
 
 class CBufferManager
@@ -61,8 +63,9 @@ public:
     CBuffer* getNewest();
     void showCacheStats(uint16_t state);
 private:
-    CBuffer* slots[BUFFER_SLOTS];
+    CBuffer** slots = 0;
     CBuffer* last = 0;
+    uint32_t total = 0;
 };
 
 class TeleClient
