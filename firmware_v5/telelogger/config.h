@@ -304,8 +304,6 @@
 #define APN_USERNAME            NULL
 #define APN_PASSWORD            NULL
 
-// HTTPS settings
-#define SERVER_METHOD           PROTOCOL_METHOD_POST
 /**
  * The path-part of the url of the traccar server to send data to.
  * (json-config default for `node_info.srv_path`)

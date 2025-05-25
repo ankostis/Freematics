@@ -1574,12 +1574,14 @@ MEMS_I2C *init_MEMS(bool enable_orientation) {
       mems->end();
       delete mems;
 
+      /*  TODO: drop MPU9250 code (and check if fw-size reduced).
       mems = new MPU9250;
       if (!mems->begin(enable_orientation)) {
         mems->end();
         delete mems;
         mems = nullptr;
       }
+      */
     }
   }
 

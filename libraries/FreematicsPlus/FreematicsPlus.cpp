@@ -459,12 +459,8 @@ void FreematicsESP32::gpsEnd(bool powerOff)
 
 bool FreematicsESP32::gpsBeginExt(int baudrate)
 {
-<<<<<<< HEAD
     ESP_LOGV(TAG_GNSS, "<BEGIN>");
-    if (devType <= 13) {
-=======
     if (devType > 0 && devType <= 13) {
->>>>>>> origin/master
 #ifdef ARDUINO_ESP32C3_DEV
         pinGPSRx = 18;
         pinGPSTx = 19;
@@ -551,12 +547,8 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
 bool FreematicsESP32::gpsBegin()
 {
     if (!link) return false;
-<<<<<<< HEAD
-
-=======
     m_flags |= FLAG_GNSS_USE_LINK;
     
->>>>>>> origin/master
     char buf[256];
     link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
     delay(300);
@@ -590,53 +582,7 @@ bool FreematicsESP32::gpsGetData(GPS_DATA** pgd)
     ESP_LOGV(TAG_GNSS, "<READ ASKED>");
     if (pgd) *pgd = &gpsData;
     if (m_flags & FLAG_GNSS_USE_LINK) {
-<<<<<<< HEAD
         ret = _gpsGetData_linkUart(pgd);
-=======
-        char buf[160];
-        if (!link || link->sendCommand("ATGPS\r", buf, sizeof(buf), 100) == 0) {
-            return false;
-        }
-        char *s = strstr(buf, "$GNIFO,");
-        if (!s) return false;
-        s += 7;
-        float lat = 0;
-        float lng = 0;
-        float alt = 0;
-        bool good = false;
-        do {
-            uint32_t date = atoi(s);
-            if (!(s = strchr(s, ','))) break;
-            uint32_t time = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            gpsData.date = date;
-            gpsData.time = time;
-            lat = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            lng = (float)atoi(++s) / 1000000;
-            if (!(s = strchr(s, ','))) break;
-            alt = (float)atoi(++s) / 100;
-            good = true;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.speed = (float)atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.heading = atoi(++s) / 100;
-            if (!(s = strchr(s, ','))) break;
-            gpsData.sat = atoi(++s);
-            if (!(s = strchr(s, ','))) break;
-            gpsData.hdop = atoi(++s);
-        } while(0);
-        if (good && (gpsData.lat || gpsData.lng)) {
-            // filter out invalid coordinates
-            good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
-        }
-        if (!good) return false;
-        gpsData.lat = lat;
-        gpsData.lng = lng;
-        gpsData.alt = alt;
-        gpsData.ts = millis();
-        return true;
->>>>>>> origin/master
     } else {
         ret = _gpsGetData_tinyGps(pgd);
     }
@@ -668,7 +614,6 @@ bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
         if (!(s = strchr(s, ','))) break;
         uint32_t time = atoi(++s);
         if (!(s = strchr(s, ','))) break;
-        if (!date) break;
         gpsData.date = date;
         gpsData.time = time;
         lat = (float)atoi(++s) / 1000000;
@@ -688,7 +633,8 @@ bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
     } while(0);
     if (good && (gpsData.lat || gpsData.lng)) {
         // filter out invalid coordinates
-        good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
+        good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 
+                && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
     }
     if (!good) return false;
     gpsData.lat = lat;
@@ -842,26 +788,7 @@ void FreematicsESP32::xbTogglePower(unsigned int duration)
     digitalWrite(PIN_BEE_PWR, HIGH);
     delay(duration);
 	digitalWrite(PIN_BEE_PWR, LOW);
-<<<<<<< HEAD
-=======
-#if VERBOSE_XBEE
-    Serial.print("Pin ");
-    Serial.print(PIN_BEE_PWR);
-	Serial.println(" pull down");
-#endif
-#endif
-}
-
-void FreematicsESP32::buzzer(int freq)
-{
-#ifdef PIN_BUZZER
-    if (freq) {
-        ledcWriteTone(0, freq);
-        ledcWrite(0, 255);
-    } else {
-        ledcWrite(0, 0);
-    }
->>>>>>> origin/master
+    ESP_LOGV(TAG_GNSS, "Pin %d pull down", PIN_BEE_PWR);
 #endif
     ESP_LOGV(TAG_GNSS, "Toggled GSM power pin(%i)", PIN_BEE_PWR);
 }
@@ -896,12 +823,7 @@ bool FreematicsESP32::reactivateLink()
 
 void FreematicsESP32::resetLink()
 {
-<<<<<<< HEAD
     ESP_LOGD(TAG_LINK, "<RESET>");
-    char buf[16];
-    if (link) link->sendCommand("ATR\r", buf, sizeof(buf), 100);
-=======
->>>>>>> origin/master
 #ifdef PIN_LINK_RESET
     if (devType >= 14) {
         digitalWrite(PIN_LINK_RESET, LOW);
@@ -917,21 +839,9 @@ void FreematicsESP32::resetLink()
 
 bool FreematicsESP32::begin(bool useCoProc, bool useCellular)
 {
-<<<<<<< HEAD
     ESP_LOGD(TAG, "<BEGIN ESP32> %i, %i", useCoProc, useCellular);
-    if (link) return false;
-
-#ifdef PIN_LINK_RESET
-    pinMode(PIN_LINK_RESET, OUTPUT);
-    digitalWrite(PIN_LINK_RESET, HIGH);
-#endif
-
-    pinMode(PIN_BEE_PWR, OUTPUT);
-    digitalWrite(PIN_BEE_PWR, LOW);
-=======
     // set wifi max power
     esp_wifi_set_max_tx_power(80);
->>>>>>> origin/master
 
     // set watchdog timeout to 600 seconds
     esp_task_wdt_init(600, 0);

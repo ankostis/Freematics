@@ -16,13 +16,8 @@
 ******************************************************************************/
 
 #include <FreematicsPlus.h>
-<<<<<<< HEAD
 #include <NodeInfo.h>
-#include "telelogger.h"
-#include "telemesh.h"
-=======
 #include "telestore.h"
->>>>>>> origin/master
 #include "teleclient.h"
 #include "config.h"
 
@@ -125,28 +120,20 @@ void CBufferManager::init()
     mem = malloc(BUFFER_LENGTH);
 #endif
     if (!mem) {
-      Serial.println("OUT OF RAM");
+      ESP_LOGW(TAG_BUF, "OUT OF RAM");
       total = n;
       break;
     }
     slots[n] = new CBuffer((uint8_t*)mem);
   }
+  // TODO: `(const -> variable) node_info.nslots = CBufferManager::total;`
   assert(total > 0);
 }
 
 void CBufferManager::purge()
 {
-<<<<<<< HEAD
-  int purged = 0;
-  for (auto *buf: slots) {
-      if (buf->total) purged++;
-      buf->purge();
-  }
-  ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
-
-=======
   for (int n = 0; n < total; n++) slots[n]->purge();
->>>>>>> origin/master
+  ESP_LOGI(TAG_BUF, "Purged %u buffers", total);
 }
 
 CBuffer* CBufferManager::getFree()
@@ -218,8 +205,7 @@ void CBufferManager::showCacheStats(uint16_t state)
   int bytes = 0;
   int count = 0;
   int samples = 0;
-<<<<<<< HEAD
-  for (int n = 0; n < BUFFER_SLOTS; n++) {
+  for (int n = 0; n < total; n++) {
       if (slots[n]->state != BUFFER_STATE_FILLED) continue;
       bytes += slots[n]->offset;
       samples += slots[n]->total;
@@ -228,39 +214,23 @@ void CBufferManager::showCacheStats(uint16_t state)
               slots[n]->total, slots[n]->offset);
   }
   if (count) {
+      // TODO: Calc used RAM in bytes and with `ESP.getFreeHeap()` in `showCacheStats()`.
       constexpr const uint RAM_SIZE_KiB = 320;
       uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
       ESP_LOG_LEVEL(
               (count > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
               TAG_BUF,
-              "PIDs: %u(%u b/PID)"
-              ", slots: %u/%u(%u%%)"
-              ", filled: %u/%u bytes (%u%%)"
-              ", RAM: %u/%u KiB(%u%%)"
+              "PIDs: %u(%.2f b/PID)"
+              ", slots: %u/%u(%.2f%%)"
+              ", filled: %u/%u bytes (%.1f%%)"
+              ", RAM: %u/%u KiB(%.1f%%)"
               ", state: %X",
-              samples, samples ? bytes / samples : 0,
-              count, BUFFER_SLOTS, 100 * count / BUFFER_SLOTS,
-              bytes, BUFFER_SLOTS * BUFFER_LENGTH,
-              100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
-              ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
+              samples, samples ? ((float)bytes / samples) : 0.0,
+              count, total, 100.0 * count / total,
+              bytes, total * BUFFER_LENGTH,
+              100.0 * bytes / (total * BUFFER_LENGTH),
+              ram_used, RAM_SIZE_KiB, 100.0 * ram_used / RAM_SIZE_KiB,
               state);
-=======
-  for (int n = 0; n < total; n++) {
-    if (slots[n]->state != BUFFER_STATE_FILLED) continue;
-    bytes += slots[n]->offset;
-    samples += slots[n]->total;
-    count++;
-  }
-  if (slots) {
-    Serial.print("[BUF] ");
-    Serial.print(samples);
-    Serial.print(" samples | ");
-    Serial.print(bytes);
-    Serial.print(" bytes | ");
-    Serial.print(count);
-    Serial.print('/');
-    Serial.println(total);
->>>>>>> origin/master
   }
 }
 
@@ -606,26 +576,22 @@ void TeleClientUDP::shutdown()
 
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
-<<<<<<< HEAD
-  char url[256];
-  snprintf(url, sizeof(url), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", node_info.srv_path,
-           node_info.device_id.c_str(), (uint)event, (int)rssi,
-           (const char *)node_info.vin);
-=======
   char path[256];
-  snprintf(path, sizeof(path), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", SERVER_PATH, devid,
-    (unsigned int)event, (int)rssi, vin);
->>>>>>> origin/master
+  snprintf(path, sizeof(path), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", 
+      node_info.srv_path, node_info.device_id.c_str(), (uint)event, (int)rssi, 
+      (const char *)node_info.vin);
   if (event == EVENT_LOGOUT) login = false;
 #if ENABLE_WIFI
   if (wifi.connected())
   {
-    return wifi.send(METHOD_GET, path) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1) && wifi.code() == 200;
+    return wifi.send(METHOD_GET, path) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1) 
+        && wifi.code() == 200;
   }
   else
 #endif
   {
-    return cell.send(METHOD_GET, SERVER_HOST, SERVER_PORT, path) && cell.receive() && cell.code() == 200;
+    return cell.send(METHOD_GET, node_info.srv_host, node_info.srv_port, path) 
+        && cell.receive() && cell.code() == 200;
   }
 }
 
@@ -642,60 +608,38 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
     }
   }
 
-<<<<<<< HEAD
   const char *devid = node_info.device_id.c_str();
-  char url[256];
-  bool success = false;
-  int len;
-#if SERVER_METHOD == PROTOCOL_METHOD_GET
-  auto srv_path = node_info.srv_path;
-=======
   char path[256];
   bool success = false;
   int len;
 #if SERVER_PROTOCOL == PROTOCOL_HTTPS_GET
->>>>>>> origin/master
+  auto srv_path = node_info.srv_path;
   if (gd && gd->ts) {
-    len = snprintf(url, sizeof(url), "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
+    len = snprintf(path, sizeof(path), 
+        "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
       srv_path, devid, isoTime,
       gd->lat, gd->lng, (int)gd->alt, gd->speed, (int)gd->heading);
   } else {
-    len = snprintf(url, sizeof(url), "%s/push?id=%s", srv_path, devid);
+    len = snprintf(path, sizeof(path), "%s/push?id=%s", srv_path, devid);
   }
-  success = cell.send(METHOD_GET, SERVER_HOST, SERVER_PORT, url);
+  success = cell.send(METHOD_GET, node_info.srv_host, node_info.srv_port, path);
 #else
   len = snprintf(path, sizeof(path), "%s/post/%s", SERVER_PATH, devid);
 #if ENABLE_WIFI
   if (wifi.connected()) {
-<<<<<<< HEAD
-    ESP_LOGD(TAG_AWIFI, "Transmit %i bytes: %s", packetSize, host2log);
-    success = wifi.send(METHOD_POST, url, true, packetBuffer, packetSize);
-=======
-    Serial.print("[WIFI] ");
-    Serial.println(path);
+    ESP_LOGD(TAG_AWIFI, "HTTP_POST %ib -> %s: %s", packetSize, host2log, path);
     success = wifi.send(METHOD_POST, path, packetBuffer, packetSize);
->>>>>>> origin/master
   }
   else
 #endif
   {
-<<<<<<< HEAD
-    ESP_LOGD(TAG_ACELL, "Transmit %i bytes: %s", packetSize, host2log);
-    success = cell.send(METHOD_POST, url, true, packetBuffer, packetSize);
-=======
-    Serial.print("[CELL] ");
-    Serial.println(path);
-    success = cell.send(METHOD_POST, SERVER_HOST, SERVER_PORT, path, packetBuffer, packetSize);
->>>>>>> origin/master
+    ESP_LOGD(TAG_ACELL, "HTTP_POST %ib -> %s: %s", packetSize, host2log, path);
+    success = cell.send(METHOD_POST, node_info.srv_host, node_info.srv_port, path, packetBuffer, packetSize);
   }
   len += packetSize;
 #endif
   if (!success) {
-<<<<<<< HEAD
     ESP_LOGE(TAG_HTTP, "Transmit failed.");
-=======
-    Serial.println("[HTTP] Connection closed");
->>>>>>> origin/master
     return false;
   } else {
     txBytes += len;
@@ -717,11 +661,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
   }
   if (!content) {
     // close connection on receiving timeout
-<<<<<<< HEAD
     ESP_LOGE(TAG_HTTP, "No response");
-=======
-    Serial.println("[HTTP] No response");
->>>>>>> origin/master
     return false;
   }
   ESP_LOGD(TAG_HTTP, "tx-reply: %s", content);

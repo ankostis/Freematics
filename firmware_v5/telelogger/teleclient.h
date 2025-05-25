@@ -89,12 +89,14 @@ public:
                 t / 60000,
                 (t % 60000) / 1000,
                 (t % 1000) / 100 + '0');
-        ESP_LOGI(TAG_UDP,
-            "%s: packet #%i, Tx: %.2fKiB, Rx: %ib, login: %i, feedid: %u, state: %X",
+        ESP_LOGI(TAG_BUF,
+            "Netstats: %s: packet #%i, Tx: %.2fKiB, Rx: %ib, %.2fKb/h"
+            ", login: %i, feedid: %u, state: %X",
             timestr,
             txCount,
             (float) txBytes / (1 << 10),
             rxBytes,
+            (txBytes + rxBytes) * 3600.0 / (millis() - startTime),
             login,
             feedid,
             state);

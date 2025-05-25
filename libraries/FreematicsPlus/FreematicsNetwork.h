@@ -66,11 +66,7 @@ public:
     HTTP_STATES state() { return m_state; }
     uint16_t code() { return m_code; }
 protected:
-<<<<<<< HEAD
-    std::string genHeader(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload, int payloadSize);
-=======
-    String genHeader(HTTP_METHOD method, const char* path, const char* payload, int payloadSize);
->>>>>>> origin/master
+    std::string genHeader(HTTP_METHOD method, const char* path, const char* payload, int payloadSize);
     HTTP_STATES m_state = HTTP_DISCONNECTED;
     uint16_t m_code = 0;
     std::string m_host;
@@ -96,6 +92,8 @@ public:
      *   so better call `WiFi.reconnect()` afterwards.
      */
     int listAPs();
+    std::string ssid() { return std::string(WiFi.SSID().c_str()); }
+    std::string psk() { return std::string(WiFi.psk().c_str()); }
     bool connected() { return WiFi.isConnected(); }
     int RSSI() { return WiFi.RSSI(); }
 protected:
@@ -171,12 +169,7 @@ public:
     bool send(const char* data, unsigned int len);
     char* receive(int* pbytes = 0, unsigned int timeout = 5000);
 protected:
-<<<<<<< HEAD
-    char* checkIncoming(int* pbytes);
     std::string udpIP;
-=======
-    String udpIP;
->>>>>>> origin/master
     uint16_t udpPort = 0;
 };
 
@@ -186,77 +179,8 @@ public:
     void init();
     bool open(const char* host = 0, uint16_t port = 0);
     bool close();
-<<<<<<< HEAD
-    bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
-    char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
-};
-
-class ClientSIM7600 : public CellSIMCOM
-{
-public:
-    bool setup(const char* apn, unsigned int timeout = 30000);
-    void end();
-    bool setGPS(bool on);
-};
-
-class UDPClientSIM7600 : public ClientSIM7600
-{
-public:
-    bool open(const char* host, uint16_t port);
-    bool close();
-    bool send(const char* data, unsigned int len);
-    char* receive(int* pbytes = 0, unsigned int timeout = 5000);
-protected:
-    char* checkIncoming(int* pbytes);
-    std::string udpIP;
-    uint16_t udpPort = 0;
-};
-
-class HTTPClientSIM7600 : public HTTPClient, public ClientSIM7600
-{
-public:
-    bool open(const char* host = 0, uint16_t port = 0);
-    bool close();
-    bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
-    char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
-};
-
-class ClientSIM7070 : public CellSIMCOM
-{
-public:
-    bool begin(CFreematics* device);
-    void end();
-    bool setup(const char* apn, unsigned int timeout = 30000);
-    bool setGPS(bool on);
-    void checkGPS();
-    virtual std::string getIP();
-    virtual std::string queryIP(const char* host);
-};
-
-class UDPClientSIM7070 : public ClientSIM7070
-{
-public:
-    bool open(const char* host, uint16_t port);
-    bool close();
-    bool send(const char* data, unsigned int len);
-    char* receive(int* pbytes = 0, unsigned int timeout = 3000);
-protected:
-    char* checkIncoming(int* pbytes);
-    std::string udpIP;
-    uint16_t udpPort = 0;
-};
-
-
-class HTTPClientSIM7070 : public HTTPClient, public ClientSIM7070
-{
-public:
-    bool open(const char* host = 0, uint16_t port = 0);
-    bool close();
-    bool send(HTTP_METHOD method, const char* path, bool keepAlive, const char* payload = 0, int payloadSize = 0);
-=======
     bool send(HTTP_METHOD method, const char* host, uint16_t port, const char* path, const char* payload = 0, int payloadSize = 0);
->>>>>>> origin/master
     char* receive(int* pbytes = 0, unsigned int timeout = HTTP_CONN_TIMEOUT);
 };
 
-#endif
+#endif  // FREEMATICS_NETWORK

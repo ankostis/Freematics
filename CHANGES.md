@@ -21,9 +21,10 @@
 - [ ] convert all for-loops on bytes --> int (arduino code, larger/slower in 32bits).
 - [ ] convert `!std::string.length()` --> `std::string.empty()`.
 - [ ] convert `OLED_PRINTF()` --> `OLED_PRINTLN()`.
+- [ ] convert `showCacheStats()` to use node-state as JSON.
 - [ ] distinguish TX/RX logs with prefixes in `FreematicsNetwork.cpp`.
 - [ ] enumerate SD files on boot in a separate task, not to delay boot.
-- [ ] SIGNAL_CHECK_INTERVAL:  --> NodeInfo, rename to `SIGNAL_CHECK_INTERVAL_SEC`.
+- [ ] `config.h` defines in node-infos
 - [ ] make `wifi_retries` reconfigurable.
 - teleclient.cpp:
   - [ ] `telemetry()`: store `millis()` in temp-var to call it less often.
@@ -36,6 +37,7 @@
 - [ ] Shouldn't clean VIN when cannot read it?  (eg obd switched out).
 - [ ] Should OVERHEAT purge buffers!?  Why not sleep & purge only if still hot?
 - [ ] DOC: mention how to configure C/C++ formatting on VSCode.
+- [ ] Drop MPU9250 MEMS support to reduce image size.
 - nodeinfo:
   - [ ] `+SIGNAL_CHECK_INTERVAL_SEC`
   - [ ] `+GNSS_ALWAYS_ON`

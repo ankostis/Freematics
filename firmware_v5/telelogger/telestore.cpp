@@ -123,15 +123,15 @@ void FileLogger::dispatch(const char* buf, byte len)
 {
     if (m_id == 0) return;
 
-    if (m_file.write((uint8_t*)buf, len) != len) {
+    if (m_data_file.write((uint8_t*)buf, len) != len) {
         // try again
-        if (m_file.write((uint8_t*)buf, len) != len) {
-            Serial.println("Error writing. End file logging.");
+        if (m_data_file.write((uint8_t*)buf, len) != len) {
+            ESP_LOGE(TAG_FILE, "Failed twice writing data to file '%s'. End file logging.", m_data_file.path());
             end();
             return;
         }
     }
-    m_file.write('\n');
+    m_data_file.write('\n');
     m_size += (len + 1);
 }
 
@@ -157,14 +157,10 @@ bool SDLogger::init()
     if (SD.begin(PIN_SD_CS, SPI, SPI_FREQ)) {
         unsigned int total = SD.totalBytes() >> 20;
         unsigned int used = SD.usedBytes() >> 20;
-        Serial.print("SD:");
-        Serial.print(total);
-        Serial.print(" MB total, ");
-        Serial.print(used);
-        Serial.println(" MB used");
+        ESP_LOGI(TAG_SD, "%d/%d MB total/used", total, used);
         return true;
     } else {
-        Serial.println("NO SD CARD");
+        ESP_LOGW(TAG_SD, "NO SD CARD");
         return false;
     }
 }
@@ -179,11 +175,10 @@ uint32_t SDLogger::begin()
     }
     char path[24];
     sprintf(path, "/DATA/%u.CSV", m_id);
-    Serial.print("File: ");
-    Serial.println(path);
-    m_file = SD.open(path, FILE_WRITE);
-    if (!m_file) {
-        Serial.println("File error");
+    ESP_LOGI(TAG_SD, "Opening file: %s", path);
+    m_data_file = SD.open(path, FILE_WRITE);
+    if (!m_data_file) {
+        ESP_LOGE(TAG_SD, "Failed opening file: %s", path);
         m_id = 0;
     }
     m_dataCount = 0;
@@ -194,10 +189,10 @@ void SDLogger::flush()
 {
     char path[24];
     sprintf(path, "/DATA/%u.CSV", m_id);
-    m_file.close();
-    m_file = SD.open(path, FILE_APPEND);
-    if (!m_file) {
-        Serial.println("File error");
+    m_data_file.close();
+    m_data_file = SD.open(path, FILE_APPEND);
+    if (!m_data_file) {
+        ESP_LOGE(TAG_SD, "Failed flushing file: %s", path);
     }
 }
 
@@ -205,17 +200,13 @@ bool SPIFFSLogger::init()
 {
     bool mounted = SPIFFS.begin();
     if (!mounted) {
-        Serial.println("Formatting SPIFFS...");
+        ESP_LOGI(TAG_SPIFFS, "Formatting...");
         mounted = SPIFFS.begin(true);
     }
     if (mounted) {
-        Serial.print("SPIFFS:");
-        Serial.print(SPIFFS.totalBytes());
-        Serial.print(" bytes total, ");
-        Serial.print(SPIFFS.usedBytes());
-        Serial.println(" bytes used");
+        ESP_LOGI(TAG_SPIFFS, "%d/%d bytes total/used", SPIFFS.totalBytes(), SPIFFS.usedBytes());
     } else {
-        Serial.println("No SPIFFS");
+        ESP_LOGE(TAG_SPIFFS, "No SPIFFS");
     }
     return mounted;
 }
@@ -226,11 +217,10 @@ uint32_t SPIFFSLogger::begin()
     m_id = getFileID(root);
     char path[24];
     sprintf(path, "/DATA/%u.CSV", m_id);
-    Serial.print("File: ");
-    Serial.println(path);
-    m_file = SPIFFS.open(path, FILE_WRITE);
-    if (!m_file) {
-        Serial.println("File error");
+    ESP_LOGI(TAG_SPIFFS, "Opening file: %s", path);
+    m_data_file = SPIFFS.open(path, FILE_WRITE);
+    if (!m_data_file) {
+        ESP_LOGE(TAG_SPIFFS, "Failed opening file: %s", path);
         m_id = 0;
     }
     m_dataCount = 0;
@@ -250,14 +240,13 @@ void SPIFFSLogger::purge()
         }
     }
     if (idx) {
-        m_file.close();
+        m_data_file.close();
         char path[32];
         sprintf(path, "/DATA/%u.CSV", idx);
         SPIFFS.remove(path);
-        Serial.print(path);
-        Serial.println(" removed");
+        ESP_LOGI(TAG_SPIFFS, "Purged file: %s", path);
         sprintf(path, "/DATA/%u.CSV", m_id);
-        m_file = SPIFFS.open(path, FILE_APPEND);
-        if (!m_file) m_id = 0;
+        m_data_file = SPIFFS.open(path, FILE_APPEND);
+        if (!m_data_file) m_id = 0;
     }
 }
