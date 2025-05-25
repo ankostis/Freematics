@@ -40,54 +40,6 @@ CBuffer::CBuffer()
 
 void CBuffer::add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t count)
 {
-<<<<<<< HEAD
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) - sizeof(int)) {
-    setType(ELEMENT_INT);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    *(int*)(data + offset) = value;
-    offset += sizeof(int);
-    count++;
-  } else {
-    ESP_LOGW(TAG_BUF, "FULL");
-  }
-}
-void CBuffer::add(uint16_t pid, uint32_t value)
-{
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) - sizeof(uint32_t)) {
-    setType(ELEMENT_UINT);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    *(uint32_t*)(data + offset) = value;
-    offset += sizeof(uint32_t);
-    count++;
-  } else {
-    ESP_LOGW(TAG_BUF, "FULL");
-  }
-}
-void CBuffer::add(uint16_t pid, float value)
-{
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) - sizeof(float)) {
-    setType(ELEMENT_FLOAT);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    *(float*)(data + offset) = value;
-    offset += sizeof(float);
-    count++;
-  } else {
-    ESP_LOGW(TAG_BUF, "FULL");
-  }
-}
-void CBuffer::add(uint16_t pid, float value[])
-{
-  if (offset < BUFFER_LENGTH - sizeof(uint16_t) + sizeof(float) * 3) {
-    setType(ELEMENT_FLOATX3);
-    *(uint16_t*)(data + offset) = pid;
-    offset += 2;
-    memcpy(data + offset, value, sizeof(float) * 3);
-    offset += sizeof(float) * 3;
-    count++;
-=======
   if (offset < BUFFER_LENGTH - sizeof(ELEMENT_HEAD) - bytes) {
     ELEMENT_HEAD hdr = {pid, type, count};
     *(ELEMENT_HEAD*)(data + offset) = hdr;
@@ -95,10 +47,17 @@ void CBuffer::add(uint16_t pid, float value[])
     memcpy(data + offset, values, bytes);
     offset += bytes;
     total++;
->>>>>>> stanley_submerged_1
   } else {
       ESP_LOGW(TAG_BUF, "FULL");
   }
+}
+void CBuffer::add(uint16_t pid, int32_t value)
+{
+  add(pid, ELEMENT_INT32, &value, sizeof(int32_t));
+}
+void CBuffer::add(uint16_t pid, float value)
+{
+  add(pid, ELEMENT_FLOAT, &value, sizeof(float));
 }
 void CBuffer::purge()
 {
@@ -150,17 +109,13 @@ void CBufferManager::init()
 
 void CBufferManager::purge()
 {
-<<<<<<< HEAD
   int purged = 0;
-  for (auto *buf: buffers) {
-      if (buf->count) purged++;
+  for (auto *buf: slots) {
+      if (buf->total) purged++;
       buf->purge();
   }
   ESP_LOGI(TAG_BUF, "Purged %u buffers", purged);
 
-=======
-  for (int n = 0; n < BUFFER_SLOTS; n++) slots[n]->purge();
->>>>>>> stanley_submerged_1
 }
 
 CBuffer* CBufferManager::getFree()
@@ -233,19 +188,18 @@ void CBufferManager::showCacheStats(uint16_t state)
   int count = 0;
   int samples = 0;
   for (int n = 0; n < BUFFER_SLOTS; n++) {
-<<<<<<< HEAD
-      if (buffers[n]->state != BUFFER_STATE_FILLED) continue;
-      bytes += buffers[n]->offset;
-      samples += buffers[n]->count;
-      slots++;
+      if (slots[n]->state != BUFFER_STATE_FILLED) continue;
+      bytes += slots[n]->offset;
+      samples += slots[n]->total;
+      count++;
       ESP_LOGV(TAG_BUF, "buf: %i: count: %i, offset: %i", n,
-              buffers[n]->count, buffers[n]->offset);
+              slots[n]->total, slots[n]->offset);
   }
-  if (slots) {
+  if (count) {
       constexpr const uint RAM_SIZE_KiB = 320;
       uint ram_used = RAM_SIZE_KiB - (ESP.getFreeHeap() >> 10);
       ESP_LOG_LEVEL(
-              (slots > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
+              (count > 1? ESP_LOG_INFO : ESP_LOG_DEBUG),
               TAG_BUF,
               "PIDs: %u(%u b/PID)"
               ", slots: %u/%u(%u%%)"
@@ -253,27 +207,11 @@ void CBufferManager::showCacheStats(uint16_t state)
               ", RAM: %u/%u KiB(%u%%)"
               ", state: %X",
               samples, samples ? bytes / samples : 0,
-              slots, BUFFER_SLOTS, 100 * slots / BUFFER_SLOTS,
+              count, BUFFER_SLOTS, 100 * count / BUFFER_SLOTS,
               bytes, BUFFER_SLOTS * BUFFER_LENGTH,
               100 * bytes / (BUFFER_SLOTS * BUFFER_LENGTH),
               ram_used, RAM_SIZE_KiB, 100 * ram_used / 320,
               state);
-=======
-    if (slots[n]->state != BUFFER_STATE_FILLED) continue;
-    bytes += slots[n]->offset;
-    samples += slots[n]->total;
-    count++;
-  }
-  if (slots) {
-    Serial.print("[BUF] ");
-    Serial.print(samples);
-    Serial.print(" samples | ");
-    Serial.print(bytes);
-    Serial.print(" bytes | ");
-    Serial.print(count);
-    Serial.print('/');
-    Serial.println(BUFFER_SLOTS);
->>>>>>> stanley_submerged_1
   }
 }
 
@@ -357,12 +295,7 @@ bool TeleClientUDP::notify(byte event, const char* payload)
     char pattern[16];
     sprintf(pattern, "EV=%u", event);
     if (!strstr(data, pattern)) {
-<<<<<<< HEAD
       ESP_LOGE(TAG_UDP, "RECV invalid reply: %s, expected event: %i", data, event);
-=======
-      Serial.print("[UDP] Invalid reply: ");
-      Serial.println(data);
->>>>>>> stanley_submerged_1
       continue;
     }
     if (event == EVENT_LOGIN) {
@@ -612,16 +545,11 @@ void TeleClientUDP::shutdown()
     ESP_LOGI(TAG_UDP, "<LOGOUT>");
   }
 #if ENABLE_WIFI
-<<<<<<< HEAD
-  wifi.end();
-  ESP_LOGI(TAG_AWIFI, "<SHUTDOWN>");
-=======
   if (wifi.connected()) {
     wifi.end();
-    Serial.println("[WIFI] Deactivated");
+    ESP_LOGI(TAG_AWIFI, "<SHUTDOWN>");
     return;
   }
->>>>>>> stanley_submerged_1
 #endif
   cell.end();
   ESP_LOGI(TAG_ACELL, "<SHUTDOWN> %s", cell.deviceName());
@@ -649,11 +577,7 @@ bool TeleClientHTTP::notify(byte event, const char* payload)
 bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 {
 #if ENABLE_WIFI
-<<<<<<< HEAD
-  if (wifi.connected() && (wifi.state() != HTTP_CONNECTED || cell.state() != HTTP_CONNECTED)) {
-=======
   if ((wifi.connected() && wifi.state() != HTTP_CONNECTED) || cell.state() != HTTP_CONNECTED) {
->>>>>>> stanley_submerged_1
 #else
   if (cell.state() != HTTP_CONNECTED) {
 #endif
@@ -799,16 +723,11 @@ void TeleClientHTTP::shutdown()
     login = false;
   }
 #if ENABLE_WIFI
-<<<<<<< HEAD
-  wifi.end();
-  ESP_LOGI(TAG_AWIFI, "<SHUTDOWN> %s", wifi.deviceName());
-=======
   if (wifi.connected()) {
     wifi.end();
-    Serial.println("[WIFI] Deactivated");
+    ESP_LOGI(TAG_AWIFI, "<SHUTDOWN> %s", wifi.deviceName());
     return;
   }
->>>>>>> stanley_submerged_1
 #endif
   cell.close();
   cell.end();

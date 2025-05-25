@@ -72,36 +72,25 @@
 /**************************************
 * Circular Buffer Configuration
 **************************************/
-<<<<<<< HEAD
 #if BOARD_HAS_PSRAM
 /**
  * Max number of buffers
  * If limit reached, the oldest slot is purged and re-populated,
  * hence, gaps & out-of-order rows appear in the trace.
  */
-#define BUFFER_SLOTS            4096
+#define BUFFER_SLOTS            1024
 /**
  * Bytes-per-slot
  * PID-samples not fitting in the current slot, they are dropped!
  */
-#define BUFFER_LENGTH           256
+#define BUFFER_LENGTH           384
 #define SERIALIZE_BUFFER_SIZE   4096  /* bytes */
+#define HAS_LARGE_RAM 1
 #else
 #define BUFFER_SLOTS            256   /* see above */
 #define BUFFER_LENGTH           180   /* see above */
 #define SERIALIZE_BUFFER_SIZE   1024
-=======
-#ifdef BOARD_HAS_PSRAM
-#define BUFFER_SLOTS 1024 /* max number of buffer */
-#define BUFFER_LENGTH 384 /* bytes per slot */
-#define SERIALIZE_BUFFER_SIZE 4096 /* bytes */
-#define HAS_LARGE_RAM 1
-#else
-#define BUFFER_SLOTS 32 /* max number of buffer */
-#define BUFFER_LENGTH 256 /* bytes per slot */
-#define SERIALIZE_BUFFER_SIZE 1024 /* bytes */
 #define HAS_LARGE_RAM 0
->>>>>>> stanley_submerged_1
 #endif
 
 /**************************************
@@ -269,7 +258,6 @@
 #define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
 
 /**************************************
-<<<<<<< HEAD
  * Networking configurations
  **************************************
  * Don't modify per-device network settings & secrets here,
@@ -279,7 +267,8 @@
  *      #define SIM_CARD_PIN          ""
  *      #define SERVER_HOST           "hub.freematics.com"
  */
-#define ENABLE_WIFI             1
+#ifndef ENABLE_WIFI
+#define ENABLE_WIFI 0
 /**
  * Known WiFi SSIDs is an initializer of `map<string, string>` expression,
  * like:
@@ -290,34 +279,23 @@
  * - (json-config defaul)
  */
 #define WIFI_SSIDS
+#endif
 /**
  * Cellular access-point name for network;  leave empty for all.
  * (json-config default)
  */
+#ifndef CELL_APN
 #define CELL_APN                ""
+#endif
 /** Freematics Hub server where to send collected data
  * (json-config default)
  */
-#define SERVER_HOST             "hub.freematics.com"
-#define SERVER_PROTOCOL         PROTOCOL_UDP
-=======
-* Networking configurations
-**************************************/
-#ifndef ENABLE_WIFI
-#define ENABLE_WIFI 0
-// WiFi settings
-#define WIFI_SSID "FREEMATICS"
-#define WIFI_PASSWORD "PASSWORD"
-#endif 
-
 #ifndef SERVER_HOST
-// cellular network settings
-#define CELL_APN ""
-// Freematics Hub server settings
-#define SERVER_HOST "hub.freematics.com"
-#define SERVER_PROTOCOL PROTOCOL_UDP
+#define SERVER_HOST             "hub.freematics.com"
 #endif
->>>>>>> stanley_submerged_1
+#ifndef SERVER_PROTOCOL
+#define SERVER_PROTOCOL         PROTOCOL_UDP
+#endif
 
 /**
  * SIM card setting
@@ -436,10 +414,7 @@
 /**************************************
 * MEMS sensors
 **************************************/
-<<<<<<< HEAD
 #define ENABLE_ORIENTATION      0
-=======
->>>>>>> stanley_submerged_1
 #ifndef ENABLE_MEMS
 #define ENABLE_MEMS             1
 #endif

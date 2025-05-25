@@ -108,19 +108,12 @@ The sketch collects following data.
 * Battery voltage (from OBD port)
 * Geolocation data (from internal or external GNSS)
 * Accelerometer and gyroscope data (from internal MEMS motion sensor)
-<<<<<<< HEAD
-* Device temperature (from MEMS sensor or ESP32 built-in sensor)
-
-Collected data are stored in a circular buffer in ESP32's IRAM or PSRAM. When PSRAM is enabled, hours of data can be buffered in case of temporary network outage and transmitted afterwards.
-
-
-=======
 * Cellular or WiFi network signal level
-* Device temperature
+* Device temperature (from MEMS sensor or ESP32 built-in sensor)
 
 Collected data are stored in a circular buffer in ESP32's IRAM or PSRAM. When PSRAM is enabled, hours of data can be buffered in case of temporary network outage and transmitted when network connection resumes.
   
->>>>>>> stanley_submerged_1
+
 Data Transmission
 =================
 
@@ -131,22 +124,15 @@ Data transmission over UDP and HTTP(s) protocols are implemented for the followi
 * 4G LTE CAT-4 (SIM7600)
 * 4G LTE CAT-M (SIM7070)
 
-<<<<<<< HEAD
 There two ways of sending data:
 
 1. UDP mode implements a full telemetry client for [Freematics Hub](https://freematics.com/hub/)
-   and [Traccar](https://www.traccar.org) (sends more data, [protocol's API](https://freematics.com/pages/hub/api/), uses 5170 port).
-2. HTTP/HTTPS mode implements a `osmand` protocol client for Traccar
-   (sends only location data, [protocol's API](https://www.traccar.org/osmand/),
-   uses 5055 port)
+   and [Traccar](https://www.traccar.org) (sends more data, [protocol's API](https://freematics.com/pages/hub/api/)).
+2. HTTP/HTTPS mode implements a [OsmAnd](https://www.traccar.org/osmand/) protocol with additional data sent as POST payload
+   (sends only location data).
 
 Seamless WiFi and cellular network co-working is implemented. When defined WiFi hotspot is available, data is transmitted via WiFi and cellular module is switched off. When no WiFi hotspot can be reached, cellular module is switched on for data transmission until WiFi hotspot available again.
 
-=======
-UDP mode implements a telemetry client for [Freematics Hub](https://hub.freematics.com) and [Traccar](https://www.traccar.org). HTTP(s) mode implements [OsmAnd](https://www.traccar.org/osmand/) protocol with additional data sent as POST payload.
-
-Seamless WiFi and cellular network co-working is implemented. When defined WiFi hotspot is available, data is transmitted via WiFi and cellular module is switched off. When no WiFi hotspot can be reached, cellular module is switched on for data transmission until WiFi hotspot available again.
->>>>>>> stanley_submerged_1
 
 Data Storage
 ============

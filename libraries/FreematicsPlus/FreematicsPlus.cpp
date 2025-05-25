@@ -139,7 +139,7 @@ static void gps_decode_task(void* inst)
 }
 
 // get chip temperature sensor
-int readChipTemperature()
+float readChipTemperature()
 {
 #ifdef ARDUINO_ESP32C3_DEV
     static bool inited = false;

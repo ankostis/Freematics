@@ -431,6 +431,6 @@ public:
     ICM_20948_Status_e  getMagnetometerData     ( ICM_20948_AGMT_t* pagmt );
 };
 
-MEMS_I2C* init_MEMS(bool enable_orientation);
+MEMS_I2C* init_MEMS(bool enable_orientation = false);
 
 #endif  // FREEMATICS_MEMS

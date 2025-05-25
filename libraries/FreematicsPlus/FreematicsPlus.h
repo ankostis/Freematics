@@ -86,7 +86,7 @@ inline constexpr const char TAG_SPI[] = "SPI";
 #define FLAG_GNSS_SOFT_SERIAL 0x8
 #define FLAG_GNSS_USE_LINK 0x10
 
-int readChipTemperature();
+float readChipTemperature();
 int readChipHallSensor();
 
 class Task

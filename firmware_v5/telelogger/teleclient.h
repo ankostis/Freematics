@@ -38,6 +38,8 @@ class CBuffer
 public:
     CBuffer();
     void add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t count = 1);
+    void add(uint16_t pid, int32_t value);
+    void add(uint16_t pid, float value);
     void purge();
     void serialize(CStorage& store);
     uint32_t timestamp;
