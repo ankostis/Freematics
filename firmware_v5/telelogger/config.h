@@ -137,7 +137,7 @@
  **************************************/
 /**
  * Works only when ESP_IDF logging-lib selected in `platformio.ini`.
- * (json-config default)
+ * (json-config default for `node_info.log_levels`)
  */
 #define RUNTIME_LOG_LEVELS \
     {"*", (esp_log_level_t)CORE_DEBUG_LEVEL},
@@ -182,9 +182,10 @@
 /**
  * Which log destinations (sinks) to enable (relevant only if `ENABLE_MULTILOG`).
  * Either `LOG_SINK_NONE` or `LOG_SINK_XXX` constants OR-ed together.
+ * (json-config default for `node_info.log_levels`)
  */
 #define LOG_SINK                            LOG_SINK_SERIAL
- /** (json-config defaults) */
+ /** (json-config default for `node_info.log_sink_fpath`) */
 #define LOG_SINK_FPATH                      "/logs.txt"
 #define LOG_SINK_DISK_USAGE_PURGE_RATIO     0.90f
 #define LOG_SINK_SYNC_INTERVAL_MS           3141
@@ -216,7 +217,7 @@
  * - Reboots after the timeout has expired AND any chars have Rx/Tx,
  *   otherwise, proceeds with regular setup.
  * - Old name: `CONFIG_MODE_TIMEOUT`
- * - (json-config default)
+ * - (json-config default for `node_info.obd_pipe_sec`)
  */
 #define BOOT_OBD_PIPE_TIMEOUT_SEC    0
 
@@ -227,7 +228,7 @@
 
 /**
  * Maximum consecutive OBD access errors before entering standby.
- * (json-config default)
+ * (json-config default for `node_info.obd_max_errors`)
  */
 #define MAX_OBD_ERRORS          3
 
@@ -253,7 +254,7 @@
  * - ATSH xyz/xxyyzz:   Set Header(11bit/29bit CAN)
  * - ATCP hh:           Set CAN Priority to hh (29 bit)
  *
- * (json-config default)
+ * (json-config default for `node_info.obd_alt_init_cmds`)
  */
 #define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCM0"}, {"ATSP6", "ATCM0"}
 
@@ -282,13 +283,13 @@
 #endif
 /**
  * Cellular access-point name for network;  leave empty for all.
- * (json-config default)
+ * (json-config default for `node_info.cell_apn`)
  */
 #ifndef CELL_APN
 #define CELL_APN                ""
 #endif
 /** Freematics Hub server where to send collected data
- * (json-config default)
+ * (json-config default for `node_info.srv_host`)
  */
 #ifndef SERVER_HOST
 #define SERVER_HOST             "hub.freematics.com"
@@ -299,7 +300,7 @@
 
 /**
  * SIM card setting
- * (json-config default)
+ * (json-config default for `node_info.sim_card_pin`)
  */
 #define SIM_CARD_PIN            ""
 
@@ -307,11 +308,11 @@
 #define SERVER_METHOD           PROTOCOL_METHOD_POST
 /**
  * The path-part of the url of the traccar server to send data to.
- * (json-config default)
+ * (json-config default for `node_info.srv_path`)
  */
 #define SERVER_PATH             "/hub/api"
 
-/** (json-config default) */
+/** (json-config default for `node_info.srv_port`) */
 #if !SERVER_PORT
 #undef SERVER_PORT
 #if SERVER_PROTOCOL == PROTOCOL_UDP
@@ -332,29 +333,29 @@
 #define WIFI_AP_PASSWORD        "PASSWORD"
 
 /**
- * How many times to attempt opening net-connection before reporting error.
- * (json-config default)
+ * How many times to attempt contacting the server before reporting error.
+ * (json-config default for `node_info.net_retries`)
  */
 #define NET_CONNECT_RETRIES         5
 /**
  * How much time to sleep before reattempting to net-connect.
- * (json-config default)
+ * (json-config default for `node_info.net_udp_reconnect_delay_ms`)
  */
 #define UDP_CONNECT_RETRY_DELAY_MS  3000
 /**
  * Maximum consecutive communication errors before resetting network.
- * (json-config default)
+ * (json-config default for `node_info.reconnect_max_nerrors`)
  */
 #define MAX_CONN_ERRORS_RECONNECT   5
 /**
  * Timeout for receiving an event response.
- * (json-config default)
+ * (json-config default for `node_info.net_recv_timeout_ms`)
  */
 #define DATA_RECEIVING_TIMEOUT_MS   5000
 /**
  * Expected maximum server sync signal interval.
 *  Set 0 to disable
- * (json-config default)
+ * (json-config default for `node_info.srv_sync_timeout_ms`)
  */
 #define SERVER_SYNC_INTERVAL_SEC    120
 /**
@@ -372,7 +373,7 @@
  * until the last stationary duration (left-value),
  * which defines when the device should fall to standby.
  *
- * (json-config default)
+ * (json-config default for `node_info.transmission_intervals`)
  */
 #define STATIONARY_TRANSMISSION_INTERVALS \
         {30, 1000}, \
@@ -381,7 +382,7 @@
 
 /**
  * How often to ping the server?
- * (json-config default)
+ * (json-config default for `node_info.ping_back_interval_sec`)
  */
 #define PING_BACK_INTERVAL_SEC      900
 /**
@@ -393,13 +394,13 @@
 
 /**
  * How often to send PIDs form the on-board fuel-consumption monitoring device.
- * (json-config default)
+ * (json-config default for `node_info.obfcm_interval`)
  */
 #define OBFCM_INTERVAL_MS           30000
 
 /**
  * How often to dump buffer & network statistics (both of them).
- * (json-config default)
+ * (json-config default for `node_info.net/buf_stats_interval_sec`)
  */
 #define STATS_INTERVAL_SEC          12
 
@@ -430,7 +431,7 @@
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
 /**
  * keeping GNSS power on during standby.
-  * (TODO: `GNSS_ALWAYS_ON` -> nodeinfo.json-config default)
+ * (TODO: `GNSS_ALWAYS_ON` -> nodeinfo.json-config default)
 */
 #define GNSS_ALWAYS_ON 0
 
@@ -439,14 +440,23 @@
 **************************************/
 /**
  * Whether to reset the device after waking up from "sleep".
- * (json-config default)
+ * (json-config default for `node_info.reboot_on_wakeup`)
  */
 #define REBOOT_ON_WAKEUP        1
- /* moving vehicle motion threshold in G */
+/**
+ * Moving vehicle motion threshold in G.
+ * (json-config default for `node_info.wakeup_motion_thr`)
+ */
 #define MOTION_THRESHOLD        0.4f
-// engine jumpstart voltage for waking up (when ENABLE_MEMS)
+/**
+ * Engine jumpstart upper voltage for waking up (when ENABLE_MEMS).
+ * (json-config default for `node_info.wakeup_jumpstart_thr`)
+ */
 #define THR_VOLTAGE             13.6 /* V */
-// engine jumpstart voltage gradient
+/**
+ * Engine jumpstart voltage gradient threshold.
+ * (TODO: `THR_GRAD` -> nodeinfo.wakeup_jumpstart_gradient_thr)
+ */
 #define THR_GRAD                1 /* V */
 
 /**************************************
@@ -479,13 +489,13 @@
 #define ENABLE_OTA_UPDATE       0
 /**
  * The HTTPS site to download the firmware from.
- * (json-config default)
+ * (json-config default for `node_info.ota_url`)
  */
 #define OTA_UPDATE_URL          ""
 /**
  * The certificate-chain in pem format is needed here,
  * taken from, eg `/etc/letsencrypt/live/<server.url>/chain.pem`.
- * (json-config default)
+ * (json-config default for `node_info.ota_update_cert_pem`)
  */
 #define OTA_UPDATE_CERT_PEM     ""
 
@@ -498,16 +508,16 @@
 // enable(1)/disable(0) OLED_SH1106 screen (if connected to the board).
 #define ENABLE_OLED             0
 
-/** (json-config defaults) */
+/** (json-config defaults for `node_info.pin_sensor1/2`) */
 #define PIN_SENSOR1             34
 #define PIN_SENSOR2             26
 
 #define LOG_EXT_SENSORS         LOG_EXT_SENSORS_NONE
 
-/** (json-config default) */
+/** (json-config default for `node_info.cool_temp`) */
 #define COOLING_DOWN_TEMP       80 /* celsius degrees */
-/** (json-config default) */
-#define COOLING_DOWN_SLEEP_SEC  5 /* celsius degrees */
+/** (json-config default for `node_info.cool_delay_sec`) */
+#define COOLING_DOWN_SLEEP_SEC  5
 
 ////////////////////////////
 // NON-USER CONFIGS BELOW //
