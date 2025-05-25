@@ -267,6 +267,8 @@ struct node_info_t {
     | ((BOARD_HAS_PSRAM && 1) << 11)
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)
     | ((ENABLE_WIFI && 1) << 13)
+    | ((ENABLE_BLE && 1) << 14)
+    | ((ENABLE_HTTPD && 1) << 15)
   };
   const uint8_t log_level_build{CORE_DEBUG_LEVEL};
   const int nslots{BUFFER_SLOTS};

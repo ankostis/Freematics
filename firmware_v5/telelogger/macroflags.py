@@ -32,6 +32,8 @@ flags = {
     0x0800: "BOARD_HAS_PSRAM",
     0x1000: "BOARD_HAS_PSRAM_HIGH",
     0x2000: "ENABLE_WIFI",
+    0x4000: "ENABLE_BLE",
+    0x8000: "ENABLE_HTTPD",
 }
 
 
