@@ -13,3 +13,18 @@ d5f951541130eb2a5c56f61f1e5d5fb0279f8a37
 
 # 14 Jun 2022: refact(fw5.cfg) reorder enable-flags to the top
 ebb26961de673a3f89489e1e17231e532f9ac07c
+
+#  Tue Jan 28: WIP/RESOLVED MERGE with Stanley's model-B ~2yago >
+ca5f84526a507179b097a2e010ceeff475514374
+
+# Tue Jan 28: WIP/UNResolved MERGE with initial Stanley's "Cellular improve" >
+5249afb5b947577c24fb88b4363f96380ffbdf05
+
+# Tue Jan 28: WIP/UNResolved MERGE with initial Stanley's "Cellular improve" >
+53ec21dde1e7581ca9559b3b2e0e1446484a2a7c
+
+# Tue May 09 2023 04:41:29 GMT+0300: Update FreematicsPlus.cpp
+b39413a869a5881af16b22f1f9f5bb6727423465
+
+# Wed May 21 2025 00:48:40 GMT+0300 WIP/UNResolved MERGE-2 with Stanley Dec 2022
+7548515633a83e575a0d5b3026da3afbd5b0841a
