@@ -285,6 +285,10 @@ struct node_info_t {
   //////////
   // STATUS
   char vin[18]{};
+  // TODO: report CELL, GNSS & MEMS device names.
+  //const uint8_t cell_dev{...};
+  //const uint8_t gnss_dev{...};
+  //const uint8_t mems_dev{...};
 
   //////////
   // CONFIG

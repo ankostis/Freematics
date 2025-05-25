@@ -9,7 +9,7 @@
 - complete re-config
 - dynamic PID-list
 - trip/timestamp uint32-->64 server fixes
-- [doc fixes](https://hypothes.is/users/ankostis?q=graphtik#)
+- [doc fixes](https://hypothes.is/users/ankostis?q=freematics#)
 
 #### Other
 
@@ -17,6 +17,28 @@
 - [ ] stats/infos should include WiFis around & stats
 - [ ] +configuration combining **Tx-frequency of PIDs + OBFCM with Stats-frequency.**
 - [ ] report `uxTaskGetNumberOfTasks()` & `uxTaskGetSystemState()` in NodeInfo status
+- [ ] report CELL & MEMS device names.
+- [ ] convert all for-loops on bytes --> int (arduino code, larger/slower in 32bits).
+- [ ] convert `!std::string.length()` --> `std::string.empty()`.
+- [ ] convert `OLED_PRINTF()` --> `OLED_PRINTLN()`.
+- [ ] distinguish TX/RX logs with prefixes in `FreematicsNetwork.cpp`.
+- [ ] enumerate SD files on boot in a separate task, not to delay boot.
+- [ ] SIGNAL_CHECK_INTERVAL:  --> NodeInfo, rename to `SIGNAL_CHECK_INTERVAL_SEC`.
+- [ ] make `wifi_retries` reconfigurable.
+- teleclient.cpp:
+  - [ ] `telemetry()`: store `millis()` in temp-var to call it less often.
+  - [ ] `telemetry()`: encapsulate PSRAM-malloc in `store.init()`.
+  - [ ] drop remaining `Serial.prints`.
+  - [ ] `processMEMS()`: Restore MEMS PIDs with a config option.
+  - [ ] drop wait `waitMotionGPS()`.
+  - [ ] fix: should delete VIN when cannot read it (eg obd switched out)?
+- [ ] Drop `BOARD_HAS_PSRAM_HIGH`??
+- [ ] Shouldn't clean VIN when cannot read it?  (eg obd switched out).
+- [ ] Should OVERHEAT purge buffers!?  Why not sleep & purge only if still hot?
+- [ ] DOC: mention how to configure C/C++ formatting on VSCode.
+- nodeinfo:
+  - [ ] `+SIGNAL_CHECK_INTERVAL_SEC`
+  - [ ] `+GNSS_ALWAYS_ON`
 - Port fixes:
   - [ ] 9343dc1a: Stanley GSM fixes @ `FreematcisNetwork.cpp`
 
