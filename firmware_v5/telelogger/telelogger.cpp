@@ -1144,12 +1144,15 @@ void process()
 bool initWifi()
 {
   OLED_PRINT("Connecting WiFi...");
-  teleClient.wifi.begin(node_info.wifi_ssids);
-  if (teleClient.wifi.setup()) {
-      ESP_LOGI(TAG_WIFI, "Connected");
-      OLED_PRINTLN("WiFi-connected");
-      return true;
-  }
+  // TODO: make `wifi_retries` reconfigurable.
+  for (byte attempts = 0; attempts < 2; attempts++) {
+    teleClient.wifi.begin(node_info.wifi_ssids);
+    if (teleClient.wifi.setup()) {
+        ESP_LOGI(TAG_WIFI, "Connected");
+        OLED_PRINTLN("WiFi-connected");
+        return true;
+    }
+  }  // wifi attempts loop
   ESP_LOGW(TAG_WIFI, "No WiFi.");
   return false;
 }  // initWifi()
@@ -1336,7 +1339,10 @@ void telemetry(void* inst)
 
 #if ENABLE_WIFI
         if (!state.check(STATE_WIFI_CONNECTED)) {
-          teleClient.wifi.begin(node_info.wifi_ssids);
+          // TODO: make `wifi_retries` reconfigurable.
+          for (byte attempts = 0; attempts < 2; attempts++) {
+            teleClient.wifi.begin(node_info.wifi_ssids);
+          }
         }
 #endif
       }
