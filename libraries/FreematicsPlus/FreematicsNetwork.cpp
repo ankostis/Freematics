@@ -744,6 +744,13 @@ void CellSIMCOM::inbound()
   }
 }
 
+char* CellSIMCOM::getBuffer()
+{
+  if (!m_buffer) m_buffer = (char*)malloc(RECV_BUF_SIZE);
+  return m_buffer;
+}
+
+
 bool CellUDP::open(const char* host, uint16_t port)
 {
   if (host) {
