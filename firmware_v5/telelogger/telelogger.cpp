@@ -688,9 +688,6 @@ void initialize()
   // FIXME: should delete VIN when cannot read it (eg obd switched out)?
 #endif
 
-  // Notify server early that the device for some VIN has waken up.
-  teleClient.notify(EVENT_PING);
-
   // check system time
   printTime();
 
