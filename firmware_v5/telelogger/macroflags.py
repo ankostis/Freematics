@@ -48,7 +48,7 @@ try:
     from platformio.commands.device import DeviceMonitorFilter
     import re
 
-    state_re = re.compile('(?i)(?<="macroflags": )(?:(?:"0x([0-9a-f]+)")|([0-9]+))')
+    state_re = re.compile(r'(?i)(?<="macroflags": )(?:(?:"0x([0-9a-f]+)")|([0-9]+))')
 
     def expand_state(match):
         hex_state = match.group(1)
