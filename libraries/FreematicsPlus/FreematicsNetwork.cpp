@@ -56,10 +56,10 @@ bool ClientWIFI::begin(std::map<std::string, std::string> ssids)
   const bool first_open = (n_known == 0);
   const char *ssid = nullptr;
   const char* pwd = nullptr;
+  String ssid1;  // Outside of loop to retain its `c_str` content on `success`. 
   if (first_open || n_known > 1) {
     const int n_around = listAPs();
     for (int i = 0; i < n_around; ++i) {
-      String ssid1;
       uint8_t encType;
       int32_t _rssi;
       uint8_t *_bssid;
