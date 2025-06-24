@@ -222,6 +222,12 @@
 #ifndef ENABLE_OBD
 #define ENABLE_OBD              1
 #endif
+/**
+ * When 1, it generates & transmits speed=314kmh and a dummy VIN, 
+ * so as to keep communication to the server up and never sleep.
+ * Use it to debug the network even when not hooked on a vehicle.
+ */
+#define ENABLE_OBD_EMULATION        0
 
 /**
  * Maximum consecutive OBD access errors before entering standby.

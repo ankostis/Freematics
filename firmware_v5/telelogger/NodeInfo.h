@@ -172,7 +172,7 @@
 
 typedef nlohmann::ordered_json Json;
 typedef std::map<std::string, esp_log_level_t> LogLevels;
-typedef uint16_t macroflags_t;
+typedef uint32_t macroflags_t;
 struct PartRec {
   const esp_partition_t * part;
   const esp_app_desc_t desc;
@@ -269,6 +269,7 @@ struct node_info_t {
     | ((ENABLE_WIFI && 1) << 13)
     | ((ENABLE_BLE && 1) << 14)
     | ((ENABLE_HTTPD && 1) << 15)
+    | ((ENABLE_OBD_EMULATION && 1) << 16)
   };
   const uint8_t log_level_build{CORE_DEBUG_LEVEL};
   const int nslots{BUFFER_SLOTS};

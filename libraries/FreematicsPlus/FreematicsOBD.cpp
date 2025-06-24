@@ -94,6 +94,10 @@ byte hex2uint8(const char *p)
 
 bool COBD::readPID(byte pid, int& result)
 {
+#if ENABLE_OBD_EMULATION
+	result = 314;
+	return true;
+#endif 
 	char buffer[64];
 	char* data = 0;
 	sprintf(buffer, "%02X%02X\r", dataMode, pid);
@@ -392,6 +396,10 @@ float COBD::getVoltage()
 
 bool COBD::getVIN(char* buffer, byte bufsize)
 {
+#if ENABLE_OBD_EMULATION
+	strcpy(buffer, "VIN4SAMPLEPURPOSE");
+	return true;
+#endif
 	for (byte n = 0; n < 2; n++) {
 		if (link && link->sendCommand("0902\r", buffer, bufsize, OBD_TIMEOUT_LONG)) {
 			int len = hex2uint16(buffer);
@@ -509,6 +517,12 @@ bool COBD::init(
 	char buffer[64];
 	bool success = false;
 
+#if ENABLE_OBD_EMULATION
+	ESP_LOGI(TAG_OBD, "<init> DUMMY proto: %i", protocol);
+	success = true;
+	goto success_2;
+#endif 
+
 	if (!link) {
 		return false;
 	}
@@ -604,7 +618,7 @@ success:
 			}
 		}
 	}
-
+success_2:
 	if (success) {
 		m_state = OBD_CONNECTED;
 		errors = 0;

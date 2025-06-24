@@ -16,7 +16,7 @@ EXAMPLE:
 ## TODO: extract common script for this and `freestate.py`.
 import sys
 
-FLAG_NBYTES = 2
+FLAG_NBYTES = 3
 flags = {
     0x0001: "ENABLE_OBD",
     0x0002: "ENABLE_MEMS",
@@ -34,6 +34,7 @@ flags = {
     0x2000: "ENABLE_WIFI",
     0x4000: "ENABLE_BLE",
     0x8000: "ENABLE_HTTPD",
+    0x10000: "ENABLE_OBD_EMULATION",
 }
 
 
