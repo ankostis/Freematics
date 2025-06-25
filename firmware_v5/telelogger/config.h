@@ -563,8 +563,6 @@ extern const char ota_url2log[];
 #define BOARD_HAS_PSRAM_HIGH 0
 #endif
 
-#define _CHECK_BUZTICKS          (node_info.macroflags & (1 << 4))
-
 // enable(1)/disable(0) http server
 #ifndef ENABLE_HTTPD
 #define ENABLE_HTTPD 0
@@ -574,6 +572,8 @@ extern const char ota_url2log[];
 #ifndef ENABLE_BLE
 #define ENABLE_BLE 1
 #endif
+
+#define _CHECK_BUZTICKS          (node_info.macroflags & (1 << 4))
 
 
 #endif // CONFIG_H_INCLUDED
