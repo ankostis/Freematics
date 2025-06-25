@@ -47,13 +47,13 @@ try:
     from platformio.commands.device import DeviceMonitorFilter
     import re
 
-    state_re = re.compile(r'(?:state: "?(?:0x)?)([0-9a-fA-F]+)\b')
+    state_re = re.compile(r'(?:("?\bstate\b"?): "?(?:0x)?)([0-9a-fA-F]+)\b"?')
 
     def expand_state(match):
-        matched_state = match.group(1)
+        matched_state = match.group(2)
         state = int(matched_state, 16)
         names = "|".join(t[1] for t in state_flag_n_names(state))
-        return f"state: ({state:#x}: {names})"
+        return f"{match.group(1)}: ({state:#x}: {names})"
 
     class FreematicsStateMonFilter(DeviceMonitorFilter):
         NAME = "freestate"
