@@ -173,6 +173,7 @@
 typedef nlohmann::ordered_json Json;
 typedef std::map<std::string, esp_log_level_t> LogLevels;
 typedef uint32_t macroflags_t;
+typedef uint16_t stateflags_t;
 struct PartRec {
   const esp_partition_t * part;
   const esp_app_desc_t desc;
@@ -232,14 +233,13 @@ void from_json(const Json &j, stationary_interval_t &t);
 struct node_info_t {
   Json hw_info_to_json() const;
   Json fw_info_to_json(const PartInfos precs) const;
-  Json node_state_to_json() const;
+  Json node_state_to_json(stateflags_t m_state) const;
   Json config_to_json() const;
 
   /**
-   * Produces a valid JSON string as output, like the pone on file header.
+   * Produces a valid JSON string as output, like the one on file header.
    */
-
-  Json to_json() const;
+  Json to_json(stateflags_t m_state) const;
 
   //////////
   // HARDWARE

@@ -225,7 +225,7 @@ public:
   bool check(uint16_t flags) { return (m_state & flags) == flags; }
   void set(uint16_t flags) { m_state |= flags; }
   void clear(uint16_t flags) { m_state &= ~flags; }
-  uint16_t m_state = 0;
+  stateflags_t m_state = 0;
 };
 
 FreematicsESP32 sys;
@@ -760,7 +760,7 @@ std::string executeCommand(const char* cmd)
     Json j;
 
     if (!itype || *itype == '*') // BUG: STACK TOO SMALL!!
-      j = node_info.to_json();
+      j = node_info.to_json(state.m_state);
 
     else if (*itype == 'H')
       j = node_info.hw_info_to_json();
@@ -770,7 +770,7 @@ std::string executeCommand(const char* cmd)
       j = node_info.fw_info_to_json(precs);
 
     } else if (*itype == 'S')
-      j = node_info.node_state_to_json();
+      j = node_info.node_state_to_json(state.m_state);
 
     else if (*itype == 'C')
       j = node_info.config_to_json();
@@ -1907,7 +1907,7 @@ void setup()
   adc1_config_channel_atten(ADC1_CHANNEL_1, ADC_ATTEN_DB_11);
 #endif
 
-  node_info_j = node_info.to_json();
+  node_info_j = node_info.to_json(state.m_state);
   ESP_LOGE(
     TAG_SETUP,
     "NODE_INFO:\n%s",

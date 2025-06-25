@@ -235,7 +235,9 @@ Json node_info_t::fw_info_to_json(const PartInfos precs) const {
   };
 }  // fw_info_to_json()
 
-Json node_info_t::node_state_to_json() const {
+Json node_info_t::node_state_to_json(stateflags_t m_state) const {
+  std::stringstream ss_state;
+  ss_state << "0x" << std::hex << m_state;
   // TODO: root["boot_count"] = boot_count
   const uint32_t heap_size = ESP.getHeapSize();
   const uint32_t MinHeapFree = esp_get_minimum_free_heap_size();
@@ -258,6 +260,7 @@ Json node_info_t::node_state_to_json() const {
   unsigned long wake_sec_now = (millis() - wakeup_tstamp) / 1000;
 
   return {
+  {"state", ss_state.str()},
   {"last_boot_reason", esp_reset_reason()},
   {"reboots", boot_ark.reboots},
   {"naps", boot_ark.naps},
@@ -360,7 +363,7 @@ Json node_info_t::config_to_json() const {
 }  // config_to_json()
 
 
-Json node_info_t::to_json() const {
+Json node_info_t::to_json(stateflags_t m_state) const {
   const PartInfos precs = collect_ota_partition_records();
   const auto fw_j = fw_info_to_json(precs);
 
@@ -384,7 +387,7 @@ Json node_info_t::to_json() const {
         {"build_date", build_date},
         {"node_hw", hw_info_to_json()},
         {"node_fw", fw_j},
-        {"node_state", node_state_to_json()},
+        {"node_state", node_state_to_json(m_state)},
         {"config", config_to_json()},
     };
 }
