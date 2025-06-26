@@ -252,6 +252,9 @@
  * - ATSP 9 - ISO 15765-4 (CAN 29/250)
  * - ATSP B - SAE J1939 CAN (29 bit ID, 250* kbaud)
  *
+ * NOTE: some commands below (like `ATSH`) like `ATSP` to have run before
+ * (maybe to decide frame's length?)
+ * 
  * - ATCM hhh/hhhhhhhh: Set the ID Mask (11bit/29bit CAN)
  * - ATCF hhh/hhhhhhhh: Set the ID Filter (11bit/29bit CAN)
  * - ATSH xyz/xxyyzz:   Set Header(11bit/29bit CAN)

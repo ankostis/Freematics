@@ -362,7 +362,7 @@ bool TeleClientUDP::connect(bool quick)
   {
     cell.close();
     if (quick) {
-      return cell.open(0, 0);
+      return cell.open(0, 0);  // Preserve existing host/port.
     }
   }
 
@@ -513,11 +513,11 @@ void TeleClientUDP::inbound()
       break;
     }
     data[len] = 0;
-    ESP_LOGD(TAG_UDP, "Inbound: %s", data);
+    ESP_LOGD(TAG_UDP, "Inbound %ib: %s", len, data);
     rxBytes += len;
     if (!verifyChecksum(data)) {
       err = "bad checksum";
-      ESP_LOGE(TAG_UDP, "Inbound Checksum mismatch: %s", data);
+      ESP_LOGE(TAG_UDP, "Inbound %ib Checksum mismatch: %s", len, data);
       break;
     }
     char *p = strstr(data, "EV=");
