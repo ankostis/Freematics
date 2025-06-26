@@ -223,7 +223,7 @@
 #define ENABLE_OBD              1
 #endif
 /**
- * When 1, it generates & transmits speed=314kmh and a dummy VIN, 
+ * When 1, it generates & transmits speed=314kmh and a dummy VIN,
  * so as to keep communication to the server up and never sleep.
  * Use it to debug the network even when not hooked on a vehicle.
  */
@@ -236,11 +236,11 @@
 #define MAX_OBD_ERRORS          3
 
 /**
- * A list-of-list-of-alternate ELM327-like Protocol AT-commands
- * to send to OBD-coprocessor if default initialization in `OBD.init()` fails
- * ie. sending `ATZ, ATEO, ATHO` and then querying `010D` (PID_SPEED).
+ * A list-of-list-of-alternate AT-cmds used to widen OBD masks/filter 
+ * when `OBD.init()` fails with ELM327-like coprocessor's defaults
+ * ie. after sending `ATZ, ATEO, ATHO` and querying `010D` (`PID_SPEED`).
  *
- * As an aid, here thre are some usefull commands:
+ * Some usefull AT commands (more in `ELM327-AT_cmds.md` file):
  *
  * - ATSP 0 - Automaticaly detected by coprocessor
  * - ATSP 3 - ISO 9141-2
@@ -255,17 +255,49 @@
  * - ATCM hhh/hhhhhhhh: Set the ID Mask (11bit/29bit CAN)
  * - ATCF hhh/hhhhhhhh: Set the ID Filter (11bit/29bit CAN)
  * - ATSH xyz/xxyyzz:   Set Header(11bit/29bit CAN)
- * - ATCP hh:           Set CAN Priority to hh (29 bit)
+ * - ATCP hh:           Set CAN Priority to hh (5msb of 29 bit)
  *
+ * ## Regular PIDs & OBFCM IDs
+ *
+ * - 11bit:
+ *   - BROADCAST:
+ *     - 0x7DF (0b111_1110_1000)
+ *   - typical (regular PIDs & OBFCM):
+ *     - 0x7E8 (0b111_1110_1000)
+ *     - 0x7E9 (0b111_1110_1001)
+ *   - Toyota (OBFCM):
+ *     - 0x7EA (0b111_1110_1010)
+ * - 29bit:
+ *   - BROADCAST:
+ *     - 0x18DB33F1 (0b1_1000_1101_1011_0011_0011_1111_0001)
+ *   - typical (regular PIDs & OBFCM):
+ *     - 0x18DAF110 (0b1_1000_1101_1010_1111_0001_0001_0000)
+ *   - Mercedes (regular PIDs):
+ *     - 0x18DAF158 (0b1_1000_1101_1010_1111_0001_0101_1000)
+ *     - 0x18DAF15A (0b1_1000_1101_1010_1111_0001_0101_1010)
+ *     - 0x18DAF15D (0b1_1000_1101_1010_1111_0001_0101_1101)
+ *   - Mercedes (OBFCM):
+ *     - 0x18DAF159 (0b1_1000_1101_1010_1111_0001_0101_1001)
+ *
+ * ## Default Filters & Masks (baked into the ELM327 coproc)
+ * 
+ * - 11 bit:
+ *   - Accepts data from 7E8 & 7E9 but not 7EA.
+ *   - filter: 0x7E8 (0b111_1110_1000)
+ *   - mask:   0x7FE (0b111_1111_1110)
+ * - 29bit:
+ *   - accepts from 0x18DAF110 but not 0x18DAF158/9
+ *   - filter: ??
+ *   - mask:   ??
+ * 
  * (json-config default for `node_info.obd_alt_init_cmds`)
  */
-//// Toyota cmds
+////                            [MERCEDES FILTER/MASK]                     [WIDER FILTER/MASK]
 #define OBD_ALT_INIT_CMDS       {"ATSP7", "ATCF18DAF101", "ATCM1FFFFF00"}, {"ATSP6", "ATCF7E8", "ATCM7F8"}
+////                            [TOYOTA OBFCM F/M: 0b111_1110_1010/0b111_1111_1111]
 #define OBFCM_CMD_LIST_START    {"ATSP6\r", "ATCF7EA\r", "ATCM7FF\r"}
+////                            Note: mask become stricter afterwards!
 #define OBFCM_CMD_LIST_END      {"ATSP6\r", "ATCF7E8\r", "ATCM7FF\r"}
-//// Mercedes cmds
-// #define OBFCM_CMD_LIST_START    {"ATSP7", "ATCF18DAF159", "ATCM1FFFFFFF"}  
-// #define OBFCM_CMD_LIST_END      {"ATSP7", "ATCF18DAF158", "ATCM1FFFFFFF"}
 
 
 /**************************************
@@ -313,7 +345,7 @@
  * (json-config default for `node_info.sim_card_pin`)
  */
 #define SIM_CARD_PIN            ""
-// TODO: `APN_USERNAME` & `APN_PASSWORD` --> nodinfo 
+// TODO: `APN_USERNAME` & `APN_PASSWORD` --> nodinfo
 #define APN_USERNAME            NULL
 #define APN_PASSWORD            NULL
 

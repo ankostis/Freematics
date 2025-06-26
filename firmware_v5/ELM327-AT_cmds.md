@@ -16,7 +16,7 @@ on May 2022 (a month before the closing of ELM company).
 
 ## General Commands
 
-- `<CR>`: repeat the last command (`\r`, or ASCII(0x0D))
+- /`<CR>`: repeat the last command (`\r`, or ASCII(0x0D))
 - /ATBRD hh: try Baud Rate Divisor hh
 - /ATBRT hh: set Baud Rate Timeout
 - /ATD: set all to Defaults
@@ -24,14 +24,14 @@ on May 2022 (a month before the closing of ELM company).
 - **ATE1**: Echo on*
 - /ATFE: Forget Events
 - **ATI**: print the version ID
-- **ATL0**: Linefeeds off
+- **ATL0**: Linefeeds off*
 - **ATL1**: Linefeeds on
 - **ATLP**: go to Low Power mode
 - **ATM0**: ~~Memory off~~**Enable sniffing**
 - **ATM1**: ~~Memory on~~**Disable sniffing**
 - /ATRD: Read the stored Data
 - /ATSD hh: Save Data byte hh
-- /ATWS: Warm Start (quick software reset)
+- **ATWS**: Warm Start (quick software reset)
 - **ATZ**: reset all
 - **AT@1**: display the device description
 - /AT@2: display the device identifier
@@ -49,8 +49,8 @@ on May 2022 (a month before the closing of ELM company).
 
 
 ## Voltage Reading Commands
-- ATCV dddd: Calibrate the Voltage to dd.dd volts
-- ATCV 0000: restore CV value to factory setting
+- /ATCV dddd: Calibrate the Voltage to dd.dd volts
+- /ATCV 0000: restore CV value to factory setting
 - **ATRV**: Read the input Voltage
 
 ## Other
@@ -71,23 +71,23 @@ on May 2022 (a month before the closing of ELM company).
 - **ATDPN**: Describe the Protocol by Number
 - /ATFT: Filter for Transmitter off*
 - /ATFT hh: Filter for Transmitter = hh
-- *ATH0*: (RECV) Headers off*
-- *ATH1*: (RECV) Headers on
+- **ATH0**: (RECV) Headers off*
+- **ATH1**: (RECV) Headers on
 - /ATIA: Is the protocol Active?
 - /ATMA: Monitor All
 - /ATMR hh: Monitor for Receiver = hh
 - /ATMT hh: Monitor for Transmitter = hh
 - /ATNL: Normal Length messages*
-- *ATPC*: Protocol Close
+- **ATPC**: Protocol Close
 - /ATR0: Responses off
 - /ATR1: Responses on*
 - /ATRA hh: set the Receive Address to hh
-- *ATS0*: printing of Spaces off
-- *ATS1*: printing of Spaces on*
+- **ATS0**: printing of Spaces off
+- **ATS1**: printing of Spaces on*
 - ATSH xyz: Set Header to xyz
 - ATSH xxyyzz: Set Header to xxyyzz
 - ATSH wwxxyyzz: Set Header to wwxxyyzz
-- *ATSP h*: Set Protocol to h and save it
+- **ATSP h**: Set Protocol to h and save it
 - /ATSP Ah: Set Protocol to Auto, h and save it
 - /ATSP 00: Erase stored protocol
 - /ATSR hh: Set the Receive address to hh
@@ -113,7 +113,7 @@ on May 2022 (a month before the closing of ELM company).
 - ATIB15: set the ISO Baud rate to 15625
 - ATIB48: set the ISO Baud rate to 4800
 - ATIB96: set the ISO Baud rate to 9600
-- *ATIIA hh*: set ISO (slow) Init Address to hh
+- **ATIIA hh**: set ISO (slow) Init Address to hh
 - /ATKW: display the Key Words
 - /ATKW0: Key Word checking off
 - /ATKW1: Key Word checking on*
@@ -132,12 +132,12 @@ on May 2022 (a month before the closing of ELM company).
 - /ATCEA: turn off CAN Extended Addressing
 - /ATCEA hh: use CAN Extended Address hh
 - ATCER hh: set CAN Extended Rx address to hh
-- *ATCF hhh*: set the ID Filter to hhh
-- *ATCF hhhhhhhh*: set the ID Filter to hhhhhhhh
-- *ATCFC0*: Flow Controls off
-- *ATCFC1*: Flow Controls on*
-- *ATCM hhh*: set the ID Mask to hhh
-- *ATCM hhhhhhhh*: set the ID Mask to hhhhhhhh
+- **ATCF hhh**: set the ID Filter to hhh
+- **ATCF hhhhhhhh**: set the ID Filter to hhhhhhhh
+- **ATCFC0**: Flow Controls off
+- **ATCFC1**: Flow Controls on*
+- **ATCM hhh**: set the ID Mask to hhh
+- **ATCM hhhhhhhh**: set the ID Mask to hhhhhhhh
 - **ATCP hh**: set CAN Priority to hh (29 bit)
 - /ATCRA: reset the Receive Address filters
 - /ATCRA hhh: set CAN Receive Address to hhh
