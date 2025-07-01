@@ -428,11 +428,8 @@ bool COBD::getVIN(char* buffer, byte bufsize)
     return false;
 }
 
-bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
+bool _coreGetOBFCM(DS_CAN_MSG* obfcmDataArray)
 {
-  // Write C++ code here
-	const char *obfcminitcmd[] = OBFCM_CMD_LIST_START;
-	const char *obfcmendcmd[] = OBFCM_CMD_LIST_END;
 	char command[128];
   	char data[16];
   	byte idx = 0;
@@ -440,13 +437,9 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 	byte msgNr = 0;
 	char buffer[128];
 	byte bufsize;
+	bool gotData = false;
 
-
-	for (byte i = 0; i < sizeof_array(obfcminitcmd); i++) {
-		link->sendCommand(obfcminitcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
-	}
-
-		while(obfcmDataArray[idx2].idx){
+	while(obfcmDataArray[idx2].idx){
 		sprintf(command, "%02d%02X\r", obfcmDataArray[idx2].service, obfcmDataArray[idx2].pid);
 		bufsize = sizeof(buffer);
 		if (link->sendCommand(command, buffer, bufsize, OBD_TIMEOUT_LONG))
@@ -477,11 +470,9 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 								p += 2;
 							}
 						}
-/*					if (!data) {
-							errors++;
+						if (data) gotData true; 
 							return false;
 						}
-*/
 						obfcmDataArray[idx2].value = hex2uint32(data); //(hex2uint32(data)*obfcmDataArray[idx2].gain + obfcmDataArray[idx2].offset);
 						idx2++;
 					}
@@ -492,12 +483,29 @@ bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
 		}
 	}
 
+	return true;
+}
+
+bool COBD::GetOBFCM (DS_CAN_MSG* obfcmDataArray)
+{
+	const char *obfcminitcmd[] = OBFCM_CMD_LIST_START;
+	const char *obfcmendcmd[] = OBFCM_CMD_LIST_END;
+
+	for (byte i = 0; i < sizeof_array(obfcminitcmd); i++) {
+		link->sendCommand(obfcminitcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
+	}
+
+	return _coreGetOBFCM(obfcmDataArray);
 	for (byte i = 0; i < sizeof_array(obfcmendcmd); i++) {
 		link->sendCommand(obfcmendcmd[i], buffer, sizeof(buffer), OBD_TIMEOUT_SHORT);
 	}
 
-	return true;
 }
+
+bool _GetOBFCM (DS_CAN_MSG* obfcmDataArray)
+{
+	const char *obfcminitcmd[] = OBFCM_CMD_LIST_START;
+	const char *obfcmendcmd[] = OBFCM_CMD_LIST_END;
 
 bool COBD::isValidPID(byte pid)
 {
