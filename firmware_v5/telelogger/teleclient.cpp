@@ -502,15 +502,19 @@ void TeleClientUDP::inbound()
     {
       data = cell.getBuffer();
       len = wifi.receive(data, RECV_BUF_SIZE - 1, 10);
+      if (len == 0) {
+        // No data available - not an error
+        return;
+      }
     }
     else
 #endif
     {
       data = cell.receive(&len, 50);
     }
-    if (!data) {
-      err = "timeout";
-      break;
+    if (!data || len == 0) {
+      // No data available - not an error, just return silently
+      return;
     }
     data[len] = 0;
     ESP_LOGD(TAG_UDP, "Inbound %ib: %s", len, data);
