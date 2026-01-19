@@ -1194,7 +1194,7 @@ int _mwProcessReadSocket(HttpParam* hp, HttpSocket* phsSocket)
 
 	if (!hp->pxUrlHandler || !_mwCheckUrlHandlers(hp,phsSocket))
 		SETFLAG(phsSocket,FLAG_DATA_FILE);
-		
+
 	// set state to SENDING (actual sending will occur on next select)
 	CLRFLAG(phsSocket,FLAG_RECEIVING)
 	if (phsSocket->request.iHttpVer == 0) {
@@ -1244,7 +1244,7 @@ void _mwCloseSocket(HttpParam* hp, HttpSocket* phsSocket)
 	if (phsSocket->fp) {
 		fclose(phsSocket->fp);
 		phsSocket->fp = 0;
-		hp->stats.openedFileCount--;	
+		hp->stats.openedFileCount--;
 	}
 	if (phsSocket->request.pucPayload) {
 		free(phsSocket->request.pucPayload);

@@ -236,7 +236,7 @@
 #define MAX_OBD_ERRORS          3
 
 /**
- * A list-of-list-of-alternate AT-cmds used to widen OBD masks/filter 
+ * A list-of-list-of-alternate AT-cmds used to widen OBD masks/filter
  * when `OBD.init()` fails with ELM327-like coprocessor's defaults
  * ie. after sending `ATZ, ATEO, ATHO` and querying `010D` (`PID_SPEED`).
  *
@@ -254,7 +254,7 @@
  *
  * NOTE: some commands below (like `ATSH`) like `ATSP` to have run before
  * (maybe to decide frame's length?)
- * 
+ *
  * - ATCM hhh/hhhhhhhh: Set the ID Mask (11bit/29bit CAN)
  * - ATCF hhh/hhhhhhhh: Set the ID Filter (11bit/29bit CAN)
  * - ATSH xyz/xxyyzz:   Set Header(11bit/29bit CAN)
@@ -283,7 +283,7 @@
  *     - 0x18DAF159 (0b1_1000_1101_1010_1111_0001_0101_1001)
  *
  * ## Default Filters & Masks (baked into the ELM327 coproc)
- * 
+ *
  * - 11 bit:
  *   - Accepts data from 7E8 & 7E9 but not 7EA.
  *   - filter: 0x7E8 (0b111_1110_1000)
@@ -292,7 +292,7 @@
  *   - accepts from 0x18DAF110 but not 0x18DAF158/9
  *   - filter: ??
  *   - mask:   ??
- * 
+ *
  * (json-config default for `node_info.obd_alt_init_cmds`)
  */
 ////                            [MERCEDES FILTER/MASK]                     [WIDER FILTER/MASK]

@@ -62,7 +62,7 @@ function CreateChart(container, title, color, val1, val2, interval, samples)
                 data: samples
             }]
 	});
-	return chart;	
+	return chart;
 }
 
 function CreateChartTiny(container, color, val1, val2, interval, samples)
@@ -111,7 +111,7 @@ function CreateChartTiny(container, color, val1, val2, interval, samples)
                 data: samples
             }]
 	});
-	return chart;	
+	return chart;
 }
 
 function CreateGauge(container, title, minval, maxval)
@@ -174,11 +174,11 @@ function CreateGauge(container, title, minval, maxval)
                 }
             }
         },
-		
+
 		exporting: {
 			enabled: false
 		},
-		
+
         series: [{
             name: title,
             data: [0],
@@ -191,6 +191,6 @@ function CreateGauge(container, title, minval, maxval)
         }]
 
 	});
-	return chart;	
+	return chart;
 
 }

@@ -70,10 +70,10 @@ var USER = {
 				self.setTimeout(callback, 0);
 			} else {
 				alert("Please specify a device ID");
-			}		
+			}
 		} else {
 			var url = serverURL + "query?user=" + this.userb64;
-			this.xhr.open('GET', url, true);    
+			this.xhr.open('GET', url, true);
 			this.xhr.send(null);
 		}
 	},
@@ -94,7 +94,7 @@ var USER = {
 		this.userb64 = this.user ? btoa(this.user) : getCookie("user");
 		if (this.userb64) {
 			var url = serverURL + "query?user=" + this.userb64;
-			this.xhr.open('GET', url, true);    
+			this.xhr.open('GET', url, true);
 			this.xhr.send(null);
 		} else {
 			if (callback) self.setTimeout(callback, 0);

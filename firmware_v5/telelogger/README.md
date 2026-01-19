@@ -112,7 +112,7 @@ The sketch collects following data.
 * Device temperature (from MEMS sensor or ESP32 built-in sensor)
 
 Collected data are stored in a circular buffer in ESP32's IRAM or PSRAM. When PSRAM is enabled, hours of data can be buffered in case of temporary network outage and transmitted when network connection resumes.
-  
+
 
 Data Transmission
 =================

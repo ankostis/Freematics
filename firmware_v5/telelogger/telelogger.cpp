@@ -1537,7 +1537,7 @@ void standby()
   sys.resetLink();
   if (node_info.reboot_on_wakeup) {
 #if ENABLE_MEMS
-  if (mems) mems->end();  
+  if (mems) mems->end();
 #endif
     esp_restart();
   }

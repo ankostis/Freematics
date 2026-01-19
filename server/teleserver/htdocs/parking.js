@@ -4,7 +4,7 @@
 * Distributed under BSD license
 * Visit http://freematics.com/hub/api for Freematics Hub API reference
 * To obtain your Freematics Hub server key, contact support@freematics.com.au
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -110,7 +110,7 @@ var DASH = {
             this.setText("state", "RUNNING");
             this.setClass("state", "state_running");
         }
-		
+
         this.data = ch.data;
 
 	    // update map
@@ -152,7 +152,7 @@ var DASH = {
             }
 		};
         var url = serverURL + "channels/" + USER.devid + "?data=1";
-		this.xhr.open('GET', url, true);    
+		this.xhr.open('GET', url, true);
 		this.xhr.send(null);
 	}
 };

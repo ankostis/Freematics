@@ -36,23 +36,23 @@ typedef enum{
     }AK09916_ST1_Reg_t;
 
     // typedef struct{
-        
+
     // }AK09916_HXL_Reg_t;
 
     // typedef struct{
-        
+
     // }AK09916_HXH_Reg_t;
     // typedef struct{
-        
+
     // }AK09916_HYL_Reg_t;
     // typedef struct{
-        
+
     // }AK09916_HYH_Reg_t;
     // typedef struct{
-        
+
     // }AK09916_HZL_Reg_t;
     // typedef struct{
-        
+
     // }AK09916_HZH_Reg_t;
 
     typedef struct{
@@ -68,7 +68,7 @@ typedef enum{
 
     typedef struct{
         uint8_t SRST : 1;
-        uint8_t reserved_0 : 7;    
+        uint8_t reserved_0 : 7;
     }AK09916_CNTL3_Reg_t;
 
 

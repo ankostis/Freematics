@@ -490,7 +490,7 @@ bool FreematicsESP32::gpsBeginExt(int baudrate)
             .flow_ctrl = UART_HW_FLOWCTRL_DISABLE,
             .rx_flow_ctrl_thresh = 122,
         };
-        
+
         // configure UART parameters
         uart_param_config(gpsUARTNum, &uart_config);
         // set UART pins
@@ -548,7 +548,7 @@ bool FreematicsESP32::gpsBegin()
 {
     if (!link) return false;
     m_flags |= FLAG_GNSS_USE_LINK;
-    
+
     char buf[256];
     link->sendCommand("ATGPSON\r", buf, sizeof(buf), 100);
     delay(300);
@@ -633,7 +633,7 @@ bool FreematicsESP32::_gpsGetData_linkUart(GPS_DATA** pgd)
     } while(0);
     if (good && (gpsData.lat || gpsData.lng)) {
         // filter out invalid coordinates
-        good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000 
+        good = (abs(lat * 1000000 - gpsData.lat * 1000000) < 100000
                 && abs(lng * 1000000 - gpsData.lng * 1000000) < 100000);
     }
     if (!good) return false;

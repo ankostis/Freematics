@@ -40,7 +40,7 @@ void CBuffer::add(uint16_t pid, uint8_t type, void* values, int bytes, uint8_t c
     ELEMENT_HEAD hdr = {pid, type, count};
     *(ELEMENT_HEAD*)(m_data + offset) = hdr;
     offset += sizeof(ELEMENT_HEAD);
-    memcpy(m_data + offset, values, bytes); 
+    memcpy(m_data + offset, values, bytes);
     offset += bytes;
     total++;
   } else {
@@ -197,7 +197,7 @@ CBuffer* CBufferManager::getNewest()
 void CBufferManager::free(CBuffer* slot)
 {
   slot->purge();
-  last = slot;  
+  last = slot;
 }
 
 void CBufferManager::showCacheStats(uint16_t state)
@@ -577,20 +577,20 @@ void TeleClientUDP::shutdown()
 bool TeleClientHTTP::notify(byte event, const char* payload)
 {
   char path[256];
-  snprintf(path, sizeof(path), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s", 
-      node_info.srv_path, node_info.device_id.c_str(), (uint)event, (int)rssi, 
+  snprintf(path, sizeof(path), "%s/notify/%s?EV=%u&SSI=%d&VIN=%s",
+      node_info.srv_path, node_info.device_id.c_str(), (uint)event, (int)rssi,
       (const char *)node_info.vin);
   if (event == EVENT_LOGOUT) login = false;
 #if ENABLE_WIFI
   if (wifi.connected())
   {
-    return wifi.send(METHOD_GET, path) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1) 
+    return wifi.send(METHOD_GET, path) && wifi.receive(cell.getBuffer(), RECV_BUF_SIZE - 1)
         && wifi.code() == 200;
   }
   else
 #endif
   {
-    return cell.send(METHOD_GET, node_info.srv_host, node_info.srv_port, path) 
+    return cell.send(METHOD_GET, node_info.srv_host, node_info.srv_port, path)
         && cell.receive() && cell.code() == 200;
   }
 }
@@ -615,7 +615,7 @@ bool TeleClientHTTP::transmit(const char* packetBuffer, unsigned int packetSize)
 #if SERVER_PROTOCOL == PROTOCOL_HTTPS_GET
   auto srv_path = node_info.srv_path;
   if (gd && gd->ts) {
-    len = snprintf(path, sizeof(path), 
+    len = snprintf(path, sizeof(path),
         "%s/push?id=%s&timestamp=%s&lat=%f&lon=%f&altitude=%d&speed=%f&heading=%d",
       srv_path, devid, isoTime,
       gd->lat, gd->lng, (int)gd->alt, gd->speed, (int)gd->heading);

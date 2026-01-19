@@ -56,7 +56,7 @@ bool ClientWIFI::begin(std::map<std::string, std::string> ssids)
   const bool first_open = (n_known == 0);
   const char *ssid = nullptr;
   const char* pwd = nullptr;
-  String ssid1;  // Outside of loop to retain its `c_str` content on `success`. 
+  String ssid1;  // Outside of loop to retain its `c_str` content on `success`.
   if (first_open || n_known > 1) {
     const int n_around = listAPs();
     for (int i = 0; i < n_around; ++i) {
@@ -97,7 +97,7 @@ bool ClientWIFI::begin(std::map<std::string, std::string> ssids)
 success:
     WiFi.begin(ssid, pwd);
 #ifndef ARDUINO_ESP32C3_DEV
-  WiFi.setTxPower(WIFI_POWER_8_5dBm); 
+  WiFi.setTxPower(WIFI_POWER_8_5dBm);
 #endif
   return true;
 }
@@ -331,7 +331,7 @@ bool CellSIMCOM::begin(CFreematics* device)
         if (q) p = q + 1;
         for (int i = 0; i < sizeof(m_model) - 1 && p[i] && p[i] != '\r' && p[i] != '\n'; i++) {
             m_model[i] = p[i];
-        } 
+        }
         if (strstr(m_model, "5360"))
           m_type = CELL_SIM5360;
         else if (strstr(m_model, "7670"))
@@ -430,7 +430,7 @@ bool CellSIMCOM::setup(const char* apn, const char* username, const char* passwo
         }
       } while (!success && millis() - t < timeout);
       if (!success) break;
-      
+
       /*
       if (m_type == CELL_SIM7600) {
         success = false;
@@ -863,7 +863,7 @@ bool CellHTTP::open(const char* host, uint16_t port)
     bool useSSL = (port == 443);
     if (useSSL) {
       sendCommand("AT+SHSSL=1,\"\"\r");
-      sendCommand("AT+CSSLCFG=\"ignorertctime\",1,1\r");    
+      sendCommand("AT+CSSLCFG=\"ignorertctime\",1,1\r");
       sendCommand("AT+CSSLCFG=\"SSLVERSION\",1,3\r");
       sprintf(m_buffer, "AT+CSSLCFG=\"sni\",1,\"%s\"\r", host);
       sendCommand(m_buffer);
@@ -1034,7 +1034,7 @@ char* CellHTTP::receive(int* pbytes, unsigned int timeout)
     if (!m_incoming) return 0;
     m_incoming = 0;
 
-    // to be compatible with SIM5360 
+    // to be compatible with SIM5360
     bool legacy = false;
     char *p = strstr(m_buffer, "RECV EVENT");
     if (p && *(p - 1) == ' ') legacy = true;

@@ -71,7 +71,7 @@ typedef enum{
 	// AGB0_REG_GYRO_YOUT_L,
 	// AGB0_REG_GYRO_ZOUT_H,
 	// AGB0_REG_GYRO_ZOUT_L,
-	// AGB0_REG_TEMP_OUT_H, 
+	// AGB0_REG_TEMP_OUT_H,
 	// AGB0_REG_TEMP_OUT_L,
 	// AGB0_REG_EXT_SLV_SENS_DATA_00,
 	// AGB0_REG_EXT_SLV_SENS_DATA_01,
@@ -237,7 +237,7 @@ typedef enum{							// Format is dAbwB_nXbwZ - A is integer part of 3db BW, B is
 	// AGB3_REG_I2C_SLV4_DI,
 	// 	// Break
 	// AGB3_REG_REG_BANK_SEL = 0x7F,
-	
+
 	// // Magnetometer
 	// M_REG_WIA2 = 0x01,
 	// 	// Break

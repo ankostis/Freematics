@@ -88,7 +88,7 @@ var opts = {
 						return this.series.name + ': <strong>' + this.y + '</strong>';
 					}
 				},
-        
+
 				plotOptions: {
 					series: {
 						marker: {
@@ -128,7 +128,7 @@ function ShowChart(divName, names, dataset)
 
 function SetChartRange(startpos, endpos)
 {
-	mychart.xAxis[0].setExtremes(startpos, endpos);	
+	mychart.xAxis[0].setExtremes(startpos, endpos);
 }
 
 function GetTimeByLocation(lat, lon)
@@ -136,7 +136,7 @@ function GetTimeByLocation(lat, lon)
 	xmlhttp.open("GET", "/obdchart/query?lat=" + lat + "&lon=" + lon + "&id=" + GetUrlArg("id"), false);
 	xmlhttp.send(null);
 	if (xmlhttp.status == 200) {
-		return parseInt(xmlhttp.responseText);	
+		return parseInt(xmlhttp.responseText);
 	}
 	return -1;
 }

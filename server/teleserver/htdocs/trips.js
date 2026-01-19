@@ -4,7 +4,7 @@
 * Distributed under BSD license
 * Visit https://freematics.com/hub/api for Freematics Hub API reference
 * To obtain your Freematics Hub server key, contact support@freematics.com.au
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -203,7 +203,7 @@ var TRIPS = {
 				type: "Feature", properties: { name: "Top Speed", info: topSpeed + " km/h" }, geometry: { type: "Point", coordinates: data.trip.coordinates[indexTopSpeed] }
 			});
 			*/
-        
+
 			// generate popup info
 			var info = "Distance: " + (data.stats.distance / 1000).toFixed(1) + " km";
 			var duration = Math.floor((data.stats.end.ts - data.stats.start.ts) / 1000);
@@ -274,8 +274,8 @@ var TRIPS = {
 		this.tripID = this.history[tripIndex].id;
 
 		var html = "";
-		html += "<a href='" + serverURL + "trip?devid=" + USER.devid + "&tripid=" + this.tripID + "' target='_blank'>JSON</a> | " 
-		html += "<a href='" + serverURL + "trip/kml?devid=" + USER.devid + "&tripid=" + this.tripID + "' target='_blank'>KML</a> | " 
+		html += "<a href='" + serverURL + "trip?devid=" + USER.devid + "&tripid=" + this.tripID + "' target='_blank'>JSON</a> | "
+		html += "<a href='" + serverURL + "trip/kml?devid=" + USER.devid + "&tripid=" + this.tripID + "' target='_blank'>KML</a> | "
 		html += "<a href='" + serverURL + "trip/raw?devid=" + USER.devid + "&tripid=" + this.tripID + "' target='_blank'>RAW</a><hr/>";
 
 		if (tripIndex < TRIPS.history.length - 1) {
@@ -310,8 +310,8 @@ var TRIPS = {
 	            this.series.push(series);
 	            names.push(PID.getName(pids[i]));
 	        }
-	    }       
-	    chart = ShowChart("chart", names, this.series);    
+	    }
+	    chart = ShowChart("chart", names, this.series);
 	},
 	list: function ()
 	{
@@ -375,7 +375,7 @@ var TRIPS = {
 		for (var i = 0; i < data.trip.timestamps.length; i++) {
 			if (data.trip.timestamps[i] >= ts) {
 				OSMAP.setMarker(0, [data.trip.coordinates[i][1], data.trip.coordinates[i][0]]);
-				var info = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', t) + "<br/>" + 
+				var info = Highcharts.dateFormat('%Y-%m-%d %H:%M:%S', t) + "<br/>" +
 					data.trip.speeds[i] + " " + data.trip.altitudes[i];
 				OSMAP.popupMarker(0, info);
 				break;
@@ -389,7 +389,7 @@ function getShortDate(d)
 	var year = d.getFullYear();
 	var month = d.getMonth() + 1;
 	var day = d.getDate();
-	return year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day;	
+	return year + (month < 10 ? "0" : "") + month + (day < 10 ? "0" : "") + day;
 }
 
 function setRange(range)
@@ -420,13 +420,13 @@ function setRange(range)
 	case "this_week":
 		d.setTime(Date.now() - 86400000 * d.getDay());
 		begin = getShortDate(d);
-		break;		
+		break;
 	case "last_week":
 		d.setTime(Date.now() - 86400000 * (d.getDay() + 7));
 		begin = getShortDate(d);
 		d.setTime(Date.now() - 86400000 * (d.getDay() + 1));
 		end = getShortDate(d);
-		break;		
+		break;
 	case "this_month":
 		d.setTime(Date.now() - 86400000 * (d.getDate() - 1));
 		begin = getShortDate(d);

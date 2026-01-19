@@ -75,7 +75,7 @@ int loadConfig()
 	if (st.st_mtime == m_time)
 		return 0;
 	m_time = st.st_mtime;
-	
+
 	FILE* fp = fopen(fn, "r");
 	if (!fp) return -1;
 	int len = st.st_size;

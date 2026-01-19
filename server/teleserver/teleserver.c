@@ -583,7 +583,7 @@ int uhChannelsXML(UrlHandlerParam* param)
 		CHANNEL_DATA* pld = ld + n;
 		if (pld->id) {
 			p += sprintf(p, "<channel id=\"%u\" devid=\"%s\" recv=\"%u\" rate=\"%u\" tick=\"%u\" elapsed=\"%u\" age=\"%u\" parked=\"%u\" rssi=\"%d\" flags=\"%u\"",
-				pld->id, pld->devid, pld->dataReceived, (unsigned int)pld->sampleRate, pld->deviceTick, pld->elapsedTime, 
+				pld->id, pld->devid, pld->dataReceived, (unsigned int)pld->sampleRate, pld->deviceTick, pld->elapsedTime,
 				(int)(tick - pld->serverDataTick), (pld->flags & FLAG_RUNNING) ? 0 : 1, (int)pld->rssi, pld->devflags);
 
 			if (extend) {

@@ -4,7 +4,7 @@
 * Distributed under BSD license
 * Visit http://freematics.com/hub/api for Freematics Hub API reference
 * To obtain your Freematics Hub server key, contact support@freematics.com.au
-* 
+*
 * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -40,7 +40,7 @@ var SIM = {
                 SIM.rotation = eventData.rotationRate;
             }, false);
         }
-		
+
 		if (window.DeviceOrientationEvent) {
 		  window.addEventListener('deviceorientation', function(eventData) { SIM.orientation = eventData; });
 		}

@@ -169,7 +169,7 @@ typedef struct
 	byte		startBit;				// start bit position where the channel is found
 	byte		length;					// lenght of the information in bits
 	float		gain;                   // engineering scale factor
-	float		offset;				    // engineering offset 
+	float		offset;				    // engineering offset
 	int		    value;			        // engineered value
 }
 DS_CAN_MSG;
@@ -187,7 +187,7 @@ typedef enum {
     PROTO_ISO11898_11B_500K = 0xC,
     PROTO_ISO11898_29B_500K = 0xD,
     PROTO_ISO11898_11B_250K = 0xE,
-    PROTO_ISO11898_29B_250K = 0xF    
+    PROTO_ISO11898_29B_250K = 0xF
 } OBD_PROTOCOLS;
 
 // states

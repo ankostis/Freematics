@@ -411,7 +411,7 @@ int uhTrip(UrlHandlerParam* param)
 	} else {
 		snprintf(param->pucBuffer, param->bufSize, "%s/%s.%s", dataDir, file, ext);
 		return FLAG_DATA_FILE | FLAG_ABSOLUTE_PATH;
-	}	
+	}
 }
 
 void getDateTimeInt(const char* isotime, unsigned int* dateint, unsigned int* timeint)

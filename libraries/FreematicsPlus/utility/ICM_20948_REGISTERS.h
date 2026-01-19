@@ -55,7 +55,7 @@ typedef enum{
 	AGB0_REG_GYRO_YOUT_L,
 	AGB0_REG_GYRO_ZOUT_H,
 	AGB0_REG_GYRO_ZOUT_L,
-	AGB0_REG_TEMP_OUT_H, 
+	AGB0_REG_TEMP_OUT_H,
 	AGB0_REG_TEMP_OUT_L,
 	AGB0_REG_EXT_SLV_SENS_DATA_00,
 	AGB0_REG_EXT_SLV_SENS_DATA_01,
@@ -173,7 +173,7 @@ typedef enum{
 	AGB3_REG_I2C_SLV4_DI,
 		// Break
 	AGB3_REG_REG_BANK_SEL = 0x7F,
-	
+
 	// Magnetometer
 	M_REG_WIA2 = 0x01,
 		// Break
@@ -674,7 +674,7 @@ typedef struct{
 }ICM_20948_I2C_SLVX_ADDR_t;
 
 typedef struct{
-	uint8_t REG;	
+	uint8_t REG;
 }ICM_20948_I2C_SLVX_REG_t;
 
 typedef struct{

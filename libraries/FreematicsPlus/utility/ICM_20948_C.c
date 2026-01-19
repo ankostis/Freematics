@@ -41,9 +41,9 @@ ICM_20948_Status_e	ICM_20948_execute_r( ICM_20948_Device_t* pdev, uint8_t regadd
 // Single-shot I2C on Master IF
 ICM_20948_Status_e	ICM_20948_i2c_master_slv4_txn( ICM_20948_Device_t* pdev, uint8_t addr, uint8_t reg, uint8_t* data, uint8_t len, bool Rw, bool send_reg_addr ){
 	// Thanks MikeFair! // https://github.com/kriswiner/MPU9250/issues/86
-	
+
 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-	
+
 	addr = (((Rw) ? 0x80 : 0x00) | addr );
 
 	retval = ICM_20948_set_bank( pdev, 3 );
@@ -80,7 +80,7 @@ ICM_20948_Status_e	ICM_20948_i2c_master_slv4_txn( ICM_20948_Device_t* pdev, uint
 	// 	uint32_t max_cycles = 1000;
 	// 	uint32_t count = 0;
 	// 	bool slave4Done = false;
-	// 	while (!slave4Done) { 
+	// 	while (!slave4Done) {
 	// 		retval = ICM_20948_set_bank( pdev, 0 );
 	// 		retval = ICM_20948_execute_r( pdev, AGB0_REG_I2C_MST_STATUS, &i2c_mst_status, 1 );
 
@@ -92,7 +92,7 @@ ICM_20948_Status_e	ICM_20948_i2c_master_slv4_txn( ICM_20948_Device_t* pdev, uint
 	// 	txn_failed |= (count >= max_cycles);
 	// 	if (txn_failed) break;
 
-	// 	if ( Rw ){ 
+	// 	if ( Rw ){
 	// 		retval = ICM_20948_set_bank( pdev, 3 );
 	// 		retval = ICM_20948_execute_r( pdev, AGB3_REG_I2C_SLV4_DI, &data[nByte], 1 );
 	// 	}
@@ -175,7 +175,7 @@ ICM_20948_Status_e	ICM_20948_set_clock_source	( ICM_20948_Device_t* pdev, ICM_20
 	ICM_20948_PWR_MGMT_1_t reg;
 
 	ICM_20948_set_bank(pdev, 0);	// Must be in the right bank
-	
+
 	retval = ICM_20948_execute_r( pdev, AGB0_REG_PWR_MGMT_1, (uint8_t*)&reg, sizeof(ICM_20948_PWR_MGMT_1_t));
 	if( retval != ICM_20948_Stat_Ok ){ return retval; }
 
@@ -274,7 +274,7 @@ ICM_20948_Status_e	ICM_20948_int_enable 		( ICM_20948_Device_t* pdev, ICM_20948_
 		retval = ICM_20948_execute_r( pdev, AGB0_REG_INT_ENABLE_1, (uint8_t*)&en_1, sizeof(ICM_20948_INT_ENABLE_1_t)); if( retval != ICM_20948_Stat_Ok ){ return retval; }
 		retval = ICM_20948_execute_r( pdev, AGB0_REG_INT_ENABLE_2, (uint8_t*)&en_2, sizeof(ICM_20948_INT_ENABLE_2_t)); if( retval != ICM_20948_Stat_Ok ){ return retval; }
 		retval = ICM_20948_execute_r( pdev, AGB0_REG_INT_ENABLE_3, (uint8_t*)&en_3, sizeof(ICM_20948_INT_ENABLE_3_t)); if( retval != ICM_20948_Stat_Ok ){ return retval; }
-	
+
 		read->I2C_MST_INT_EN = en_0.I2C_MST_INT_EN;
 		read->DMP_INT1_EN = en_0.DMP_INT1_EN;
 		read->PLL_RDY_EN = en_0.PLL_READY_EN;
@@ -309,12 +309,12 @@ ICM_20948_Status_e	ICM_20948_set_sample_mode( ICM_20948_Device_t* pdev, ICM_2094
 	ICM_20948_LP_CONFIG_t reg;
 
 	if( !(sensors & ( ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr | ICM_20948_Internal_Mst ) ) ){ return ICM_20948_Stat_SensorNotSupported; }
-	
+
 	retval = ICM_20948_set_bank(pdev, 0);				// Must be in the right bank
 	if( retval != ICM_20948_Stat_Ok){ return retval; }
 	retval = ICM_20948_execute_r( pdev, AGB0_REG_LP_CONFIG, (uint8_t*)&reg, sizeof(ICM_20948_LP_CONFIG_t));
 	if( retval != ICM_20948_Stat_Ok){ return retval; }
-	
+
 	if( sensors & ICM_20948_Internal_Acc ){ reg.ACCEL_CYCLE = mode; }		// Set all desired sensors to this setting
 	if( sensors & ICM_20948_Internal_Gyr ){ reg.GYRO_CYCLE = mode; }
 	if( sensors & ICM_20948_Internal_Mst ){ reg.I2C_MST_CYCLE = mode; }
@@ -366,7 +366,7 @@ ICM_20948_Status_e	ICM_20948_set_dlpf_cfg		( ICM_20948_Device_t* pdev, ICM_20948
 		retval |= ICM_20948_execute_w( pdev, AGB2_REG_GYRO_CONFIG_1, (uint8_t*)&reg, sizeof(ICM_20948_GYRO_CONFIG_1_t));
 	}
 	return retval;
-}	
+}
 
 ICM_20948_Status_e	ICM_20948_enable_dlpf		( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, bool enable ){
 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
@@ -440,7 +440,7 @@ ICM_20948_Status_e	ICM_20948_i2c_master_enable ( ICM_20948_Device_t* pdev, bool 
 
 	ICM_20948_I2C_MST_CTRL_t ctrl;
 	retval = ICM_20948_set_bank(pdev, 3);
-	if( retval != ICM_20948_Stat_Ok ){ return retval; }	
+	if( retval != ICM_20948_Stat_Ok ){ return retval; }
 	retval = ICM_20948_execute_r( pdev, AGB3_REG_I2C_MST_CTRL, (uint8_t*)&ctrl, sizeof(ICM_20948_I2C_MST_CTRL_t) );
 	if( retval != ICM_20948_Stat_Ok ){ return retval; }
 	ctrl.I2C_MST_CLK = 0x07; // corresponds to 345.6 kHz, good for up to 400 kHz
@@ -463,7 +463,7 @@ ICM_20948_Status_e	ICM_20948_i2c_master_enable ( ICM_20948_Device_t* pdev, bool 
 
 ICM_20948_Status_e	ICM_20948_i2c_master_configure_slave 		( ICM_20948_Device_t* pdev, uint8_t slave, uint8_t addr, uint8_t reg, uint8_t len, bool Rw, bool enable, bool data_only, bool grp, bool swap ){
 	ICM_20948_Status_e retval = ICM_20948_Stat_Ok;
-	
+
 	uint8_t slv_addr_reg;
 	uint8_t slv_reg_reg;
 	uint8_t slv_ctrl_reg;
@@ -520,7 +520,7 @@ ICM_20948_Status_e  ICM_20948_get_agmt          ( ICM_20948_Device_t* pdev, ICM_
 	uint8_t buff[numbytes];
 
 	// Get readings
-	retval |= ICM_20948_set_bank( pdev, 0 ); 
+	retval |= ICM_20948_set_bank( pdev, 0 );
 	retval |= ICM_20948_execute_r( pdev, (uint8_t)AGB0_REG_ACCEL_XOUT_H, buff, numbytes );
 
 	pagmt->acc.axes.x = ((buff[0] << 8) | (buff[1] & 0xFF));
@@ -540,17 +540,17 @@ ICM_20948_Status_e  ICM_20948_get_agmt          ( ICM_20948_Device_t* pdev, ICM_
 
 
 	// Get settings to be able to compute scaled values
-	retval |= ICM_20948_set_bank( pdev, 2 ); 
-	ICM_20948_ACCEL_CONFIG_t acfg; 
+	retval |= ICM_20948_set_bank( pdev, 2 );
+	ICM_20948_ACCEL_CONFIG_t acfg;
 	retval |= ICM_20948_execute_r( pdev, (uint8_t)AGB2_REG_ACCEL_CONFIG, (uint8_t*)&acfg, 1*sizeof(acfg) );
-	pagmt->fss.a = acfg.ACCEL_FS_SEL; 	// Worth noting that without explicitly setting the FS range of the accelerometer it was showing the register value for +/- 2g but the reported values were actually scaled to the +/- 16g range 
+	pagmt->fss.a = acfg.ACCEL_FS_SEL; 	// Worth noting that without explicitly setting the FS range of the accelerometer it was showing the register value for +/- 2g but the reported values were actually scaled to the +/- 16g range
 										// Wait a minute... now it seems like this problem actually comes from the digital low-pass filter. When enabled the value is 1/8 what it should be...
-	retval |= ICM_20948_set_bank( pdev, 2 ); 
+	retval |= ICM_20948_set_bank( pdev, 2 );
 	ICM_20948_GYRO_CONFIG_1_t gcfg1;
 	retval |= ICM_20948_execute_r( pdev, (uint8_t)AGB2_REG_GYRO_CONFIG_1, (uint8_t*)&gcfg1, 1*sizeof(gcfg1) );
 	pagmt->fss.g = gcfg1.GYRO_FS_SEL;
 	ICM_20948_ACCEL_CONFIG_2_t acfg2;
 	retval |= ICM_20948_execute_r( pdev, (uint8_t)AGB2_REG_ACCEL_CONFIG_2, (uint8_t*)&acfg2, 1*sizeof(acfg2) );
- 
+
 	return retval;
 }

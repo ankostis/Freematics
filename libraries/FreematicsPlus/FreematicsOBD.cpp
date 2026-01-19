@@ -97,7 +97,7 @@ bool COBD::readPID(byte pid, int& result)
 #if ENABLE_OBD_EMULATION
 	result = 314;
 	return true;
-#endif 
+#endif
 	char buffer[64];
 	char* data = 0;
 	sprintf(buffer, "%02X%02X\r", dataMode, pid);
@@ -356,7 +356,7 @@ void COBD::enterLowPowerMode()
   	char buf[32];
 	if (link) {
 		reset();
-		delay(1000);	
+		delay(1000);
 		link->sendCommand("ATLP\r", buf, sizeof(buf), 1000);
 	}
 }
@@ -521,7 +521,7 @@ bool COBD::init(
 	ESP_LOGI(TAG_OBD, "<init> DUMMY proto: %i", protocol);
 	success = true;
 	goto success_2;
-#endif 
+#endif
 
 	if (!link) {
 		return false;
@@ -754,9 +754,9 @@ int COBD::sendCANMessage(byte msg[], int len, char* buf, int bufsize)
 {
 	if (!link) return 0;
 	char cmd[258];
-	if (len * 2 >= sizeof(cmd) - 1) len = sizeof(cmd) / 2 - 2; 
+	if (len * 2 >= sizeof(cmd) - 1) len = sizeof(cmd) / 2 - 2;
 	for (int n = 0; n < len; n++) {
-		sprintf(cmd + n * 2, "%02X", msg[n]); 
+		sprintf(cmd + n * 2, "%02X", msg[n]);
 	}
 	cmd[len * 2] = '\r';
 	cmd[len * 2 + 1] = 0;

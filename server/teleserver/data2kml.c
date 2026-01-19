@@ -55,7 +55,7 @@ void WriteKMLData(KML_DATA* kd, uint32_t timestamp, uint16_t pid, float value[])
 			kd->bounds[1].lat = kd->bounds[0].lat = kd->cur.lat;
 			kd->bounds[1].lng = kd->bounds[0].lng = kd->cur.lng;
 		}
-	
+
 		DATASET* newdata = malloc(sizeof(DATASET));
 		memcpy(newdata, &kd->cur, sizeof(DATASET));
 		if (newdata->pidCount) {

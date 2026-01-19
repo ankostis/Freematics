@@ -156,7 +156,7 @@ var PID = {
 	{
 		var day = Math.floor(d / 10000);
 		var mon = Math.floor((d % 10000) / 100);
-		var year = d % 100; 
+		var year = d % 100;
 		return "20" + year + "-" + mon + "-" + day;
 	},
 	getXYZ: function(d)

@@ -3,7 +3,7 @@
 This is a C-compatible interface to the features presented by the ICM 20948 9-axis device
 The imementation of the interface is flexible
 
-*/ 
+*/
 
 
 #ifndef _ICM_20948_C_H_
@@ -61,13 +61,13 @@ typedef union{
   uint8_t u8bit[2];
 }ICM_20948_axis1bit16_t;
 
-typedef struct{								
+typedef struct{
 	uint8_t				a			: 2;
 	uint8_t 			g			: 2;
 	uint8_t 			reserved_0	: 4;
 }ICM_20948_fss_t;							// Holds full-scale settings to be able to extract measurements with units
 
-typedef struct{								
+typedef struct{
 	uint8_t	a;
 	uint8_t	g;
 }ICM_20948_dlpcfg_t;						// Holds digital low pass filter settings. Members are type ICM_20948_ACCEL_CONFIG_DLPCFG_e
@@ -141,8 +141,8 @@ read raw temp values
 configure temperature sensor
 load DMP firmware into the device
 read DMP results from the device
-configure interrupts 
-	- configure interrupt and FSYNC pins 
+configure interrupts
+	- configure interrupt and FSYNC pins
 	- configure which interrupts activate the interrupt pin
 respond to interrupts on INT
 configure FIFO (and use it)
@@ -187,7 +187,7 @@ ICM_20948_Status_e	ICM_20948_int_enable 		( ICM_20948_Device_t* pdev, ICM_20948_
 // Internal Sensor Options
 ICM_20948_Status_e	ICM_20948_set_sample_mode	( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, ICM_20948_LP_CONFIG_CYCLE_e mode );	// Use to set accel, gyro, and I2C master into cycled or continuous modes
 ICM_20948_Status_e	ICM_20948_set_full_scale 	( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, ICM_20948_fss_t fss );
-ICM_20948_Status_e	ICM_20948_set_dlpf_cfg		( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, ICM_20948_dlpcfg_t cfg );			
+ICM_20948_Status_e	ICM_20948_set_dlpf_cfg		( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, ICM_20948_dlpcfg_t cfg );
 ICM_20948_Status_e	ICM_20948_enable_dlpf		( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, bool enable );
 ICM_20948_Status_e	ICM_20948_set_sample_rate	( ICM_20948_Device_t* pdev, ICM_20948_InternalSensorID_bm sensors, ICM_20948_smplrt_t smplrt );
 
@@ -209,12 +209,12 @@ ICM_20948_Status_e  ICM_20948_get_agmt          ( ICM_20948_Device_t* pdev, ICM_
 
 // ToDo:
 
-/* 
+/*
 	Want to access magnetometer throught the I2C master interface...
 
   // If using the I2C master to read from the magnetometer
   // Enable the I2C master to talk to the magnetometer through the ICM 20948
-  myICM.i2cMasterEnable( true ); 
+  myICM.i2cMasterEnable( true );
   SERIAL_PORT.print(F("Enabling the I2C master returned ")); SERIAL_PORT.println(myICM.statusString());
   myICM.i2cMasterConfigureSlave ( 0, MAG_AK09916_I2C_ADDR, REG_ST1, 9, true, true, false, false, false );
   SERIAL_PORT.print(F("Configuring the magnetometer slave returned ")); SERIAL_PORT.println(myICM.statusString());
