@@ -754,19 +754,31 @@ char* CellSIMCOM::getBuffer()
 bool CellUDP::open(const char* host, uint16_t port)
 {
   if (host) {
-    udpIP = queryIP(host);
-    if (!udpIP.length()) {
-      udpIP = host;
-    }
     udpPort = port;
+    // Skip DNS for SIM7070 - use hostname directly with CAOPEN
+    // DNS query (AT+CDNSGIP) corrupts serial buffer on failure
+    if (m_type == CELL_SIM7070) {
+      ESP_LOGD(TAG_CELLUDP, "Using hostname directly on SIM7070: %s", host);
+      udpIP = host;
+    } else {
+      udpIP = queryIP(host);
+      if (!udpIP.length()) {
+        ESP_LOGW(TAG_CELLUDP, "DNS failed, using hostname directly");
+        udpIP = host;
+      }
+    }
   }
   if (!udpIP.length()) return false;
   if (m_type == CELL_SIM7070) {
-    sendCommand("AT+CNACT=0,1\r");
-    sendCommand("AT+CACID=0\r");
+    // Skip DNS for SIM7070 - modem resolves internally
+    // DNS query (`AT+CDNSGIP` in `queryIP(host)`)  corrupts serial buffer.
+    sendCommand("AT+CACLOSE=0\r", 1000);
+    sendCommand("AT+CNACT=0,1\r", 3000);
+    sendCommand("AT+CACID=0\r", 1000);
     sprintf(m_buffer, "AT+CAOPEN=0,0,\"UDP\",\"%s\",%u\r", udpIP.c_str(), udpPort);
-    if (!sendCommand(m_buffer, 3000)) {
-      ESP_LOGD(TAG_CELLUDP, "%s", m_buffer);
+    // CAOPEN needs longer timeout to establish connection
+    if (!sendCommand(m_buffer, 10000)) {
+      ESP_LOGW(TAG_CELLUDP, "CAOPEN failed");
       return false;
     }
     return true;
@@ -793,10 +805,13 @@ bool CellUDP::close()
 bool CellUDP::send(const char* data, unsigned int len)
 {
   if (m_type == CELL_SIM7070) {
-    sendCommand("AT+CASTATE?\r");
     sprintf(m_buffer, "AT+CASEND=0,%u\r", len);
-    sendCommand(m_buffer, 100, "\r\n>");
-    if (sendCommand(data, 1000)) return true;
+    if (!sendCommand(m_buffer, 100, "\r\n>")) {
+      ESP_LOGD(TAG_CELLUDP, "No '>' prompt from CASEND");
+      return false;
+    }
+
+    return sendCommand(data, 1000);
   } else {
     int n = sprintf(m_buffer, "AT+CIPSEND=0,%u,\"%s\",%u\r", len, udpIP.c_str(), udpPort);
     m_device->xbWrite(m_buffer, n);
