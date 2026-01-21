@@ -771,9 +771,12 @@ void CellSIMCOM::inbound()
     } while (0);
 
     if (strstr(m_buffer, "+IPD") || strstr(m_buffer, "RECV EVENT")) {
-      Serial.println("[CELL] Incoming data");
       m_incoming = 1;
     }
+  }
+
+  if (m_incoming == 1) {
+    ESP_LOGI(TAG_CELL, "Incoming data");
   }
 }
 
