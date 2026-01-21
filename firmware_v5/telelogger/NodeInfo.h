@@ -262,7 +262,7 @@ struct node_info_t {
     | ((_NEED_SD && 1) << 6)
     | ((_NEED_SPIFFS && 1) << 7)
     | ((ENABLE_MULTILOG && 1) << 8)
-    | ((USE_ESP_IDF_LOG && 1) << 9)
+    | ((USE_ESP_IDF_LOG_DEFINED && 1) << 9)
     | ((HIDE_SECRETS_IN_LOGS && 1) << 10)
     | ((BOARD_HAS_PSRAM && 1) << 11)
     | ((BOARD_HAS_PSRAM_HIGH && 1) << 12)

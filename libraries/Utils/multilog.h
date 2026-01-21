@@ -38,7 +38,7 @@ struct FileSink : public Sink {
  public:
   /*
    * Start writing logs also to SD-card/SPIFFS.
-   * (needs `DUSE_ESP_IDF_LOG=1` in build-flags.)
+   * (needs `USE_ESP_IDF_LOG` defined in build-flags.)
    *
    * NOTE: SD & SPIFFS MUST have been initialized before enabling stuff here!
    */

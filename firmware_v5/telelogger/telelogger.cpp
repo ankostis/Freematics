@@ -38,9 +38,9 @@
 #if _NEED_SD || _NEED_SPIFFS
 #include "fsutil.h"
 #endif  // _NEED_SD || _NEED_SPIFFS
-#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
+#if ENABLE_MULTILOG && USE_ESP_IDF_LOG_DEFINED
 #include "multilog.h"
-#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
+#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG_DEFINED
 #if BOARD_HAS_PSRAM
 #include "esp32/himem.h"
 #endif
@@ -1805,7 +1805,7 @@ bool setup_SPIFFS()
 }
 #endif // _NEED_SPIFFS
 
-#if ENABLE_MULTILOG && USE_ESP_IDF_LOG
+#if ENABLE_MULTILOG && USE_ESP_IDF_LOG_DEFINED
 void setup_multilog() {
 #if (LOG_SINK & LOG_SINK_SERIAL)
     static multilog::SerialSink serial_link;
@@ -1836,7 +1836,7 @@ void setup_multilog() {
 
     multilog::enable(true);
 }  // setup_multilog()
-#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG
+#endif  // ENABLE_MULTILOG && USE_ESP_IDF_LOG_DEFINED
 
 
 // Allow test-cases to call functions from here, and avoid clashing.
@@ -1870,7 +1870,7 @@ void setup()
   // initialize USB serial
   Serial.begin(115200);
 
-  // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG=1`).
+  // Relevant only when ESP_IDF log-lib selected (`USE_ESP_IDF_LOG defined`).
   apply_runtime_log_levels(node_info.log_levels);
 
 #if _NEED_SD
@@ -1881,11 +1881,11 @@ void setup()
 #endif  // _NEED_SPIFFS
 
 #if ENABLE_MULTILOG
-#if USE_ESP_IDF_LOG
+#if USE_ESP_IDF_LOG_DEFINED
   setup_multilog();
 #else
-  ESP_LOGW(TAG_SETUP, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG=1 to work!");
-#endif  // USE_ESP_IDF_LOG
+  ESP_LOGW(TAG_SETUP, "ENABLE_MULTILOG needs USE_ESP_IDF_LOG defined to work!");
+#endif  // USE_ESP_IDF_LOG defined
 #endif  // ENABLE_MULTILOG
 
   // init LED pin
