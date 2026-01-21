@@ -308,15 +308,44 @@ bool CellSIMCOM::begin(CFreematics* device)
     device->xbTogglePower(200);
     device->xbPurge();
     if (!check(2000)) continue;
-    if (sendCommand("ATE0\r") && sendCommand("ATI\r")) {
-      // retrieve module info
+
+    if (sendCommand("ATE0;I\r")) {
+      // 7070 response for `ATE0;I`:
+      //    R1951.04
+      //
+      //    OK
+      // Pre-7070 response:
+      //    Manufacturer: SIMCOM INCORPORATED
+      //    Model: SIMCOM_SIM7600E-H
+      //    Revision: SIM7600M22_V1.1
+      //    IMEI: 867584033641973
+      //    +GCAP: +CGSM,+DS
+      //
+      //    OK
       ESP_LOGD(TAG_CELL, "%s", m_buffer);
+      // Retrieve model from pre-7070 modems.
       char *p = strstr(m_buffer, "Model:");
       if (!p) {
-        sendCommand("AT+SIMCOMATI\r");
+        sendCommand("AT+GSV;I;+SIMCOMATI\r");
+        // 7070 response for `AT+GSV;I;+SIMCOMATI`:
+        //    SIMCOM_Ltd
+        //    SIMCOM_SIM7070
+        //    Revision:1951B08SIM7070
+        //
+        //    R1951.04
+        //
+        //    Revision:1951B08SIM7070
+        //    CSUB:B08V04
+        //    APRev:1951B08SIM7070,B08V04
+        //    QCN:SIM7070G_P1.03_20210304
+        //    IMEI:865456053842926
+        //
+        //    OK
+        //
+        // Note `ATI` included again to be dumped to logs, below.
         p = strstr(m_buffer, "QCN:");
         if (p) {
-          char *q = strchr(p += 4, '_');
+          char *q = strchr(p += 4, '.');
           if (q) {
             int l = q - p;
             if (l >= sizeof(m_model)) l = sizeof(m_model) - 1;
@@ -341,9 +370,13 @@ bool CellSIMCOM::begin(CFreematics* device)
       }
       p = strstr(m_buffer, "IMEI:");
       if (p) strncpy(IMEI, p[5] == ' ' ? p + 6 : p + 5, sizeof(IMEI) - 1);
+
+      // Dump raw modem information.
+      ESP_LOGI(TAG_CELL, "Modem info: %s", m_buffer);
+
       return true;
     }
-  }
+  }  // init loop end
   end();
   return false;
 }
