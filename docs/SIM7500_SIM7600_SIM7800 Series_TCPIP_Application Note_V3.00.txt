@@ -1,0 +1,987 @@
+SIM7500_SIM7600_SIM7800
+Series_TCPIP_Application
+Note
+LTE Module
+
+SIMCom Wireless Solutions Limited
+
+SIMCom Headquarters Building, Building 3, No. 289
+Linhong Road, Changning District, Shanghai P.R. China
+Tel: 86-21-31575100
+support@simcom.com
+www.simcom.com
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+Document Title:
+Version:
+Date:
+Status:
+
+SIM7500_SIM7600_SIM7800 Series _TCPIP_Application Note
+3.00
+2022.02.08
+Released
+
+GENERAL NOTES
+SIMCOM OFFERS THIS INFORMATION AS A SERVICE TO ITS CUSTOMERS, TO SUPPORT
+APPLICATION AND ENGINEERING EFFORTS THAT USE THE PRODUCTS DESIGNED BY SIMCOM.
+THE INFORMATION PROVIDED IS BASED UPON REQUIREMENTS SPECIFICALLY PROVIDED TO
+SIMCOM BY THE CUSTOMERS. SIMCOM HAS NOT UNDERTAKEN ANY INDEPENDENT SEARCH
+FOR ADDITIONAL RELEVANT INFORMATION, INCLUDING ANY INFORMATION THAT MAY BE IN THE
+CUSTOMER’S POSSESSION. FURTHERMORE, SYSTEM VALIDATION OF THIS PRODUCT
+DESIGNED BY SIMCOM WITHIN A LARGER ELECTRONIC SYSTEM REMAINS THE RESPONSIBILITY
+OF THE CUSTOMER OR THE CUSTOMER’S SYSTEM INTEGRATOR. ALL SPECIFICATIONS
+SUPPLIED HEREIN ARE SUBJECT TO CHANGE.
+
+COPYRIGHT
+THIS DOCUMENT CONTAINS PROPRIETARY TECHNICAL INFORMATION WHICH IS THE PROPERTY
+OF SIMCOM WIRELESS SOLUTIONS LIMITED COPYING, TO OTHERS AND USING THIS DOCUMENT,
+ARE FORBIDDEN WITHOUT EXPRESS AUTHORITY BY SIMCOM. OFFENDERS ARE LIABLE TO THE
+PAYMENT OF INDEMNIFICATIONS. ALL RIGHTS RESERVED BY SIMCOM IN THE PROPRIETARY
+TECHNICAL INFORMATION, INCLUDING BUT NOT LIMITED TO REGISTRATION GRANTING OF A
+PATENT , A UTILITY MODEL OR DESIGN. ALL SPECIFICATION SUPPLIED HEREIN ARE SUBJECT TO
+CHANGE WITHOUT NOTICE AT ANY TIME.
+
+SIMCom Wireless Solutions Limited
+SIMCom Headquarters Building, Building 3, No. 289 Linhong Road, Changning District, Shanghai P.R.
+China
+Tel: +86 21 31575100
+Email: simcom@simcom.com
+
+For more information, please visit:
+https://www.simcom.com/download/list-863-en.html
+
+For technical support, or to report documentation errors, please visit:
+https://www.simcom.com/ask/ or email to: support@simcom.com
+
+Copyright © 2022 SIMCom Wireless Solutions Limited All Rights Reserved.
+www.simcom.com
+
+2 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+About Document
+Version History
+Version
+
+Date
+
+Owner
+
+What is new
+
+V2.00
+
+2020.8.6
+
+Yulong Li
+
+Update the format
+
+V3.00
+
+2022.02.08
+
+Haotian Wang
+
+Update the format
+
+Scope
+This document applies to SIM7500 series SIM7600 series and SIM7800 series.
+
+www.simcom.com
+
+3 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+Contents
+About Document............................................................................................................ 3
+Version History.........................................................................................................................................................3
+Scope........................................................................................................................................................................ 3
+
+Contents........................................................................................................................... 4
+1
+
+Introduction......................................................................................................... 5
+1.1
+1.2
+1.3
+
+2
+
+Purpose of the document...........................................................................................................................5
+Related documents.....................................................................................................................................5
+Conventions and abbreviations................................................................................................................ 5
+
+TCPIP Introduction............................................................................................ 6
+2.1
+2.2
+
+Characteristic............................................................................................................................................... 6
+TCPIP Commands Process...................................................................................................................... 7
+
+3
+
+AT Commands for TCPIP.................................................................................8
+
+4
+
+Bearer Configuration........................................................................................ 9
+4.1
+
+5
+
+Start TCPIP Service....................................................................................................................................9
+
+TCPIP Examples...............................................................................................11
+5.1
+
+TCP Client.................................................................................................................................................. 11
+5.1.1
+TCP Client Works in Direct Push Mode.................................................................................... 11
+5.1.2
+TCP Client Works in Buffer Access Mode................................................................................12
+5.1.3
+TCP Client Works in Transparent Access Mode.....................................................................13
+5.2
+UDP Client................................................................................................................................................. 14
+5.2.1
+UDP Client Works in Direct Push Mode................................................................................... 15
+5.2.2
+UDP Client Works in Buffer Access Mode............................................................................... 16
+5.2.3
+UDP Client Works in Transparent Access Mode.................................................................... 17
+5.3
+TCP Server................................................................................................................................................ 18
+5.3.1
+Transparent Mode........................................................................................................................ 19
+5.3.2
+Non-Transparent Mode................................................................................................................19
+5.4
+Extended Information............................................................................................................................... 21
+5.4.1
+UDP Data Receiving Rules.........................................................................................................21
+5.5
+Query Connection Status........................................................................................................................ 21
+
+www.simcom.com
+
+4 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+1 Introduction
+1.1 Purpose of the document
+
+Based on module AT command manual, this document will introduce TCPIP application process.
+Developers could understand and develop application quickly and efficiently based on this document.
+
+1.2 Related documents
+[1] SIM7500_SIM7600 Series_AT Command Manual
+
+1.3 Conventions and abbreviations
+
+Abbreviation
+
+Description
+
+TCP
+
+Transmission Control Protocol
+
+UDP
+
+User Datagram Protocol
+
+www.simcom.com
+
+5 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+2 TCPIP Introduction
+TCPIP is used to setup connections between clients and servers, which are used for TCP/UDP clients
+communicating with servers.
+
+2.1 Characteristic
+ Support connecting TCP/UDP servers;
+
+
+TCP connections
+Module works as TCP clients. It communicates with TCP servers by TCP connections.
+
+
+
+UDP connections
+Module works as UDP clients. It communicates with UDP servers.
+
+ Support accepting TCP clients;
+
+
+TCP servers
+Module works as TCP servers. It listens TCP clients accept request and communicates with TCP
+
+clients.
+
+ Support multiple data transmission mode;
+Direct Push Mode
+Host data will be sent to internal protocol stack and forwarded to air interface. Data received from
+air interface will be transmitted to internal protocol stack and forwarded to COM ports.
+
+
+Buffer Access Mode
+Host data will be sent to internal protocol stack and forwarded to air interface. Data received from
+air interface will be saved into local buffers. Host could retrieve buffer data by AT commands.
+
+
+Transparent Access Mode
+Host data will be directly sent to air interface. Data received from air interface will be directly sent to
+COM ports.
+
+
+www.simcom.com
+
+6 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+2.2 TCPIP Commands Process
+
+Figure 1: Flow Chart of Using TCP/IP Commands
+
+www.simcom.com
+
+7 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+3 AT Commands for TCPIP
+Command
+
+Description
+
+AT+NETOPEN
+
+Start TCPIP Service
+
+AT+NETCLOSE
+
+Stop TCPIP Service
+
+AT+CIPOPEN
+
+Setup TCP/UDP Client Socket Connections
+
+AT+CIPCLOSE
+
+Destroy TCP/UDP Client Socket Connections
+
+AT+CIPSEND
+
+Send TCP/UDP Data
+
+AT+CIPRXGET
+
+Retrieve TCP/UDP Buffer Data
+
+AT+IPADDR
+
+Get IP Address of PDP Context
+
+AT+CIPHEAD
+
+Set Length Domain of Reporting Head of Data
+
+AT+CIPSRIP
+
+Set IP Domain of Reporting Head of Data
+
+AT+CIPMODE
+
+Enable/Disable Transparent Access Mode
+
+AT+CIPSENDMODE
+
+Set Reporting Mode of CIPSEND result
+
+AT+CIPTIMEOUT
+
+Set Timeout Value of NETOPEN, CIPOPEN and CIPSEND
+
+AT+CIPCCFG
+
+Configure Socket Context
+
+AT+SERVERSTART
+
+Setup TCP Server Socket Connections
+
+AT+SERVERSTOP
+
+Destroy TCP Server Socket Connections
+
+AT+CIPACK
+
+Get Statistics Information of Data Communication
+
+AT+CDNSGIP
+
+Analysis IP Address from Domain Name
+
+AT+CDNSGHNAME
+
+Analysis Domain Name from IP Address
+
+AT+CIPDNSSET
+
+Configure DNS Context
+
+For detail information, please refer to SIM7500_SIM7600 Series AT Command Manual document.
+
+www.simcom.com
+
+8 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+4 Bearer Configuration
+Module will usually attach to network and register PS service automatically.
+
+4.1 Start TCPIP Service
+//Example of PDN Auto-activation.
+AT+CPIN?
++CPIN: READY
+
+//Check Status of SIM Card
+
+OK
+AT+CSQ
++CSQ: 27,99
+
+//Check RF Signal
+
+OK
+AT+CGREG?
++CGREG: 0,1
+
+//Check Status of PS Service
+
+OK
+AT+COPS?
++COPS: 0,0,"CHN-UNICOM",7
+
+//Check Information of Operator
+
+OK
+AT+CPSI?
++CPSI:
+LTE,Online,460-00,0x1816,27593
+483,139,EUTRAN-BAND39,38400,
+5,5,-88,-868,-578,18
+
+//Check Information of Network
+
+OK
+AT+CGDCONT?
++CGDCONT:
+1,"IPV4","CMNET","0.0.0.0.0.0.0.
+0.0.0.0.0.0.0.0.0",0,0,0,0
+
+//Check Information of PDP Context
+
+OK
+AT+CGDCONT=1, "IP", "CMNET"
+www.simcom.com
+
+9 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+OK
+
+//Set PDP Context
+
+AT+NETOPEN
+OK
++NETOPEN: 0
+
+www.simcom.com
+
+//Start TCPIP Service
+
+10 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+5 TCPIP Examples
+5.1 TCP Client
+5.1.1 TCP Client Works in Direct Push Mode
+5.1.1.1 Set up TCP Client Connection
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+CIPOPEN=1,"TCP","117.131.85.139",5253
+
+// Set up a TCP connection, <link_num> is 1.
+// Before using AT+CIPOPEN, host should
+// activate PDP ontext with AT+NETOPEN first.
+
+OK
++CIPOPEN: 1,0
+
+5.1.1.2 Send data to Server
+AT+CIPSEND=1,5
+
+// send data with fixed length
+
+>HELLO
+OK
++CIPSEND: 1,5,5
+AT+CIPSEND=1,
+
+// send data with changeable length, <CTRL+Z>
+// to end
+
+>HELLOWORLD<CTRL+Z>
+OK
++CIPSEND: 1,10,10
+
+5.1.1.3 Receive Data From Server
+RECV FROM:117.131.85.139:5253
+
+// data from server directly output to COM
+
++IPD16
+data from server
+
+www.simcom.com
+
+11 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+5.1.1.4 Close TCP Connection
+AT+CIPCLOSE=1
+OK
++CIPCLOSE: 1,0
+
+5.1.2 TCP Client Works in Buffer Access Mode
+5.1.2.1 Set up TCP Client connection
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+CIPRXGET=1
+
+// buffer access mode, get data by AT+CIPRXGET
+
+OK
+AT+CIPOPEN=1,"TCP","117.131.85.139",5253
+
+// set up a TCP connection, <link_num> is 1
+
+OK
++CIPOPEN: 1,0
+
+5.1.2.2 Send Data to Server
+AT+CIPSEND=1,5
+
+// send data with fixed length
+
+>hello
+OK
++CIPSEND: 1,5,5
+
+5.1.2.3 Receive Data from Server
++CIPRXGET: 1,1
+
+// URC to notify host of data from server
+
+AT+CIPRXGET=4,1
+
+// query the length of data in the buffer of socket with <link_num>=1
+
++CIPRXGET: 4,1,16
+OK
+AT+CIPRXGET=2,1,5
+
+// get data in ASCII form
+
++CIPRXGET: 2,1,5,11
+data
+OK
+www.simcom.com
+
+12 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+AT+CIPRXGET=3,1,5
+
+// get data in hex form
+
++CIPRXGET: 3,1,5,6
+66726F6D20
+OK
+AT+CIPRXGET=4,1
+
+// read the length of unread data in buffer
+
++CIPRXGET: 4,1,6
+OK
+AT+CIPRXGET=2,2
+
+// the connection identified by link_num=2 has not been established
+
++IP ERROR: No data
+ERROR
+AT+CIPRXGET=2,1
++CIPRXGET: 2,1,6,0
+server
+OK
+AT+CIPRXGET=4,1
+
+// all the data in buffer has been read, the rest_len is 0.
+
++CIPRXGET: 4,1,0
+OK
+
+5.1.2.4 Close TCP Connection
+AT+CIPCLOSE=1
+OK
++CIPCLOSE: 1,0
+
+5.1.3 TCP Client Works in Transparent Access Mode
+5.1.3.1 Set up TCP Client Connection
+AT+CIPMODE=1
+
+// Enter into transparent mode by at+cipmode=1
+
+OK
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+CIPOPEN=0,"TCP","117.131.85.139",5253
+
+www.simcom.com
+
+// only <link_num>=0 is allowed to operate with
+
+13 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+// transparent mode.
+CONNECT 115200
+
+5.1.3.2 Send Data to Server
+All data got from com port will be sent to internet directly
+
+5.1.3.3 Receive Data From Server
+DATA FROM SERVERDATA FROM SERVER
+
+// all the received data from server will be output to
+// com port directly
+// sequence of +++ to quit transparent mode
+
+OK
+AT+CIPOPEN?
++CIPOPEN: 0,"TCP","117.131.85.139",5253,-1
++CIPOPEN: 1
++CIPOPEN: 2
++CIPOPEN: 3
++CIPOPEN: 4
++CIPOPEN: 5
++CIPOPEN: 6
++CIPOPEN: 7
++CIPOPEN: 8
++CIPOPEN: 9
+OK
+ATO
+
+// ATO to enter transparent mode again
+
+CONNECT 115200
+HELLO CLIENT
+
+5.1.3.4 Close TCP Connection
+AT+CIPCLOSE=0
+OK
+CLOSED
++CIPCLOSE: 0,0
+
+5.2 UDP Client
+
+www.simcom.com
+
+14 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+5.2.1 UDP Client Works in Direct Push Mode
+5.2.1.1 Set up UDP Client Connection
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+CIPOPEN=1,"UDP",,,5000
+
+// when set a UDP connection, the remote IP
+// address and port is not necessary, but the local
+// port must be specified.
+
++CIPOPEN: 1,0
+OK
+
+5.2.1.2 Send data to Server
+AT+CIPSEND=1,,"117.131.85.139",5254
+
+// for UDP connection, when sending data, user must
+// specify the remote IP address and port. Sending data
+// with changeable length
+
+>HELLOSERVER
+OK
+
+<CTRL+Z>
+
+// <CTRL+Z> to end
+
++CIPSEND: 1,11,11
+AT+CIPSEND=1,5,"117.131.85.139",5254
+
+// send data with fixed length
+
+>HELLO
+OK
++CIPSEND: 1,5,5
+
+5.2.1.3 Receive Data From Server
+RECV FROM:117.131.85.139:5254
+
+// data from server output to COM port directly
+
++IPD14
+HELLO CLIENT
+5.2.1.4 Close UDP Connection
+AT+CIPCLOSE=1
++CIPCLOSE: 1,0
+OK
+
+www.simcom.com
+
+15 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+5.2.2 UDP Client Works in Buffer Access Mode
+5.2.2.1 Set up UDP Client connection
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+CIPRXGET=1
+
+// buffer access mode, get data by AT+CIPRXGET
+
+OK
+// when set a UDP connection, the remote IP address and
+// port is not necessary, but the local port must be specified.
+
+AT+CIPOPEN=1,"UDP",,,5000
++CIPOPEN: 1,0
+OK
+
+5.2.2.2 Send Data to Server
+AT+CIPSEND=1,,"117.131.85.139",5254
+
+// for UDP connection, when sending data, user must
+// specify the remote IP address and port. Sending data
+// with changeable length, <CTRL+Z> to end
+
+>HELLOSERVER
+OK
+
+<CTRL+Z>
+
++CIPSEND: 1,11,11
+AT+CIPSEND=1,5,"117.131.85.139",5254
+
+// send data with fixed length
+
+>HELLO
+OK
++CIPSEND: 1,5,5
+
+5.2.2.3 Receive Data From Server
++CIPRXGET: 1,1
+
+// URC to notify host of data from server
+
+AT+CIPRXGET=4,1
+
+// query the length of data in the buffer of socket with <link_num>=1
+
++CIPRXGET: 4,1,16
+OK
+AT+CIPRXGET=2,1,5
+
+// get data in ASCII form
+
++CIPRXGET: 2,1,5,11
+data
+www.simcom.com
+
+16 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+OK
+AT+CIPRXGET=3,1,5
+
+// get data in hex form
+
++CIPRXGET: 3,1,5,6
+66726F6D20
+OK
+AT+CIPRXGET=4,1
+
+// read the length of unread data in buffer
+
++CIPRXGET: 4,1,6
+OK
+AT+CIPRXGET=2,2
+
+// the connection identified by link_num=2 has not been established
+
++IP ERROR: No data
+ERROR
+AT+CIPRXGET=2,1
++CIPRXGET: 2,1,6,0
+server
+OK
+AT+CIPRXGET=4,1
+
+// all the data in buffer has been read, the rest_len is 0.
+
++CIPRXGET: 4,1,0
+OK
+
+5.2.2.4 Close UDP Connection
+AT+CIPCLOSE=1
+OK
++CIPCLOSE: 1,0
+
+5.2.3 UDP Client Works in Transparent Access Mode
+5.2.3.1 Set up UDP Client Connection
+AT+CIPMODE=1
+OK
+AT+NETOPEN
+OK
+
+www.simcom.com
+
+17 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
++NETOPEN: 0
+AT+CIPOPEN=0,"UDP","117.131.85.139",5254,5000
+
+// only <link_num>=0 is allowed to operate
+// with transparent mode.
+
+CONNECT 115200
+
+5.2.3.2 Send Data to Server
+All data got from com port will be sent to internet directly
+
+5.2.3.3 Receive Data From Server
+HELLO CLIENT
+
+// data from server output to COM port directly
+
+HELLO CLIENT
+
+// data from server output to COM port directly
+
+OK
+
+// sequence of +++ to quit transparent mode
+
+AT+CIPOPEN?
++CIPOPEN: 0,"UDP","117.131.85.139",5254,-1
++CIPOPEN: 1
++CIPOPEN: 2
++CIPOPEN: 3
++CIPOPEN: 4
++CIPOPEN: 5
++CIPOPEN: 6
++CIPOPEN: 7
++CIPOPEN: 8
++CIPOPEN: 9
+OK
+
+5.2.3.4 Close UDP Connection
+AT+CIPCLOSE=0
+CLOSED
++CIPCLOSE: 0,0
+OK
+
+5.3 TCP Server
+
+www.simcom.com
+
+18 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+
+5.3.1 Transparent Mode
+AT+CIPMODE=1
+OK
+AT+NETOPEN
+OK
++NETOPEN: 0
+AT+SERVERSTART=8080, 0
+
+// only <server_index>=0 is allowed to operate with
+// transparent mode.
+
+OK
+
++CLIENT: 0,0,192.168.108.5:57202
+
+// only <link_num> 0 can be used for transparent mode
+// operation.
+
+CONNECT 115200
+OK
+
+// sequence of +++ to quit data mode
+
+AT+CIPCLOSE=0
+
+// close client connection
+
+OK
+CLOSED
++CIPCLOSE: 0,0
+AT+SERVERSTOP=0
+
+// close server socket
+
++SERVERSTOP: 0,0
+OK
+
+5.3.2 Non-Transparent Mode
+Module supports 4 sockets to listen.
+AT+NETOPEN
+OK
++NETOPEN: 0,0
+AT+SERVERSTART=8080,0
+OK
+AT+SERVERSTART=9090,1
+OK
+AT+SERVERSTART=7070,2
+OK
+AT+SERVERSTART=6060,3
+www.simcom.com
+
+19 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+OK
++CLIENT: 0,1,192.168.108.5:57202
+
+AT+CIPOPEN?
++CIPOPEN: 0,"TCP","192.168.108.5",57202,1
+
+// If a socket is accepted, this URC will be reported
+// User can use AT+CIPOPEN? to check the
+// accepted socket
+// last parameter of 1 indicates this is an accepted
+// socket, this server index is 1
+
++CIPOPEN: 1
++CIPOPEN: 2
++CIPOPEN: 3
++CIPOPEN: 4
++CIPOPEN: 5
++CIPOPEN: 6
++CIPOPEN: 7
++CIPOPEN: 8
++CIPOPEN: 9
+OK
+AT+CIPSEND=0,5
+
+// only supports fixed-length to send
+
+>HELLO
+OK
++CIPSEND: 0,5,5
+AT+CIPCLOSE=0
+OK
++CIPCLOSE: 0,0
+AT+SERVERSTOP=0
++SERVERSTOP: 0,0
+OK
+AT+SERVERSTOP=1
++SERVERSTOP: 1,0
+OK
+AT+SERVERSTOP=2
++SERVERSTOP: 2,0
+OK
+AT+SERVERSTOP=3
+
+www.simcom.com
+
+20 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
++SERVERSTOP: 3,0
+OK
+AT+NETCLOSE
+OK
++NETCLOSE: 0
+
+5.4 Extended Information
+5.4.1 UDP Data Receiving Rules
+One UDP connection could handle no more 1500 Bytes with once receiving. Please make sure that UDP
+server sends acceptable data packets, whose length is greater than 0 and less than 1500 Bytes.
+
+5.5 Query Connection Status
+AT+CIPOPEN=1,"TCP","117.131.85.139",5253
+OK
++CIPOPEN: 1,0
+AT+CIPOPEN?
+
+// query the current state of all sockets
+
++CIPOPEN: 0
++CIPOPEN: 1,"TCP","117.131.85.139",5253,-1
++CIPOPEN: 2
++CIPOPEN: 3
++CIPOPEN: 4
++CIPOPEN: 5
++CIPOPEN: 6
++CIPOPEN: 7
++CIPOPEN: 8
++CIPOPEN: 9
+OK
+AT+CIPCLOSE?
++CIPCLOSE: 0,1,0,0,0,0,0,0,0,0
+OK
+AT+CIPCLOSE=1
+www.simcom.com
+
+21 / 22
+
+SIM7500_SIM7600_SIM7800 Series_TCPIP_Application Note_V3.00
+OK
++CIPCLOSE: 1,0
+AT+CIPCLOSE?
++CIPCLOSE: 0,0,0,0,0,0,0,0,0,0
+OK
+
+www.simcom.com
+
+22 / 22
+
+

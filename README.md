@@ -16,8 +16,9 @@ and time to clone:
 git clone --sparse <repo-url>
 cd <repo-dir>
 git sparse-checkout set --cone \
-    server\
-    libraries/{FreematicsPlus,httpd,TinyGPS,Utils,NlohmannJSON}\
+    .github \
+    server docs \
+    libraries/{FreematicsPlus,httpd,TinyGPS,Utils,NlohmannJSON} \
     firmware_v5/{telelogger,sandbox}
 ```
 
@@ -75,3 +76,4 @@ Directories
 - **libraries/** - Arduino libraries for ESP32 based Freematics ONE+ and Esprit
 
 - **server/** - [Freematics Hub](https://freematics.com/hub/) server source code
+- **docs/** - specs & schematics for hardware and integrated circuits of the device

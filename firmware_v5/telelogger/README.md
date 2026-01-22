@@ -117,12 +117,12 @@ Collected data are stored in a circular buffer in ESP32's IRAM or PSRAM. When PS
 Data Transmission
 =================
 
-Data transmission over UDP and HTTP(s) protocols are implemented for the followings.
+Data transmission over UDP and HTTP(s) protocols are *implemented* for the followings network modules:
 
 * WiFi (ESP32 built-in)
 * 3G WCDMA (SIM5360)
-* 4G LTE CAT-4 (SIM7600)
-* 4G LTE CAT-M (SIM7070)
+* 4G LTE CAT-4 ([SIM7600E/A-H](https://www.simcom.com/product/SIM7600X.html), where E: Europe, A: America)
+* 4G LPWA (Low-Power Wide-Area) CAT-M ([SIM7070G](https://www.simcom.com/product/SIM7070G.html))
 
 There two ways of sending data:
 

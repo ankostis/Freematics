@@ -1,0 +1,1290 @@
+SIM7070_SIM7080_SIM7090
+Series_Low Power Mode
+_Application Note
+LPWA Module
+
+SIMCom Wireless Solutions Limited
+
+Building B, SIM Technology Building, No.633, Jinzhong Road
+Changning District, Shanghai P.R. China
+Tel: 86-21-31575100
+support@simcom.com
+www.simcom.com
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+Document Title:
+Version:
+Date:
+Status:
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note
+1.02
+2020.7.8
+Released
+
+GENERAL NOTES
+SIMCOM OFFERS THIS INFORMATION AS A SERVICE TO ITS CUSTOMERS, TO SUPPORT
+APPLICATION AND ENGINEERING EFFORTS THAT USE THE PRODUCTS DESIGNED BY SIMCOM.
+THE INFORMATION PROVIDED IS BASED UPON REQUIREMENTS SPECIFICALLY PROVIDED TO
+SIMCOM BY THE CUSTOMERS. SIMCOM HAS NOT UNDERTAKEN ANY INDEPENDENT SEARCH
+FOR ADDITIONAL RELEVANT INFORMATION, INCLUDING ANY INFORMATION THAT MAY BE IN THE
+CUSTOMER’S POSSESSION. FURTHERMORE, SYSTEM VALIDATION OF THIS PRODUCT
+DESIGNED BY SIMCOM WITHIN A LARGER ELECTRONIC SYSTEM REMAINS THE RESPONSIBILITY
+OF THE CUSTOMER OR THE CUSTOMER’S SYSTEM INTEGRATOR. ALL SPECIFICATIONS
+SUPPLIED HEREIN ARE SUBJECT TO CHANGE.
+
+COPYRIGHT
+THIS DOCUMENT CONTAINS PROPRIETARY TECHNICAL INFORMATION WHICH IS THE PROPERTY
+OF SIMCOM WIRELESS SOLUTIONS LIMITED COPYING, TO OTHERS AND USING THIS DOCUMENT,
+ARE FORBIDDEN WITHOUT EXPRESS AUTHORITY BY SIMCOM. OFFENDERS ARE LIABLE TO THE
+PAYMENT OF INDEMNIFICATIONS. ALL RIGHTS RESERVED BY SIMCOM IN THE PROPRIETARY
+TECHNICAL INFORMATION ，INCLUDING BUT NOT LIMITED TO REGISTRATION GRANTING OF A
+PATENT , A UTILITY MODEL OR DESIGN. ALL SPECIFICATION SUPPLIED HEREIN ARE SUBJECT TO
+CHANGE WITHOUT NOTICE AT ANY TIME.
+
+SIMCom Wireless Solutions Limited
+
+Building B, SIM Technology Building, No.633 Jinzhong Road, Changning District, Shanghai P.R. China
+Tel: +86 21 31575100
+Email: simcom@simcom.com
+
+For more information, please visit:
+
+https://www.simcom.com/download/list-863-en.html
+
+For technical support, or to report documentation errors, please visit:
+https://www.simcom.com/ask/ or email to: support@simcom.com
+
+Copyright © 2020 SIMCom Wireless Solutions Limited All Rights Reserved.
+
+www.simcom.com
+
+2 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+About Document
+Version History
+Version
+
+Date
+
+Owner
+
+What is new
+
+V1.00
+
+2019.10.31
+
+Wanchuan.He
+
+First Release
+
+V1.01
+
+2020.02.26
+
+Wenjie.Lai
+
+Add product type
+
+V1.02
+
+2020.7.8
+
+Wenjie.Lai
+
+All
+
+Scope
+This document applies to the following products
+Name
+
+Type
+
+Size(mm)
+
+Comments
+
+SIM7080G
+
+CAT-M/NB
+
+17.6*15.7 *2.3
+
+N/A
+
+SIM7070G/SIM7070E
+
+CAT-M/NB/GPRS
+
+24*24*2.4
+
+N/A
+
+SIM7070G-NG
+
+NB/GPRS
+
+24*24*2.4
+
+N/A
+
+SIM7090G
+
+CAT-M/NB
+
+14.8*12.8*2.0
+
+N/A
+
+www.simcom.com
+
+3 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+Contents
+About Document.................................................................................................................................. 3
+Version History.........................................................................................................................................................3
+Scope........................................................................................................................................................................ 3
+
+Contents................................................................................................................................................. 4
+1
+
+Introduction.................................................................................................................................... 6
+
+2
+
+Lower Power Mode Introduction...............................................................................................7
+
+3
+
+PSM Mode....................................................................................................................................... 9
+
+4
+
+eDRX Mode................................................................................................................................... 12
+
+5
+
+Sleep Mode................................................................................................................................... 15
+
+6
+
+Bearer Configuration................................................................................................................. 16
+
+7
+
+Lower Power Mode Examples................................................................................................. 19
+
+1.1
+1.2
+1.3
+2.1
+2.2
+2.3
+2.4
+3.1
+3.2
+3.3
+3.4
+
+Purpose of the document...........................................................................................................................6
+Related documents.....................................................................................................................................6
+Conventions and abbreviations................................................................................................................ 6
+PSM mode....................................................................................................................................................7
+DRX............................................................................................................................................................... 7
+eDRX............................................................................................................................................................. 8
+The difference between three modes...................................................................................................... 8
+
+PSM Wake-up..............................................................................................................................................9
+AT Commands Related to PSM Mode.....................................................................................................9
+Speciality.................................................................................................................................................... 10
+Notice.......................................................................................................................................................... 11
+
+4.1
+
+eDRX introduction.....................................................................................................................................12
+4.1.1
+eDRX Mode................................................................................................................................... 12
+4.1.2
+PTW................................................................................................................................................ 12
+4.1.3
+eDRX cycle length........................................................................................................................ 13
+4.2
+AT Commands Related to eDRX Mode................................................................................................ 14
+4.3
+Notice.......................................................................................................................................................... 14
+
+6.1
+6.2
+
+PDN Auto-activation................................................................................................................................. 16
+APN Manual Configuration......................................................................................................................17
+
+7.1
+
+PSM Mode Examples...............................................................................................................................19
+7.1.1
+Enable/Disable PSM mode......................................................................................................... 19
+7.2
+eDRX Mode Examples.............................................................................................................................20
+7.2.1
+Enable eDRX................................................................................................................................. 20
+7.2.2
+Set eDRX cycle length 20.48s....................................................................................................21
+7.2.3
+Set eDRX cycle length 20.48s and PTW 10.24s.....................................................................21
+
+www.simcom.com
+
+4 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+7.2.4
+Disable eDRX mode.....................................................................................................................22
+7.3
+Sleep Mode Examples............................................................................................................................. 22
+
+www.simcom.com
+
+5 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+1 Introduction
+1.1
+
+Purpose of the document
+
+Based on module AT command manual, this document will introduce low power mode application process.
+Developers could understand and develop application quickly and efficiently based on this document.
+
+1.2
+
+Related documents
+
+[1] SIM7070_SIM7080_SIM7090 Series_AT Command Manual
+
+1.3
+
+Conventions and abbreviations
+
+In this document, the GSM engines are referred to as following term:
+ ME (Mobile Equipment);
+ MS (Mobile Station);
+ TA (Terminal Adapter);
+ DCE (Data Communication Equipment) or facsimile DCE (FAX modem, FAX board);
+In application, controlling device controls the GSM engine by sending AT Command via its serial interface.
+The controlling device at the other end of the serial line is referred to as following term:
+ TE (Terminal Equipment);
+ DTE (Data Terminal Equipment) or plainly "the application" which is running on an embedded system;
+
+www.simcom.com
+
+6 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+2 Lower Power Mode Introduction
+NB-IoT supports three power saving modes: PSM (Power Saving Mode), DRX (Discontinuous Reception
+Mode), and eDRX (Extended DRX).
+PSM (power saving mode) and eDRX (extended Discontinuous Reception) are used in NB-IOT to save
+power. In PSM mode, the terminal does not need to receive paging to detect whether there is downlink
+service, and eDRX mode has a longer paging detection period than DRX, which may result in a longer time
+delay, which has an impact on the real-time performance of the data. Whether the PSM or the eDRX are
+used depends on the capabilities and configuration of the terminal and the network. In terms of capabilities,
+the capability network that the terminal does not support must not be configured, and the capabilities
+supported by the terminal may be different in different situations of the network.
+
+2.1
+
+PSM mode
+
+In PSM mode, the terminal does not detect whether there is paging data in the downlink. As long as the TAU
+and uplink need to send data, the PSM state will be exited. T3412 is the time of TAU (Tracking Area Update),
+and T3324 is the timer that enters PSM in IDLE mode.
+
+2.2
+
+DRX
+
+DRX can be considered that the downlink service can reach the terminal equipment at any time. In each
+DRX cycle (1.28s, 2.56s, 5.12s or 10.24s), the terminal will detect whether there is a downlink service
+arrival, which is applicable to services with high requirements for delay. Terminal equipment generally
+adopts a power supply method, such as a street light service.
+
+
+Since the DRX cycle is short (1.28s, 2.56s, 5.12s, or 10.24s, determined by the operator's network side
+setting), the downlink service can be considered to be reachable at any time with a small delay.
+
+
+
+Applicable to services with high latency requirements, but with relatively high power consumption.
+Terminal devices generally use power supply.
+
+www.simcom.com
+
+7 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+2.3
+
+eDRX
+
+eDRX has a longer paging cycle than DRX, which enables the terminal to save power and also causes
+longer downlink data delay (such as DRX value of 1.28s\2.56s, and eDRX value can be 20.48s, even 2.9h),
+so it is suitable for use in scenarios where time urgency is not very high.
+
+2.4
+
+The difference between three modes
+
+No
+
+Method
+
+Description
+
+1
+
+PSM
+
+It may take a day or longer time to find the device
+
+2
+
+DRX
+
+Can find devices anytime, anywhere.
+
+3
+
+eDRX
+
+It takes from few minutes to an hour or even longer time to find the device.
+
+www.simcom.com
+
+8 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+3 PSM Mode
+Power Saving Mode (PSM) will start after data connection terminates or periodic TAU completes.
+Data connection terminates, module will go to idle mode firstly, and then move to DRX (Discontinuous
+Reception) status. Once timer T3324 is expired, module will enter into PSM mode.
+In PSM mode, module will be in a kind of deep sleep mode, in extremely low power mode, the current of
+SIM7080 is about 3.5 μA.
+
+Figure1
+
+3.1
+
+PSM mode
+
+PSM Wake-up
+
+Wake-up conditions:
+1) T3412 timer is expired
+2) Pulling PWRKEY to low level
+
+3.2
+
+AT Commands Related to PSM Mode
+
+www.simcom.com
+
+9 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+AT Command
+
+Description
+
+AT+CPSMS
+
+Power Saving Mode Setting
+
+AT+CPSMRDP
+
+Read PSM Dynamic Parameters
+
+AT+CPSMSTATUS
+
+Enable Deep Sleep Wakeup Indication
+
+AT+CPSMCFG
+
+Configure PSM version and Minimum Threshold Value
+
+AT+CPSMCFGEXT
+
+Configure Modem Optimization of PSM
+
+For the detail of these commands, Please refer to "SIM7070_SIM7080_SIM7090 Series AT Command
+Manual".
+
+3.3
+
+Speciality
+
+NOTE：Parameters for AT+CPSMS command
++CPSMS:
+<mode>,<Requested_Periodic-RAU>,<Requested_GPRS-Ready-timer>,<Requested_periodic-TAU>,<Re
+quested_Active-Time>
+Here, parameters <Requested_Periodic-RAU> and<Requested_GPRS-Ready-timer> are not need to
+configure. <Requested_periodic-TAU> is T3412_ext, <Requested_Active-Time> is timer T3324.
+Parameter includes unit (high 3 bits) and value (low 5 bits), below is the table.
+<Requested_Periodic-TAU>
+
+Unit
+
+Base
+
+Min. in Second
+
+Max. in Second
+
+0
+
+10min
+
+2400
+
+18600
+
+1
+
+1h
+
+21600
+
+111600
+
+2
+
+10h
+
+144000
+
+1116000
+
+3
+
+2sec
+
+0
+
+62
+
+4
+
+30sec
+
+90
+
+930
+
+5
+
+1min
+
+960
+
+1860
+
+6
+
+320h
+
+1152000
+
+35712000
+
+Table 1
+
+<Requested_Periodic-TAU> of AT+CPSMS
+
+For example, <TAU>=01000111 means, unit=2(010 hours) and value=7(00111), so total period is
+7*10hours=70 hours.
+<Requested_Active-Time>
+
+www.simcom.com
+
+10 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+Unit
+
+Base
+
+Min. in Second
+
+Max. in Second
+
+0
+
+2sec
+
+0
+
+62
+
+1
+
+1min
+
+120
+
+1860
+
+2
+
+6min
+
+2160
+
+11160
+
+Table 2
+
+3.4
+
+<Requested_Active-Time> of AT+CPSMS
+
+Notice
+
+1)
+
+About the URC report of “+ CPSMSTATUS: ENTER PSM” in the process of entering PSM, it means
+that the module is ready to enter PSM sleep mode. When the module exits from the PSM, it reports
++CPSMSTATUS: "EXIT PSM". AT+CPSMSTATUS can control whether these URCs are reported.
+
+2)
+
+The module enables and disables the PSM function through the AT+CPSMS command. This command
+can also configure the values of the terminal's T3324 and T3241.The module only makes network
+requests when it switches from CPSMS 0 to CPSMS 1, and gets the parameters issued by the operator.
+When the value of CPSMS is already 1, reconfiguring AT+CPSMS=1 will not do network requests.
+
+3)
+
+The actual value of T3324 and T3412 is issued by the operator. Values configured with AT+CPSMS
+may in some cases be inconsistent with the values assigned by the network. The AT+CPSMRDP
+command can be used to query the terminal configuration and the values of T3324 and T3412
+delivered by the network.
+
+4)
+
+The usage of AT+CPSMCFG indicates that if the terminal cannot enter the PSM in some cases, it can
+be checked whether the difference between T3412 and T3324 is less than the default minimum
+threshold. If it is less than, you can adjust this threshold by AT+CPSMCFG.
+
+5)
+
+AT + CPSMCFGEXT is mainly used to configure PSM extended parameters, these parameters mainly
+include network search and other related content. If it is needed in the actual application, you can refer
+to the documentation of the command to set it up.
+
+6)
+
+If the SIM card is opened with a PIN code and other related functions, it may not be able to enter the
+PSM. If you want to use the PSM function, please first confirm the related functions such as closing the
+SIM card PIN code.
+
+7)
+
+If the module is not woken up when the time of the T3412 arrives, in this case, it needs to interact with
+the network to enter the PSM mode again. The interaction mode can be to send a packet of data.
+
+www.simcom.com
+
+11 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+4 eDRX Mode
+4.1
+
+eDRX introduction
+
+4.1.1
+
+eDRX Mode
+
+The eDRX mode is a new feature in the Rel-13. Its main purpose is to support longer-cycle paging
+monitoring to save power. The traditional 2.56-second paging interval consumes a large amount of power
+for the UE, and the downlink data transmission frequency is small. Through the negotiation cooperation
+between the core network and the user terminal, the user terminal skips most of the paging monitoring,
+thereby achieving the purpose of power saving.
+The power saving effect of the eDRX mode is worse than the PSM mode, but the accessibility of the
+downlink communication link is greatly improved relative to the PSM mode.
+The eDRX cycle is shown in Figure 3. The user can check the eDRX cycle by consulting the relevant AT
+command (AT+CEDRXS).
+
+4.1.2
+
+PTW
+
+During each eDRX cycle, there is a Paging Time Window (PTW). The UE can only listen to the paging
+channel according to the DRX cycle in the PTW to receive downlink traffic. The time outside the PTW is in a
+sleep state and does not monitor. The paging channel cannot receive downlink traffic.
+The PTW cycle is shown in Figure 3. The user can perform the PTW cycle setting by consulting the relevant
+AT command (AT+CEDRX).
+
+NOTE
+
+
+The user terminal and the core network negotiate the length of the eDRX through the attach and
+TAU procedures.
+
+www.simcom.com
+
+12 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+ptw
+
+ptw
+
+ptw
+
+···
+
+DRX
+
+DRX
+
+cycle_length
+
+cycle_length
+Figure 3
+
+4.1.3
+
+DRX
+cycle_length
+
+eDRX diagrammatic sketch
+
+eDRX cycle length
+
+eDRX value, octet 3 (bit 4 to 1)
+The octet contains the eDRX value field. The values are listed in table3.
+4
+
+3
+
+2
+
+1
+
+eDRX cycle length duration
+
+0
+
+0
+
+0
+
+0
+
+5.12 seconds
+
+0
+
+0
+
+0
+
+1
+
+10.24 seconds
+
+0
+
+0
+
+1
+
+0
+
+20.48 seconds
+
+0
+
+0
+
+1
+
+1
+
+40.96 seconds
+
+0
+
+1
+
+0
+
+0
+
+61.44 seconds
+
+0
+
+1
+
+0
+
+1
+
+81.92 seconds
+
+0
+
+1
+
+1
+
+0
+
+102.4 seconds
+
+0
+
+1
+
+1
+
+1
+
+122.88 seconds
+
+1
+
+0
+
+0
+
+0
+
+143.36 seconds
+
+1
+
+0
+
+0
+
+1
+
+163.84 seconds
+
+1
+
+0
+
+1
+
+0
+
+327.68 seconds
+
+1
+
+0
+
+1
+
+1
+
+655.36 seconds
+
+1
+
+1
+
+0
+
+0
+
+1310.72 seconds
+
+1
+
+1
+
+0
+
+1
+
+2621.44 seconds
+
+1
+
+1
+
+1
+
+0
+
+5242.88 seconds
+
+1
+
+1
+
+1
+
+1
+
+10485.76 seconds
+
+Table 3
+
+www.simcom.com
+
+eDRX cycle length
+
+13 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+4.2
+
+AT Commands Related to eDRX Mode
+
+AT Command
+
+Description
+
+AT+CEDRXS
+
+Entended-DRX Setting
+
+AT+CEDRXRDP
+
+eDRX Read Dynamic Parameters
+
+AT+CEDRX
+
+Configure EDRX parameters
+
+AT+CEDRXS
+
+Entended-DRX Setting
+
+For the detail of these commands, Please refer to"SIM7070_SIM7080_SIM7090 Series AT Command
+Manual".
+
+4.3
+
+Notice
+
+1)
+
+AT+CEDRXS can be used to enable and disable the EDRX function of the module. If it has been
+registered to the network, executing this command will initiate a TAU update process. If accepted by
+the network, these parameters will take effect immediately.
+
+2)
+
+The AT+CEDRXRDP command can be used to query whether the request sent by the module to the
+network is accepted by the network. If the response "+CEDRXRDP: 0" indicates that the EDRX request
+is not accepted by the carrier's network.
+
+3)
+
+The AT+CEDRX command can be used to configure the EPRX paging cycle and PTW parameters, but
+the configuration parameters need to be restarted. This command can be used for the need to modify
+the PTW parameters.
+
+www.simcom.com
+
+14 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+5 Sleep Mode
+In sleep mode, module will consume very low power, but still can receive paging.
+
+www.simcom.com
+
+15 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+6 Bearer Configuration
+Usually module will register PS service automatically.
+
+6.1
+
+PDN Auto-activation
+
+//Example of PDN Auto-activation.
+AT+CPIN?
+
+//Check SIM card status
+
++CPIN:READY
+OK
+AT+CSQ
+
+//Check RF signal
+
++CSQ: 20,0
+OK
+AT+CGATT?
+
+//Check PS service. 1 indicates PS has attached.
+
++CGATT: 1
+OK
+AT+COPS?
++COPS: 0,0,"CHN-CT",9
+OK
+AT+CGNAPN
+
++CGNAPN: 1,"ctnb"
+OK
+AT+CNCFG=0,1,"ctnb"
+
+//Query Network information,
+network.
+//Mode 9 means NB-IOT network.
+
+operator
+
+and
+
+//Query the APN delivered by the network after the
+CAT-M or NB-IOT network is successfully
+registered.
+//"ctnb" is APN delivered by the CAT-M or NB-IOT
+network. APN is empty under the GSM network.
+//Before activation please use AT+CNCFG to set
+APN\user name\password if needed.
+
+OK
+AT+CNACT=0,1
+
+//Activate network, Activate 0th PDP.
+
+OK
+
+www.simcom.com
+
+16 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
++APP PDP: 0,ACTIVE
+AT+CNACT?
+
+//Get local IP
+
++CNACT: 0,1,"10.94.36.44"
++CNACT: 1,0,"0.0.0.0"
++CNACT: 2,0,"0.0.0.0"
++CNACT: 3,0,"0.0.0.0"
+OK
+
+6.2
+
+APN Manual Configuration
+
+If not attached automatically, could configure correct APN setting.
+//Example of APN Manual configuration.
+AT+CFUN=0
+
+//Disable RF
+
++CPIN: NOT READY
+OK
+AT+CGDCONT=1,"IP","ctnb"
+
+//Set the APN manually. Some operators need to
+set APN first when registering the network.
+
+OK
+AT+CFUN=1
+
+//Enable RF
+
+OK
++CPIN: READY
+AT+CGATT?
+
+//Check PS service. 1 indicates PS has attached.
+
++CGATT: 1
+OK
+AT+CGNAPN
+
++CGNAPN: 1,"ctnb"
+OK
+AT+CNCFG=0,1,"ctnb"
+
+//Query the APN delivered by the network after the
+CAT-M or NB-IOT network is successfully
+registered.
+//"ctnb" is APN delivered by the CAT-M or NB-IOT
+network. APN is empty under the GSM network.
+//Before activation please use AT+CNCFG to set
+APN\user name\password if needed.
+
+OK
+AT+CNACT=0,1
+
+//Activate network, Activate 0th PDP.
+
+OK
+www.simcom.com
+
+17 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
++APP PDP: 0,ACTIVE
+AT+CNACT?
+
+//Get local IP
+
++CNACT: 0,1,"10.94.36.44"
++CNACT: 1,0,"0.0.0.0"
++CNACT: 2,0,"0.0.0.0"
++CNACT: 3,0,"0.0.0.0"
+OK
+
+www.simcom.com
+
+18 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+7 Lower Power Mode Examples
+7.1
+
+PSM Mode Examples
+
+7.1.1
+
+Enable/Disable PSM mode
+
+//Example of Enable or Disable PSM mode.
+AT+CPSMSTATUS=1
+
+//Enable PSM Event report
+
+OK
+AT+IPR=115200
+
+//Fix baud rate
+
+OK
+AT+CEREG=4
+OK
+AT+CEREG?
+
+//Inquiry timers configured by network.
+
++CEREG:
+4,1,"5B57","195071B",9,,,"00000000","01100000"
+OK
+AT+CPSMS=1,,,"01011111","00000001"
+
+//Enable PSM mode and set the specific
+T3412_ext and T3324
+
+OK
++CEREG:
+1,"5B57","195071B",9,,,"00000001","01011111"
++CEREG:
+1,"5B57","195071B",9,,,"00000001","01011111"
++CPSMSTATUS: "ENTER PSM"
+AT+CEREG?
+
+//Inquiry timers configured by network.
+
++CEREG:
+4,1,"5B57","195071B",9,,,"00000001","01011111"
+OK
+
+www.simcom.com
+
+19 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+AT+CEREG=0
+
+//Disable network registration unsolicited result
+code
+
+OK
+AT+CPSMS=0
+
+//Disable PSM
+
+OK
+
+7.2
+
+eDRX Mode Examples
+
+NOTE
+
+
+
+After eDRX enabled, you need to let module enter into sleep mode. To disable eDRX, you need to
+exit sleep mode firstly. In order to achieve real power saving.
+If not enter into sleep mode, Enable eDRX mode is used to enter eDRX in standby mode.
+
+7.2.1
+
+Enable eDRX
+
+//Example of Enable eDRX
+AT+COPS?
+
+//Check operator information
+9 is NB-IOT network
+
++COPS: 0,0,"CHINA MOBILE CMCC",9
+OK
+AT+CEDRXS=1,5,”0000”
+
+//Enable eDRX function.
+
+OK
+AT+CEDRXS?
+
+//Query eDRX current status
+
++CEDRXS: 4,"0001"
++CEDRXS: 5,"0000"
+OK
+AT+CEDRXRDP
+
+//If eDRX supported,
+“0000” Requested cycle length
+“0010” Cycle length from network
+“0100” PTW
+
++CEDRXRDP: 5,"0000","0010","0100"
+OK
+AT+CEDRXRDP
+
+www.simcom.com
+
+//If eDRX not supported, return with 0.
+
+20 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
++CEDRXRDP: 0
+OK
+
+7.2.2
+
+Set eDRX cycle length 20.48s
+
+//Example of Set eDRX cycle length 20.48s
+AT+CEDRXS?
+
+//Query eDRX current status
+
++CEDRXS: 4,"0001"
++CEDRXS: 5,"0000"
+OK
+AT+CEDRXS=1,5,"0010"
+
+//Set eDRX cycle length with "0010",which is
+20.48 s.
+
+OK
+AT+CEDRXRDP
+
+//“0010” Requested cycle length
+“0010” Cycle length from network
+“0100” PTW from network
+
++CEDRXRDP: 5,"0010","0010","0100"
+OK
+
+7.2.3
+
+Set eDRX cycle length 20.48s and PTW 10.24s
+
+//Example of Set eDRX cycle length 20.48s and PTW 10.24s.
+AT+CEDRXS?
+
+//Query eDRX current status
+
++CEDRXS: 5,"0000"
+OK
+AT+CEDRX=2,1,3,2
+
+//Set PTW with 3(10.24s).This configuration will be
+saved after reboot.
+
+OK
+AT+CEDRXRDP
+
+//“0010” Requested cycle length
+“0010” Cycle length from network
+“0011” PTW from network
+
++CEDRXRDP: 5,"0010","0010","0011"
+OK
+www.simcom.com
+
+21 / 22
+
+SIM7070_SIM7080_SIM7090 Series_Low Power Mode_Application Note_V1.02
+
+7.2.4
+
+Disable eDRX mode
+
+//Example of Disable eDRX Mode.
+AT+CEDRXS=0
+
+//Disable eDRX function
+
+OK
+AT+CEDRXRDP
+
+//If eDRX not supported, return with 0.
+
++CEDRXRDP: 0
+OK
+
+7.3
+
+Sleep Mode Examples
+
+//Example of Sleep Mode.
+AT+CSCLK=1
+
+//Enable sleep mode 1.
+
+OK
+
+//Pulling up DTR pin, module will go to normal
+sleep mode
+//Pulling down DTR pin will wake module up from
+sleep mode.
+
+www.simcom.com
+
+22 / 22
+
+
