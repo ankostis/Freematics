@@ -684,7 +684,17 @@ bool CellSIMCOM::sendCommand(const char* cmd, unsigned int timeout, const char* 
   m_buffer[0] = 0;
   const char* answers[] = {"\r\nOK", "\r\nERROR"};
   byte ret = m_device->xbReceive(m_buffer, RECV_BUF_SIZE, timeout, expected ? &expected : answers, expected ? 1 : 2);
+
+  if (cmd) {
+    if (ret != 1) {
+      ESP_LOGW(TAG_CELL, "CMD failed: %s", cmd);
+    } else {
+      ESP_LOGD(TAG_CELL, "CMD ok: %s", cmd);
+    }
+  }
+
   inbound();
+
   return ret == 1;
 }
 
