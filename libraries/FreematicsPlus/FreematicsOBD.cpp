@@ -22,6 +22,8 @@ int dumpLine(char* buffer, int len)
 		}
 	}
 	memmove(buffer, buffer + bytesToDump, len - bytesToDump);
+	// Inaccurate OBD log-label here, actually it's a util function for all UARTs.
+	ESP_LOGW(TAG_OBD, "BUFFER FULL, trimmed %i of %i", bytesToDump, len);
 	return bytesToDump;
 }
 

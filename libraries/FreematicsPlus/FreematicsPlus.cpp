@@ -367,7 +367,6 @@ int CLink_SPI::receive(char* buffer, int bufsize, unsigned int timeout)
 				if (n == bufsize - 1) {
 					int bytesDumped = dumpLine(buffer, n);
 					n -= bytesDumped;
-					ESP_LOGW(TAG_LINK, "<SPI RECV> BUFFER FULL");
 				}
 				buffer[n++] = c;
 			}
