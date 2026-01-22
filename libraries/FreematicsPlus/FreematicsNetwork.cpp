@@ -384,18 +384,19 @@ bool CellSIMCOM::begin(CFreematics* device)
 void CellSIMCOM::end()
 {
   setGPS(false);
+
+  const char *cmd, *exp;
   if (m_type == CELL_SIM7070) {
-    if (!sendCommand("AT+CPOWD=1\r", 1000, "NORMAL POWER DOWN")) {
-      if (m_device) m_device->xbTogglePower(2510);
-    } else {
-      delay(1500);
-    }
+    cmd = "AT+CPOWD=1\r";
+    exp = "NORMAL POWER DOWN";
   } else {
-    if (!sendCommand("AT+CPOF\r")) {
-      if (m_device) m_device->xbTogglePower(2510);
-    } else {
-      delay(1500);
-    }
+    cmd = "AT+CPOF=1\r";
+    exp = nullptr;
+  }
+  if (!sendCommand(cmd, 1000, exp)) {
+    if (m_device) m_device->xbTogglePower(2510);
+  } else {
+    delay(1500);
   }
 }
 
@@ -799,27 +800,33 @@ char* CellSIMCOM::getBuffer()
 
 bool CellUDP::open(const char* host, uint16_t port)
 {
-  if (host) {
-    udpPort = port;
-    // Skip DNS for SIM7070 - use hostname directly with CAOPEN
-    // DNS query (AT+CDNSGIP) corrupts serial buffer on failure
-    if (m_type == CELL_SIM7070) {
-      ESP_LOGD(TAG_CELLUDP, "Using hostname directly on SIM7070: %s", host);
+  if (m_type == CELL_SIM7070) {
+    // SIM7070G: Use hostname directly in CAOPEN (AT manual 12.2.3)
+    // DNS query requires active PDP, but we activate it below
+    if (host) {
+      udpPort = port;
       udpIP = host;
-    } else {
-      udpIP = queryIP(host);
-      if (!udpIP.length()) {
-        ESP_LOGW(TAG_CELLUDP, "DNS failed, using hostname directly");
-        udpIP = host;
+    }
+    if (!udpIP.length()) return false;
+
+    // Close existing socket if any (failure OK - socket may already be closed)
+    sendCommand("AT+CACLOSE=0\r", 1000);
+
+    // Check if PDP context is already active
+    bool pdpActive = false;
+    if (sendCommand("AT+CNACT?\r", 1000)) {
+      char *p = strstr(m_buffer, "+CNACT: 0,1");
+      if (p) pdpActive = true;
+    }
+
+    // Only activate if not already active
+    if (!pdpActive) {
+      if (!sendCommand("AT+CNACT=0,1\r", 3000)) {
+        ESP_LOGW(TAG_CELLUDP, "PDP activation failed");
+        return false;
       }
     }
-  }
-  if (!udpIP.length()) return false;
-  if (m_type == CELL_SIM7070) {
-    // Skip DNS for SIM7070 - modem resolves internally
-    // DNS query (`AT+CDNSGIP` in `queryIP(host)`)  corrupts serial buffer.
-    sendCommand("AT+CACLOSE=0\r", 1000);
-    sendCommand("AT+CNACT=0,1\r", 3000);
+
     sendCommand("AT+CACID=0\r", 1000);
     sprintf(m_buffer, "AT+CAOPEN=0,0,\"UDP\",\"%s\",%u\r", udpIP.c_str(), udpPort);
     // CAOPEN needs longer timeout to establish connection
@@ -841,8 +848,9 @@ bool CellUDP::open(const char* host, uint16_t port)
 bool CellUDP::close()
 {
   if (m_type == CELL_SIM7070) {
-    sendCommand("AT+CACLOSE=0\r");
-    return sendCommand("AT+CNACT=0,0\r");
+    // Only close socket, keep PDP context active for reconnection
+    // Deactivating CNACT causes reactivation failures on retry
+    return sendCommand("AT+CACLOSE=0\r");
   } else {
     return sendCommand("AT+CIPCLOSE=0\r");
   }
