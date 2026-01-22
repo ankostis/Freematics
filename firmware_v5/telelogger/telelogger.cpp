@@ -1386,6 +1386,7 @@ void telemetry(void* inst)
           OLED_PRINTF("%3i", teleClient.txBytes >> 10);
         }
       } else {
+        ESP_LOGE(TAG_TELE, "FAIL tx: |%s|", store.buffer());
         timeoutsNet++;
         connErrors++;
         printTimeoutStats();
