@@ -620,7 +620,9 @@ success:
 			}
 		}
 	}
+#if ENABLE_OBD_EMULATION
 success_2:
+#endif
 	if (success) {
 		m_state = OBD_CONNECTED;
 		errors = 0;
