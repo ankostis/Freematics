@@ -226,6 +226,8 @@
  * When 1, it generates & transmits speed=314kmh and a dummy VIN,
  * so as to keep communication to the server up and never sleep.
  * Use it to debug the network even when not hooked on a vehicle.
+ *
+ * ATTENTION: clean-before-build (for ./libraries/) needed when modified.
  */
 #define ENABLE_OBD_EMULATION        0
 
@@ -473,6 +475,21 @@
 #endif
 #define GPS_SERIAL_BAUDRATE     115200L  // TODO: drop unused `GPS_SERIAL_BAUDRATE`.
 #define GPS_MOTION_TIMEOUT      180 /* seconds */
+
+// These are the partial args in parenthesis fed into 7070G's command:
+//      AT+CGNSMOD: <gps>,[<glonas>,<beidu>,<galileo>,<qzss>]
+#define GNSS_GLONAS             "1,0,0,0"
+#define GNSS_BEIDU              "0,1,0,0"
+#define GNSS_GALILEO            "0,0,1,0"
+#define GNSS_QZSS               "0,0,0,1"
+/**
+ * What extra GNSS system to use to enhance GPS's precision.
+ *
+ * ATTENTION: clean-before-build (for ./libraries/) needed when modified.
+ * (TODO: `GNSS_PRECISION_SYSTEM` -> nodeinfo.json-config default)
+  */
+#define GNSS_7070_2ND_SYSTEM    GNSS_GLONAS
+
 /**
  * keeping GNSS power on during standby.
  * (TODO: `GNSS_ALWAYS_ON` -> nodeinfo.json-config default)

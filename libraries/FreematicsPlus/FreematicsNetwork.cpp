@@ -509,7 +509,12 @@ bool CellSIMCOM::setGPS(bool on)
   if (on) {
     if (m_type == CELL_SIM7070) {
       sendCommand("AT+CGNSPWR=1\r");
-      sendCommand("AT+CGNSMOD=1,1,0,0,0\r");
+      // This gets fed into 7070G's command:
+      //      AT+CGNSMOD: <gps>,(<glonas>,<beidu>,<galileo>,<qzss>)
+      // Only the args in parenthesis are controlled from config, and
+      // only one of the x4 args can be 1.
+      // (see p. 211 of `SIM7070_SIM7080_SIM7090 Series_AT Command Manual_V1.07.txt`)
+      sendCommand("AT+CGNSMOD=1," GNSS_7070_2ND_SYSTEM "\r");
       if (sendCommand("AT+CGNSINF\r", 1000, "+CGNSINF:")) {
         if (!m_gps) {
           m_gps = new GPS_DATA;
