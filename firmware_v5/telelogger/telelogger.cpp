@@ -453,8 +453,9 @@ bool processGPS(CBuffer* buffer)
   }
   if (gd->lng == 0 && gd->lat == 0) {
     // coordinates not ready
+    ESP_LOGW(TAG_GNSS, "no coords");
     if (gd->date) {
-      ESP_LOGW(TAG_GNSS, "isoTime: %s", isoTime);
+      ESP_LOGD(TAG_GNSS, "isoTime: %s", isoTime);
     }
     return false;
   }
@@ -483,7 +484,7 @@ bool processGPS(CBuffer* buffer)
     if (gd->hdop) buffer->add(PID_GPS_HDOP, ELEMENT_UINT8, &gd->hdop, sizeof(uint8_t));
   }
 
-  ESP_LOGD(TAG_PROC,
+  ESP_LOGD(TAG_GNSS,
       "<GNSS> lat: %.6f, lng: %.6f, alt: %.6f, v: %.1f km/h"
       ", course: %d, sats: %d, hdop: %d, t: %s, err: %d",
       gd->lat, gd->lng, gd->alt, kph, gd->heading, gd->sat, gd->hdop, isoTime, gd->errors);
