@@ -1550,42 +1550,129 @@ void standby()
 /*******************************************************************************
   SETUP (after boot)
 *******************************************************************************/
-void enter_coproc_bootpipe_mode() {
-  constexpr const char EOT = 0x04; // End Of Transmission
-  const uint32_t timeout_ms = node_info.obd_pipe_sec * 1000;
+void power_cycle_modem() {
+    pinMode(PIN_BEE_PWR, OUTPUT);
+    digitalWrite(PIN_BEE_PWR, LOW);
+    delay(200);
+    digitalWrite(PIN_BEE_PWR, HIGH);
+}
 
-  ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE ))--");
-  Serial.printf(
-      "Awaiting user-input for %isec;"
-      "\n  please type any ELM327 AT cmds for OBD, or"
-      "\n  press [Ctrl+D] to exit immediately:\n",
-      node_info.obd_pipe_sec);
-  Serial1.begin(LINK_UART_BAUDRATE, SERIAL_8N1, PIN_LINK_UART_RX,
-                PIN_LINK_UART_TX);
-  uint32_t last_traffic_ms = millis();
-  bool input_given = false;
+struct UartPipe {
+  unsigned long baud;
+  int8_t rx_pin;
+  int8_t tx_pin;
+  const char *at_type;
+  const char *module_name;
+  void (*power_cycle_func)();
+  void banner(int pipe_timeout_sec) {
+    Serial.printf(
+      "UART-PIPE: Type any %s AT cmds for %s module for %isec:"
+      "\n  - [CTRL+P] - (P)ower-toggle on selected module"
+      "\n  - [CTRL+N] - (N)ext module"
+      "\n  - [CTRL+D] - en(D) session immediately"
+      "\n",
+      at_type, module_name, pipe_timeout_sec);
+  }
+  void begin() { Serial1.begin(baud, SERIAL_8N1, rx_pin, tx_pin); }
+  void end() { Serial1.end(); }
+};
+
+UartPipe uart_pipes[] = {
+  UartPipe{
+    LINK_UART_BAUDRATE,
+    PIN_LINK_UART_RX,
+    PIN_LINK_UART_TX,
+    "ELM327",
+    "OBD",
+    nullptr
+  },
+  UartPipe{
+    BEE_BAUDRATE,
+    PIN_BEE_UART_RXD,
+    PIN_BEE_UART_TXD,
+    "SIMCOM",
+    "MODEM",
+    power_cycle_modem
+  }
+};
+
+/**
+ * Pipe bidirectionally the USB directly into UART1, itself connected to some module
+ * (USB <--> UART <--> (OBD | MODEM)) and reboot on exit if anything touched.
+ *
+ * See `UartPipe::banner()` for the keyboard shortcuts pertaining.
+ */
+void enter_uart_pipe_loop() {
+  constexpr const size_t n_pipes = sizeof_array(uart_pipes);
+  constexpr const char EOT          = 0x04;  // (CTRL+D) End Of Transmission
+  constexpr const char CTRL_POWER   = 0x10;  // (CTRL+P)
+  constexpr const char CTRL_NEXT    = 0x0E;  // (CTRL+N)
+
+  const uint32_t timeout_ms = node_info.uart_pipe_sec * 1000;
+
+  int mod_i = 0;
+  UartPipe *bp = &uart_pipes[mod_i];
+  bp->banner(node_info.uart_pipe_sec);
+  bp->begin();
+
+  uint32_t last_traffic_ms, now_ms;
+  bool stop, input_given;
+  last_traffic_ms = now_ms = millis();
+  stop= input_given=false;
   do {
-    if (Serial.available()) {
-      char usb_char = Serial.read();
-      if (usb_char == EOT) break;
-      Serial1.write(usb_char);
-      // Echo user-input back to serial port.
-      // Coproc's `ATE1` cmd seems not that adept...
-      Serial.write(usb_char);
-      last_traffic_ms = millis();
-      input_given = true;
-    }
+    // Module --> USB
+    //
     if (Serial1.available()) {
       Serial.write(Serial1.read());
-      last_traffic_ms = millis();
+      last_traffic_ms = now_ms;
     }
-  } while ((millis() - last_traffic_ms) < timeout_ms);
+
+    // USB --> Module, scanning for keyboard shortcuts.
+    //
+    if (Serial.available()) {
+      char usb_char = Serial.read();
+
+      switch (usb_char) {
+        case EOT:
+          ESP_LOGI(TAG_SETUP, "--(( USER BREAK ))--");
+          stop = true;
+          break;
+        case CTRL_POWER:
+          if (bp->power_cycle_func) {
+            ESP_LOGI(TAG_SETUP, "--(( TOGGLE POWER %s ))--", bp->module_name);
+            bp->power_cycle_func();
+          }
+          break;
+        case CTRL_NEXT: {
+          bp->end();
+          const char *old_name = bp->module_name;
+          bp = &uart_pipes[++mod_i % n_pipes];
+          ESP_LOGI(TAG_SETUP, "--(( CYCLE from %s --> %s ))--", old_name, bp->module_name);
+          bp->banner(node_info.uart_pipe_sec);
+          bp->begin();
+          break;
+        }
+        default:
+          Serial1.write(usb_char);
+
+          // Echo user-input back to serial port.
+          // Coproc's `ATE1` cmd seems not that adept...
+          Serial.write(usb_char);
+          input_given = true;
+      }
+
+      last_traffic_ms = now_ms;
+    }
+
+    now_ms = millis();
+  } while (!stop && (now_ms - last_traffic_ms) < timeout_ms);
 
   if (input_given) {
     ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did things...REBOOTING! ))--");
     esp_restart();
   }
-  ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did nothing ))--");
+  Serial1.end();
+  ESP_LOGI(TAG_SETUP, "--(( OBD_PIPE did nothing, booting continues ))--");
 }
 
 void loadConfig()
@@ -1921,9 +2008,8 @@ void setup()
       (int)ESP.getCpuFreqMHz(), (int)(ESP.getFlashChipSize() >> 20),
       node_info.device_id);
 
-  // TODO: move Boot-obd_pipe after reconfig, OBD-begin & net-connect.
-  if (node_info.obd_pipe_sec)
-      enter_coproc_bootpipe_mode();
+  if (node_info.uart_pipe_sec)
+      enter_uart_pipe_loop();
 
   bufman.init();
 

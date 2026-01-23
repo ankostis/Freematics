@@ -206,21 +206,22 @@
 * OBD-II configurations
 **************************************/
 /**
- * When not 0, after boot the USB-uart is bidirectionally piped
- * directly to LINK-uart (connected to STM32F103CX co-processor's usart-2),
- * effectively allowing to send ELM327 AT-commands from the Serial <--> OBD.
+ * When not 0, after boot the USB-uart is bidirectionally piped directly to:
+ * - LINK-uart (connected to STM32F103CX co-processor's usart-2), or to
+ * - XBEE-uart (connected to SIMCOM modem),
+ * effectively allowing the user terminal to send ELM327 or SIMCOM AT-commands
+ * to speak directly to those modules.
  *
  * - The timeout resets on any Rx/Tx chars.
  * - Reboots after the timeout has expired AND any chars have Rx/Tx,
  *   otherwise, proceeds with regular setup.
- * - Old name: `CONFIG_MODE_TIMEOUT`
- * - (json-config default for `node_info.obd_pipe_sec`)
+ * - Old names: `CONFIG_MODE_TIMEOUT`, `BOOT_OBD_PIPE_TIMEOUT_SEC`
+ * - (json-config default for `node_info.uart_pipe_sec`)
  */
-#define BOOT_OBD_PIPE_TIMEOUT_SEC    0
-
+#define BOOT_UART_PIPE_TIMEOUT_SEC  0
 
 #ifndef ENABLE_OBD
-#define ENABLE_OBD              1
+#define ENABLE_OBD                  1
 #endif
 /**
  * When 1, it generates & transmits speed=314kmh and a dummy VIN,
@@ -235,7 +236,7 @@
  * Maximum consecutive OBD access errors before entering standby.
  * (json-config default for `node_info.obd_max_errors`)
  */
-#define MAX_OBD_ERRORS          3
+#define MAX_OBD_ERRORS              3
 
 /**
  * A list-of-list-of-alternate AT-cmds used to widen OBD masks/filter
