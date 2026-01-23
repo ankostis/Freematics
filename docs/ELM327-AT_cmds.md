@@ -11,7 +11,7 @@ on May 2022 (a month before the closing of ELM company).
 
 > **Note:**
 > - Settings which are shown with an asterisk (*) are the default values.
-> - Commands in **bold** have been tested in UART-PIPE and they worked ok.
+> - Commands in **bold** have been tested in AT-PIPE and they worked ok.
 > - Commands starting with `/`  did not work when tested.
 
 ## General Commands
