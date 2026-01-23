@@ -23,8 +23,8 @@ extern "C" {
 }
 
 // ESP_IDF logging tags used
-inline constexpr const char TAG_LINK[] = "LINK";  // UART with STM32 --> OBD
-inline constexpr const char TAG_GSM[] = "GSM";  // UART with both GSM & GNSS
+inline constexpr const char TAG_LINK[] = "OBDX";  // UART with STM32 --> OBD
+inline constexpr const char TAG_GSM[] = "CELLX";  // UART with both CELL(& GNSS)
 inline constexpr const char TAG_GNSS[] = "GNSS";
 inline constexpr const char TAG_SPI[] = "SPI";
 

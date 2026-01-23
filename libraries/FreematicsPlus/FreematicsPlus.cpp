@@ -731,8 +731,8 @@ void FreematicsESP32::xbEnd()
 void FreematicsESP32::xbWrite(const char* cmd)
 {
     int len = strlen(cmd);
-    uart_write_bytes(BEE_UART_NUM, cmd, len);
     ESP_LOGV(TAG_GSM, "<SEND> x%i |%s|", len, cmd);
+    uart_write_bytes(BEE_UART_NUM, cmd, len);
 }
 
 void FreematicsESP32::xbWrite(const char* data, int len)

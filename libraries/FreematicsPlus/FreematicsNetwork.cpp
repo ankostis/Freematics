@@ -631,6 +631,7 @@ bool CellSIMCOM::check(unsigned int timeout)
 {
   uint32_t t = millis();
   do {
+      // SIMCOM7670(?) allegedly needs ATx2, according to 1ce521bf.
       if (sendCommand("AT\rAT\r", 250)) return true;
   } while (millis() - t < timeout);
   return false;
@@ -648,37 +649,84 @@ bool CellSIMCOM::checkSIM(const char* pin)
 }
 
 std::string CellSIMCOM::queryIP(const char* host)
-{
+{return host;
+  char *ip = nullptr;
+  const char *fmt;
+  int dnsTimeoutMs;
+  int rxTimeoutMs;
+  const char *searchStr;
+
+  ESP_LOGI(TAG_CELL, "DNS resolve: %s...", host);
   if (m_type == CELL_SIM7070) {
-    sprintf(m_buffer, "AT+CDNSGIP=\"%s\",1,3000\r", host);
-    if (sendCommand(m_buffer, 10000, "+CDNSGIP:")) {
-      char *p = strstr(m_buffer, host);
-      if (p) {
-        p = strstr(p, "\",\"");
+    fmt = "AT+CDNSGIP=\"%s\",1,%d\r";
+    dnsTimeoutMs = 10000;  // Modem's internal DNS timeout
+    rxTimeoutMs = 15000;   // Host timeout: modem_timeout + retries + margin
+    searchStr = "\",\"";
+  } else {
+    fmt = "AT+CDNSGIP=\"%s\"\r";
+    dnsTimeoutMs = 0;      // Not used for other modems
+    rxTimeoutMs = 3000;
+    searchStr = ",\"";
+  }
+
+  sprintf(m_buffer, fmt, host, dnsTimeoutMs);
+
+  // Send command and wait for OK
+  m_device->xbWrite(m_buffer);
+  delay(10);
+
+  m_buffer[0] = 0;
+  const char* okAnswer[] = {"\r\nOK"};
+  byte ret = m_device->xbReceive(m_buffer, RECV_BUF_SIZE, 3000, okAnswer, 1);
+
+  if (ret != 1) {
+    ESP_LOGW(TAG_CELL, "DNS command failed: %s", m_buffer);
+    m_device->xbPurge();
+    return "";
+  }
+
+  // Now wait for the URC response
+  m_buffer[0] = 0;
+  const char* urcAnswer[] = {"+CDNSGIP:"};
+  ret = m_device->xbReceive(m_buffer, RECV_BUF_SIZE, rxTimeoutMs, urcAnswer, 1);
+
+  if (ret == 1) {
+    // Check if success or error
+    char *p = strstr(m_buffer, "+CDNSGIP:");
+    if (p) {
+      p += 10; // Skip "+CDNSGIP: "
+      if (*p == '1') {
+        // Success: +CDNSGIP: 1,"domain","IP"
+        p = strstr(m_buffer, host);
         if (p) {
-          char *ip = p + 3;
-          p = strchr(ip, '\"');
-          if (p) *p = 0;
-          return ip;
+          p = strstr(p, searchStr);
+          if (p) {
+            ip = p + strlen(searchStr);
+            p = strchr(ip, '\"');
+            if (p) *p = 0;
+          }
         }
+      } else if (*p == '0') {
+        // Error: +CDNSGIP: 0,<err>
+        int errCode = atoi(p + 2);
+        ESP_LOGW(TAG_CELL, "DNS error code: %d", errCode);
       }
     }
   } else {
-    sprintf(m_buffer, "AT+CDNSGIP=\"%s\"\r", host);
-    if (sendCommand(m_buffer, 10000)) {
-      char *p = strstr(m_buffer, host);
-      if (p) {
-        p = strstr(p, ",\"");
-        if (p) {
-          char *ip = p + 2;
-          p = strchr(ip, '\"');
-          if (p) *p = 0;
-          return ip;
-        }
-      }
-    }
+    // URC timeout - flush buffer to discard late response
+    ESP_LOGW(TAG_CELL, "DNS URC timeout - flushing buffer");
+    m_device->xbPurge();
+    delay(100);
+    m_device->xbPurge();
   }
-  return "";
+
+  if (!ip) {
+    ESP_LOGW(TAG_CELL, "DNS '%s' failed, using hostname directly", host);
+    return "";
+  }
+
+  ESP_LOGI(TAG_CELL, "DNS resolved: %s -> %s", host, ip);
+  return ip;
 }
 
 bool CellSIMCOM::sendCommand(const char* cmd, unsigned int timeout, const char* expected)
@@ -841,6 +889,14 @@ bool CellUDP::open(const char* host, uint16_t port)
     }
     return true;
   } else {
+    // Other modems: Try DNS first, fallback to hostname
+    if (host) {
+      udpPort = port;
+      udpIP = queryIP(host);
+      if (!udpIP.length()) udpIP = host;
+    }
+    if (!udpIP.length()) return false;
+
     sprintf(m_buffer, "AT+CIPOPEN=0,\"UDP\",\"%s\",%u,8000\r", udpIP.c_str(), udpPort);
     if (!sendCommand(m_buffer, 3000)) {
       ESP_LOGD(TAG_CELLUDP, "%s", m_buffer);
