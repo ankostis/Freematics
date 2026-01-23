@@ -85,7 +85,7 @@
    *     "def_largest_free_block": 110580
    *   },
    *   "config": {
-   *     "uart_pipe_sec": 3,
+   *     "at_pipe_sec": 3,
    *     "log_levels": {
    *       "*": 4
    *     },
@@ -293,7 +293,7 @@ struct node_info_t {
 
   //////////
   // CONFIG
-  int uart_pipe_sec{BOOT_UART_PIPE_TIMEOUT_SEC};
+  int at_pipe_sec{BOOT_AT_PIPE_TIMEOUT_SEC};
   LogLevels log_levels{RUNTIME_LOG_LEVELS};
   const uint8_t log_sink{LOG_SINK};  // TODO: reconfigurable
   const char *log_sink_fpath{LOG_SINK_FPATH};

@@ -216,9 +216,9 @@
  * - Reboots after the timeout has expired AND any chars have Rx/Tx,
  *   otherwise, proceeds with regular setup.
  * - Old names: `CONFIG_MODE_TIMEOUT`, `BOOT_OBD_PIPE_TIMEOUT_SEC`
- * - (json-config default for `node_info.uart_pipe_sec`)
+ * - (json-config default for `node_info.at_pipe_sec`)
  */
-#define BOOT_UART_PIPE_TIMEOUT_SEC  0
+#define BOOT_AT_PIPE_TIMEOUT_SEC  0
 
 #ifndef ENABLE_OBD
 #define ENABLE_OBD                  1

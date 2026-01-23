@@ -320,7 +320,7 @@ static void _hide_sensitive_configs(Json &cfg) {
 
 Json node_info_t::config_to_json() const {
   Json cfg{
-      {"uart_pipe_sec", uart_pipe_sec},
+      {"at_pipe_sec", at_pipe_sec},
       {"log_levels", log_levels},
       {"log_sink", log_sink},
       {"log_sink_fpath", log_sink_fpath},
