@@ -55,6 +55,13 @@ int addChecksump(char* data)
 	return (int)(s - data);
 }
 
+long millis() {
+  struct timeval time;
+  gettimeofday(&time, NULL);
+
+  return time.tv_sec * 1000 + time.tv_usec / 1000;
+}
+
 int incomingUDPCallback(void* _hp)
 {
 	HttpParam* hp = (HttpParam*)_hp;
@@ -75,7 +82,7 @@ int incomingUDPCallback(void* _hp)
 
 	buf[recv] = 0;
 	hostaddr = inet_ntoa(cliaddr.sin_addr);
-	fprintf(stderr, "%u bytes from %s | ", recv, hostaddr);
+	fprintf(stderr, "(%u) %u bytes from %s | ", millis(), now, recv, hostaddr);
 
 	// validate checksum
 	if (!verifyChecksum(buf)) {
