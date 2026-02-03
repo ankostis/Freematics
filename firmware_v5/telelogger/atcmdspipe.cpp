@@ -30,6 +30,7 @@ void AtPipe::banner(int pipe_timeout_sec) {
 
 void AtPipe::begin() {
   Serial1.begin(baud, SERIAL_8N1, rx_pin, tx_pin);
+  Serial1.setHwFlowCtrlMode(HW_FLOWCTRL_DISABLE);
 }
 
 void AtPipe::end() {
@@ -85,11 +86,11 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
 
       switch (usb_char) {
         case EOT:
-          ESP_LOGI(TAG_ATPIPE, "--(( USER BREAK ))--"); stop = true;
+          Serial.printf("--(( USER BREAK ))--\n"); stop = true;
           break;
         case CTRL_POWER:
           if (bp->power_cycle_func) {
-            ESP_LOGI(TAG_ATPIPE, "--(( TOGGLE POWER %s ))--", bp->module_name);
+            Serial.printf("--(( TOGGLE POWER %s ))--\n", bp->module_name);
             bp->power_cycle_func();
           }
           break;
@@ -97,7 +98,7 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
           bp->end();
           const char *old_name = bp->module_name;
           bp = &at_pipes[++mod_i % n_pipes];
-          ESP_LOGI(TAG_ATPIPE, "--(( CYCLE from %s --> %s ))--", old_name, bp->module_name);
+          Serial.printf("--(( CYCLE from %s --> %s ))--\n", old_name, bp->module_name);
           bp->banner(timeout_ms);
           bp->begin();
           break;
@@ -118,11 +119,11 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
   } while (!stop && (now_ms - last_traffic_ms) < timeout_ms);
 
   if (input_given) {
-    ESP_LOGI(TAG_ATPIPE, "--(( OBD_PIPE did things...REBOOTING! ))--");
+    Serial.printf("--(( OBD_PIPE did things...REBOOTING! ))--\n");
     esp_restart();
   }
   Serial1.end();
-  ESP_LOGI(TAG_ATPIPE, "--(( OBD_PIPE did nothing, booting continues ))--");
+  ESP_LOGW(TAG_ATPIPE, "--(( OBD_PIPE did nothing, booting continues ))--");
 }
 
 #endif // BOOT_AT_PIPE_TIMEOUT_SEC
