@@ -32,6 +32,8 @@ struct AtPipe {
  * Pipe bidirectionally the USB directly into UART1, itself connected to some module
  * (USB <--> UART <--> (OBD | MODEM)) and reboot on exit if anything touched.
  *
+ * @param timeout_ms: if negative, loops forever
+ *
  * Keyboard shortcuts:
  *  - [CTRL+P] - (P)ower-toggle on selected module
  *  - [CTRL+N] - (N)ext module

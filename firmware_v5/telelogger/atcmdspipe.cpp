@@ -20,7 +20,8 @@ void power_cycle_modem() {
 
 void AtPipe::banner(int pipe_timeout_sec) {
   Serial.printf(
-    "AT-PIPE: Type any %s AT cmds for %s module for %isec:"
+    "AT-PIPE: Type any %s AT cmds for %s module:"
+    "\n  - Timeout  - %isec"
     "\n  - [CTRL+P] - (P)ower-toggle on selected module"
     "\n  - [CTRL+N] - (N)ext module"
     "\n  - [CTRL+D] - en(D) session immediately"
@@ -67,16 +68,14 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
   bp->banner(timeout_ms);
   bp->begin();
 
-  uint32_t last_traffic_ms, now_ms;
-  bool stop, input_given;
-  last_traffic_ms = now_ms = millis();
-  stop= input_given=false;
+  unsigned long entered_ms = millis();
+  bool input_given = false;
+  bool stop = false;
   do {
     // Module --> USB
     //
     while (Serial1.available()) {
       Serial.write(Serial1.read());
-      last_traffic_ms = now_ms;
     }
 
     // USB --> Module, scanning for keyboard shortcuts.
@@ -86,9 +85,11 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
 
       switch (usb_char) {
         case EOT:
-          Serial.printf("--(( USER BREAK ))--\n"); stop = true;
+          Serial.printf("--(( USER BREAK ))--\n");
+          stop = true;
           break;
         case CTRL_POWER:
+          input_given = true;
           if (bp->power_cycle_func) {
             Serial.printf("--(( TOGGLE POWER %s ))--\n", bp->module_name);
             bp->power_cycle_func();
@@ -104,19 +105,18 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
           break;
         }
         default:
+          input_given = true;
           Serial1.write(usb_char);
 
           // Echo user-input back to serial port.
           // Coproc's `ATE1` cmd seems not that adept...
           Serial.write(usb_char);
-          input_given = true;
-      }
+      }  // end switch
 
-      last_traffic_ms = now_ms;
-    }
+    }  // if input available
 
-    now_ms = millis();
-  } while (!stop && (now_ms - last_traffic_ms) < timeout_ms);
+  } while (!stop &&
+      (input_given || timeout_ms < 0 || (millis() - entered_ms) < timeout_ms));
 
   if (input_given) {
     Serial.printf("--(( OBD_PIPE did things...REBOOTING! ))--\n");
