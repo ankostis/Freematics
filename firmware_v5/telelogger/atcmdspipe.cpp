@@ -68,7 +68,10 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
   bp->banner(timeout_ms);
   bp->begin();
 
+  constexpr const int SEC_MS = 1000;
+  unsigned long now_ms;
   unsigned long entered_ms = millis();
+  uint32_t next_countdown = entered_ms + SEC_MS;
   bool input_given = false;
   bool stop = false;
   do {
@@ -115,8 +118,17 @@ void enter_atpipe_loop(uint32_t timeout_ms) {
 
     }  // if input available
 
+    now_ms = millis();
+
+    // Print a countdown while no input given.
+    //
+    if (!input_given && timeout_ms > 0 && now_ms > next_countdown) {
+      Serial.printf("\b\b\b%3i", (entered_ms + timeout_ms - next_countdown) / SEC_MS);
+      next_countdown  += SEC_MS;
+    }
+
   } while (!stop &&
-      (input_given || timeout_ms < 0 || (millis() - entered_ms) < timeout_ms));
+      (input_given || timeout_ms < 0 || (now_ms - entered_ms) < timeout_ms));
 
   if (input_given) {
     Serial.printf("--(( OBD_PIPE did things...REBOOTING! ))--\n");
